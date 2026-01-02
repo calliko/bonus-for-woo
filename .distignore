@@ -1,0 +1,6 @@
+# Файлы и папки, которые НЕ должны попасть в WordPress.org
+/.wordpress-org
+/.git
+/.github
+/.gitignore
+/.distignore

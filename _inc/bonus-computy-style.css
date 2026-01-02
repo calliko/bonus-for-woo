@@ -1,0 +1,682 @@
+.computy_skidka_container {
+    max-width: 400px;
+    overflow: hidden;
+    transition: max-height .3s ease;
+    margin-top: 10px;
+}
+
+.computy_skidka_form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.computy_skidka_form form, .take_coupon_form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.computy_skidka_form .write_points_form {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.opacity05 {
+    opacity: 0.5;
+}
+
+.loading_button {
+    pointer-events: none;
+    cursor: default;
+
+}
+
+.write_points {
+    position: relative;
+    border: none;
+    outline: none;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.button__text {
+    color: #ffffff;
+    transition: all 0.2s;
+}
+
+.loading_button .button__text {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.loading_button::after {
+    content: "";
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 4px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: button-loading-spinner 1s ease infinite;
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+.computy_skidka_form .input-text, .take_coupon_form .input-text {
+    max-width: 90px;
+    padding: 10px;
+}
+
+.computy_skidka_form .button, .computy_skidka_form .remove_points, .code_coupon_submit {
+    padding: 10px;
+    cursor: pointer;
+    color: #fff;
+    border: none;
+}
+
+.computy_skidka_form .button, .code_coupon_submit {
+    background: #4CAF50;
+}
+
+.computy_skidka_form .remove_points {
+    background: #F44336;
+    position: relative;
+}
+
+.computy_skidka_link {
+    border-bottom: dashed 1px;
+    cursor: pointer;
+}
+
+#bfw_remove_cart_point {
+    background-image: url("../img/remove.svg");
+    font-size: 0;
+    width: 25px;
+    height: 25px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    float: right;
+    margin: -3px 0 0 5px;
+}
+
+#bfw_remove_cart_point:hover {
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.woocommerce-variation-price .bfw_social_links {
+    display: none;
+}
+
+.bfw_not_participant {
+    color: #F44336;
+    font-weight: bold;
+}
+
+/*
+.related.products .how_mach_bonus,
+ .up-sells  .how_mach_bonus{
+    display: none;
+}*/
+.bonus_computy_account.add_coupon {
+    margin: 10px 0;
+}
+
+.coupon_form {
+    max-width: 100%;
+}
+
+.loading_coupon {
+    background-image: url(../img/spiner.svg);
+    background-repeat: no-repeat;
+    background-position: 10% 50%;
+}
+
+.loading_coupon input {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: default;
+}
+
+.bonus_computy_account.add_coupon .title {
+    font-weight: 500;
+    display: inline-block;
+}
+
+.related.products .bfw_social_links {
+    display: none;
+}
+
+.table-bfw th {
+    border: 1px solid;
+    padding: 5px
+}
+
+.table-bfw {
+    border-collapse: collapse
+}
+
+.table-bfw thead {
+    font-weight: bold;
+}
+
+.table-bfw td {
+    border: 1px solid;
+    padding: 5px
+}
+
+.bfw-spisanie-blocks-button-text::before {
+    content: '';
+    background-image: url(../img/coin.svg);
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 5px;
+}
+
+
+#copy_referal {
+    display: inline-block;
+    background: url(../img/copy.svg);
+    width: 25px;
+    height: 25px;
+    background-size: cover;
+    margin: 0 0 -7px 4px;
+    cursor: pointer;
+}
+
+#copy_good {
+    font-size: 12px;
+    padding: 10px;
+    color: #009688;
+}
+
+.bfw_social_link_item {
+    width: 25px;
+    height: 25px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: inline-block;
+    margin: 0 10px 0 0;
+}
+
+.bfw_ref_icon_vk {
+    background-image: url("../img/social/009-vk.svg");
+}
+
+.bfw_ref_icon_viber {
+    background-image: url("../img/social/viber.svg");
+}
+
+.bfw_ref_icon_fb {
+    background-image: url("../img/social/043-facebook.svg");
+}
+
+.bfw_ref_icon_tw {
+    background-image: url("../img/social/013-twitter.svg");
+}
+
+.bfw_ref_icon_tg {
+    background-image: url("../img/social/telegram.svg");
+    background-size: cover;
+}
+
+.bfw_ref_icon_whatsapp {
+    background-image: url("../img/social/007-whatsapp.svg");
+}
+
+.copy_referal_single {
+    display: inline-block;
+    background: url(../img/copy.svg);
+    width: 25px;
+    height: 25px;
+    background-size: cover;
+    cursor: pointer;
+}
+
+.goodcopy {
+    opacity: 0.5;
+}
+
+
+#bfw-progressbar {
+    background-color: #f3f3f3;
+    border-radius: 13px;
+    padding: 3px;
+}
+
+#bfw-progressbar > div {
+    background: #badb73 linear-gradient(90deg, rgb(161 244 185 / 30%), rgb(159 250 142 / 30%), rgb(3 255 8 / 30%), rgb(20 255 0 / 63%));
+    animation: gradient 20s ease infinite;
+    transform: translate3d(0, 0, 0);
+    height: 20px;
+    border-radius: 10px;
+    position: relative;
+}
+
+#bfw-progressbar > div > span {
+    font-size: 14px;
+    position: absolute;
+    top: -2px;
+    font-weight: bold;
+    color: #626262;
+    min-width: 50px;
+    width: max-content;
+}
+
+.bfw-progressbar-title {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-top: 20px;
+    line-height: 1.5;
+    color: #53a318;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bfw-progress-bar {
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+}
+
+.bfw-progress-bar li {
+    flex: 2;
+    margin: 0;
+    position: relative;
+    padding: 0 0 16px 0;
+    font-size: .875rem;
+    line-height: 1.5;
+    color: #53a318;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: visible;
+    min-width: 0;
+    text-align: center;
+    border-bottom: 4px solid #e8e8e8;
+}
+
+.bfw-progress-bar li:first-child,
+.bfw-progress-bar li:last-child {
+    flex: 1;
+}
+
+.bfw-progress-bar li:last-child {
+    text-align: right;
+}
+
+.bfw-progress-bar li:before {
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    background-color: #e8e8e8;
+    border-radius: 50%;
+    border: 8px solid #fff;
+    position: absolute;
+    left: calc(50% - 6px);
+    bottom: -13px;
+    z-index: 3;
+    transition: all .2s ease-in-out;
+    box-sizing: unset;
+}
+
+.bfw-progress-bar li:first-child:before {
+    left: 0;
+}
+
+.bfw-progress-bar li:last-child:before {
+    right: 0;
+    left: auto;
+}
+
+.bfw-progress-bar span {
+    transition: opacity .3s ease-in-out;
+}
+
+.bfw-progress-bar li:not(.is-active) span {
+    opacity: 0;
+}
+
+.bfw-progress-bar .is-complete:not(:first-child):after,
+.bfw-progress-bar .is-active:not(:first-child):after {
+    content: "";
+    display: block;
+    width: 100%;
+    position: absolute;
+    bottom: -4px;
+    left: -50%;
+    z-index: 2;
+    border-bottom: 4px solid #53a318;
+}
+
+.bfw-progress-bar li:first-child {
+    text-align: left;
+}
+
+.bfw-progress-bar li:last-child span {
+    width: 200%;
+    display: inline-block;
+    position: absolute;
+    left: -100%;
+}
+
+.bfw-progress-bar .is-complete:last-child:after,
+.bfw-progress-bar .is-active:last-child:after {
+    width: 200%;
+    left: -100%;
+}
+
+.bfw-progress-bar .is-complete:before {
+    background-color: #53a318;
+}
+
+.bfw-progress-bar .is-active:before,
+.bfw-progress-bar li:hover:before,
+.bfw-progress-bar .is-hovered:before {
+    background-color: #fff;
+    border-color: #53a318;
+}
+
+.bfw-progress-bar li:hover:before,
+.bfw-progress-bar .is-hovered:before {
+    transform: scale(1.33);
+}
+
+.bfw-progress-bar li:hover span,
+.bfw-progress-bar li.is-hovered span {
+    opacity: 1;
+}
+
+.bfw-progress-bar:hover li:not(:hover) span {
+    opacity: 0;
+}
+
+.bfw-progress-bar .has-changes {
+    opacity: 1 !important;
+}
+
+.bfw-progress-bar .has-changes:before {
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    position: absolute;
+    left: calc(50% - 4px);
+    bottom: -20px;
+    background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%208%208%22%3E%3Cpath%20fill%3D%22%23ed1c24%22%20d%3D%22M4%200l4%208H0z%22%2F%3E%3C%2Fsvg%3E');
+}
+
+.computy_copyright {
+    text-align: right;
+    font-size: 12px;
+}
+
+.computy_copyright a:before {
+    content: '';
+    display: inline-block;
+    background: url(../img/logo-svg.svg) no-repeat;
+    background-size: contain;
+    width: 9px;
+    height: 18px;
+    margin: 0 0 -5px 0;
+
+}
+
+.woocommerce-order-received #computy-bonus-message-cart {
+    display: none;
+}
+
+
+.bfw-card {
+    color: #000;
+    box-shadow: 0 0 3px 0 rgb(127 127 127);
+    border: 1px solid #faeeee;
+    font-weight: bold;
+    max-width: 300px;
+    border-radius: 10px;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, rgba(238, 119, 82, 0.3), rgba(231, 60, 126, 0.3), rgba(35, 166, 213, 0.3), rgba(35, 213, 171, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 20s ease infinite;
+    transform: translate3d(0, 0, 0);
+}
+
+.bfw-account_status_name {
+    font-size: 21px;
+}
+
+.bfw-account_count_points {
+    font-size: 21px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bfw-help-tip {
+    position: relative;
+    display: inline-block;
+    margin: 0 0 -5px 5px;
+    cursor: help;
+}
+
+.bfw-help-tip.faq:after {
+    display: block;
+    content: '?';
+    color: #fff;
+    font-size: 11px;
+    text-align: center;
+    line-height: 15px;
+    background: #333333;
+    border-radius: 50%;
+    height: 16px;
+    width: 16px;
+}
+
+.bfw-help-tip.danger:after {
+    display: block;
+    content: '!';
+    color: #fff;
+    font-size: 11px;
+    text-align: center;
+    line-height: 15px;
+    background: #c62222;
+    border-radius: 50%;
+    height: 16px;
+    width: 16px;
+}
+
+.bfw-help-tip.info:after {
+    display: block;
+    content: 'i';
+    color: #fff;
+    font-size: 11px;
+    text-align: center;
+    line-height: 15px;
+    background: #2250c6;
+    border-radius: 50%;
+    height: 16px;
+    width: 16px;
+}
+
+.bfw-help-tip:before {
+    opacity: 0;
+    content: attr(data-tip);
+    display: block;
+    line-height: 13px;
+    color: #fff;
+    font-size: .8em;
+    width: 150px;
+    background: #333;
+    border-radius: 3px;
+    padding: 0;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+    position: absolute;
+    top: 17px;
+    height: 0;
+    overflow: hidden;
+    transition-delay: .1s;
+    transition-duration: .2s;
+    z-index: 9;
+}
+
+.bfw-help-tip.danger:before {
+    background: #c62222;
+}
+
+.bfw-account_referral {
+    margin-top: 40px;
+}
+
+.bfw-help-tip:hover:before {
+    opacity: 1;
+    height: auto;
+    padding: 0.618em 1em;
+    visibility: visible;
+    transition-delay: .1s;
+    transition-duration: .2s;
+}
+
+.card_link_rulles {
+    font-size: 0;
+    width: 22px;
+    height: 22px;
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    background: url(../img/qwestion.svg) no-repeat;
+    background-size: cover;
+}
+
+.bfw-account_expire_points {
+    background: url(../img/fire.svg) no-repeat center left;
+    background-size: 24px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    padding: 0 0 0 23px;
+}
+
+.list_role_computy .delete_role-bfw {
+    color: red;
+    font-size: 30px;
+    line-height: 0;
+    font-weight: bold;
+    transform: rotate(45deg);
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    width: 19px;
+    height: 21px;
+    background: none;
+}
+
+.list_role_computy .delete_role-bfw:hover {
+    background: none;
+    cursor: pointer;
+    color: red;
+}
+
+.bfw-account_expire_points.bfw-help-tip.danger::after {
+    content: none;
+}
+
+.bfw-account_percent {
+    margin-top: 8px;
+    font-size: 16px;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+.is-large .bfw-order-cashback-blocks {
+    padding: 16px 16px;
+}
+
+.bfw-order-cashback-blocks {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 0;
+    font-weight: 500;
+}
+
+
+.bfw-spisanie-blocks-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    cursor: pointer;
+    border: 1px solid #000;
+}
+
+.computy_skidka_form {
+    opacity: 0;
+    padding: 0 15px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+}
+
+.computy_skidka_form.open {
+    opacity: 1;
+    max-height: 500px;
+    padding: 16px;
+    border: 1px solid #000;
+    border-top: none;
+}
+
+.flipped {
+    transform: rotateX(180deg);
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.text_how_many_points {
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.text_total_points {
+    color: #757575;
+    margin-top: 6px;
+    width: 100%;
+}
+
+@media (max-width: 767px ) {
+    .dtr-details .dtr-data {
+        display: block;
+    }
+}

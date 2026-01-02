@@ -1,0 +1,644 @@
+= 6.7.5 - 2025-04-20 =
+* Fixed the error of purchasing a product for which 100% cashback is accrued.
+* Added the setting of the percentage of cashback for the first order.
+* Added shortcode [bfw_history_points].
+* Updated the database.
+
+= 6.7.4 - 2025-03-22 =
+* Added filter birthday-points-filter
+* Added addon write off percentage
+
+= 6.7.3 - 2025-03-22 =
+* Fixed the correct amount when returning points.
+* Added shortcode [bfw_cart_user view="true"].
+* Added setting: how many days before birthday to accrue points.
+* Added hint to the date of birth input field to receive bonus points.
+
+= 6.7.2 - 2025-03-09 =
+* Added filter  bfw-filter-percent-in-cart.
+
+= 6.7.0 - 2025-03-03 =
+* Added user ID and email to the full history of points accrual.
+* Added the ability to write off points in the order editor.
+
+= 6.6.8 - 2025-02-16 =
+* Fixed the error of the wrong amount when returning bonus points with other coupons.
+* Fixed the error of recalculating the amount of possible bonuses when writing off points.
+* Fixed the error Warning: in_array() expects parameter 2 to be array.
+
+= 6.6.7 - 2025-01-22 =
+* Fixed saving of shortcode for writing off points.
+* Optimization of statistics page.
+
+= 6.6.6 - 2025-01-14 =
+* Corrected translations.
+* Corrected styles when writing off points.
+* Fixed the error of correct calculation of the number of points written off.
+* Fixed the setting "minimum order amount for using points".
+* Fixed export of bonus points.
+
+= 6.6.5 - 2024-12-26 =
+* fixed fatal error on single page.
+
+= 6.6.4 - 2024-12-25 =
+* Fixed exclusion of categories and products that cannot be purchased with bonuses.
+
+= 6.6.3 - 2024-12-18 =
+* Added an alternative server for activating the Pro version.
+* Added a smooth closing of the points write-off form.
+* Added loading animation to the points write-off button.
+* Fixed the cookie entry for the referral system.
+* Fixed the deletion of the date of birth in the admin panel.
+
+
+= 6.6.2 - 2024-12-15 =
+* Added a setting in the Pro version "When using a coupon, cashback is not accrued."
+* Added the ability for the administrator to participate in the bonus system by default.
+* Added the ability to insert the write-off of points anywhere in the basket and checkout.
+* Added the filter bfw_add_points_order_status_filter.
+* Fixed the shortcode [bfw_get_sum_orders]
+* Fixed the error "Passing null to parameter #1 ($haystack) of type string is deprecated"
+* Fixed the error calculating points when using an offline product.
+
+
+= 6.6.1 - 2024-12-08 =
+* Removed the write-off form for unregistered users.
+* Returned the cashback withdrawal in the basket for unregistered users.
+* If the administrator writes off points from the user during the checkout process where bonuses are applied, they will not be accepted.
+* Added filter bfw_not_use_points_text. Description in the manual.
+
+
+= 6.6.0 - 2024-12-06 =
+* Added generation of a QR code for a referral link.
+* Changed the appearance of bonus points write-off.
+* Improved protection against fraud when writing off points.
+* Removed the system of writing off points at the expense of commissions.
+* Fixed the display of the history of accrual of points in the user account.
+* Fixed a fatal error in the product card.
+* Fixed an error in excluding a payment method in woocommerce blocks.
+* Fixed an error in accrual of points to the referrer for the first order.
+* Fixed translations.
+
+
+= 6.5.4 - 2024-11-25 =
+* Minor bugs fixed.
+
+
+= 6.5.3 - 2024-11-21 =
+* Fixed incorrect calculation of total order amount.
+
+
+= 6.5.2 - 2024-10-31 =
+* Added support for woocommerce blocks on the cart and checkout page.
+* Fixed partial refunds exclusion from order totals.
+* Fixed compatibility with the Post SMTP plugin.
+
+
+= 6.5.1 - 2024-11-14 =
+* Fixed an error with product registration for unauthorized users.
+* Fixed an entry in the history of points for non-existent users.
+
+
+= 6.5.0 - 2024-10-28 =
+* Added shortcode [bfw_get_sum_orders] - output of the user's order amount.
+* Added a setting that excludes delivery when calculating the order amount.
+* Fixed erroneous cashback accrual for a product that was purchased at a discount.
+
+
+= 6.4.8 - 2024-10-22 =
+* Fixed a bug with calculating points for excluded categories.
+
+
+= 6.4.7 - 2024-10-21 =
+* Fixed a bug where the order totals for users were not calculated if the "From what date should the order totals be calculated?" setting was enabled in the new High-Performance Order Storage.
+
+
+= 6.4.6 - 2024-10-06 =
+* Fixed broken notification when points were written off by the admin.
+* Fixed offline ordering.
+* Fixed a status calculation error.
+
+
+= 6.4.3 - 2024-10-04 =
+* Moved the method for adding, updating and deleting a status to its own class.
+* Removed the ability to add the same order amount when adding statuses.
+* Bringing the code to the PSR-12 standard.
+* Fixed an error when calculating the order amount for old versions of woocommerce.
+
+
+= 6.4.2 - 2024-09-07 =
+* Added a notification for the admin in the personal account.
+* Added new data to the statistics.
+* Added the Tools page.
+* Added the ability to subtract points from users (previously this option was only available in the PRO version).
+* Optimized statistics.
+* Moved user status updates to the Tools page.
+* Moved the rules and conditions generator to the Tools page.
+* Moved point import and export to the Tools page.
+
+
+= 6.4.1 - 2024-08-27 =
+* Removed notification about status change during user registration.
+* Removed notification about status change during mass status update by admin.
+* Fixed date display in points accrual history.
+
+
+= 6.4.0 - 2024-08-22 =
+* Fixed the declination of burning days in the client account.
+* Typing of variables.
+* Removed code duplication.
+* Added comments to the code.
+* Updated the bonus system rules generator.
+
+= 5.9.3 - 2024-02-14 =
+* Fixed a bug where points were deducted if a review was rejected.
+* Fixed a bug with unexpected output when activating the plugin.
+* Fixed cashback display on the cart and checkout page.
+
+= 5.9.2 - 2024-02-07 =
+* Limited cashback settings to no more than 100 percent
+* Add shortcode [bfw_how_much_cashback]
+* Fixed removal of coupon in woocommerce blocks
+
+= 5.9.1 - 2024-01-10 =
+* Compatible with High-Performance Order Storage
+
+= 5.9.0 - 2024-01-03 =
+* Changing the logic of points burning. Now days are counted from the last action in history.
+* Additional verification of points accrual for daily login.
+
+= 5.8.8 - 2023-12-14 =
+* Code optimization
+* Woocommerce 8.4.0 compatible
+
+= 5.8.7 - 2023-11-15 =
+* Added header and footer templates for email.
+* In the user edit, I corrected the display of the history of changes in bonus points.
+* Fixed negative scoring of points for referrals.
+
+= 5.8.6 - 2023-11-15 =
+* Improving the appearance of the client account.
+* Fixed the accrual of bonus points for client logins.
+
+= 5.8.5 - 2023-11-08 =
+* Code refactoring.
+* WordPress 6.4 compatible
+* Added a function to update the total amount when writing off points in the cart.
+
+= 5.8.4 - 2023-11-02 =
+* Security fix
+
+= 5.8.3 - 2023-10-25 =
+* Fixed error checking the role of excluded users.
+* Security fix
+
+= 5.8.2 - 2023-10-22 =
+* Fixed accrual for the first order for referrals
+* Added the ability to change the word "Cashback" in the product card.
+
+= 5.8.1 - 2023-10-18 =
+* Added rel="nofollow" for social media links.
+* Code refactoring.
+* Fixed partial refund.
+* Fixed a redirect to the cart page if points were deducted during checkout. Only if you use a shortcode.
+
+= 5.8.0 - 2023-10-09 =
+* Added export buttons to the bonus points accrual history table.
+* Added the ability to change the admins referral link.
+* Added filter bfw-exclude-role-for-cron.
+* Removed "Order statistics" from the statistics page.
+* Statistics page optimization
+
+= 5.7.1 - 2023-08-19 =
+* Fixed bug
+
+= 5.7.0 - 2023-08-15 =
+* Code optimization
+* Added a setting for the PRO version: From what date to count the amount of orders. Thanks, @mishaml
+* Added filter bfw-cart-cashback-display-amount. Thanks, @mishaml
+* Fixed bugs
+* Fixed "Cannot redeclare" error
+* Fixed error saving shortcode [bfw_account]
+
+= 5.6.1 - 2023-07-17 =
+* Fixed a bug where points were deducted when a coupon was activated.
+* Fixed a critical error when recording the history of accrual of points through cron.
+* Fixed a bug where the number of days for burning points in the personal account was not displayed.
+* Changed plugin activation from file_get_content to curl
+* Woocommerce 7.8.2 compatible
+* Added filter bfw-update-points-filter. Thanks, @mishaml
+* Added filter bfw-excluded-products-filter. Thanks, @mishaml
+
+= 5.6.0 - 2023-05-22 =
+* Removed connection between statuses and user roles.
+* Fixed bonus points redemption calculation.
+* In translations, a setting has been added for the "Use Points" button.
+
+= 5.5.1 - 2023-05-10 =
+* Added the ability to search for clients by email when exporting.
+* Added a range of dates to the history of accrual of bonuses.
+* Fixed an issue where points were debited when using shipping tax.
+* Fixed incorrect display of possible points using third party fees.
+
+= 5.5.0 - 2023-05-08 =
+* Added shortcode: [bfw_account_referral] displaying a block of information of the referral system from the account.
+* Added an order status setting at which points will be debited.
+* Fixed a bug with calculating the minimum amount in the cart and checkout.
+* Fixed a bug in bonus points statistics.
+* Fixed work function get_current_endpoint. Thanks, @mishaml
+* Fixed the ability to write off taxes.
+* Fixed a bug with the interaction of coupons and bonus points.
+* Code optimization
+* WordPress 6.2 compatible
+* Woocommerce 7.6 compatible
+
+
+= 5.4.3 - 2023-03-30 =
+* Fixed adaptation of the bonus points list table.
+* Fixed a bug with displaying possible points for redemption in the shopping cart.
+* Fixed deletion of the first line in the history of accrual of points, in the user editor.
+* Fixed endpoints for orders in the history of bonus points.
+* Woocommerce 7.5.1 compatible
+* Code optimization
+
+= 5.4.2 - 2023-03-06 =
+* Fixed bugs
+* Fixed email recording error when purchasing a plugin.
+* Fixed error displaying statistics.
+
+= 5.4.1 - 2023-03-02 =
+* Added lists of those invited by the referral system in the user editor.
+
+= 5.4.0 - 2023-03-01 =
+* Added a status name in the user editor.
+* Added an order status setting at which points will be returned.
+* Added the second level of the referral system.
+
+= 5.3.4 - 2023-02-14 =
+* Fixed the ability to remove the use of bonuses if coupons are applied.
+
+= 5.3.3 - 2023-01-30 =
+* File import error fixed
+
+= 5.3.2 - 2023-01-25 =
+* Fixed the possibility of debiting cashback from the delivery amount.
+
+= 5.3.1 - 2023-01-17 =
+* Fixed bugs
+
+= 5.2.3 - 2023-01-15 =
+* Added a button to remove points in the subtotal.
+* Added the ability to ignore discounts from cashback accrual.
+* Added the ability to change the bonus system based on coupons.
+* Fixed hiding the "Up to" display of a possible bonus point for the shortcode.
+* Code optimization
+
+= 5.2.1 - 2022-12-29 =
+* Fixed hiding "Up to" near the display of a possible bonus point.
+* Fixed critical error when returning goods.
+* Fixed bugs in the rules and conditions generator.
+* Fixed bugs in the user's personal account.
+
+= 5.2.0 - 2022-12-16 =
+* Added database check for existence during plugin activation.
+* Added daily accrual of bonus points for logging into your account.
+* Code refactoring
+
+= 5.1.2 - 2022-12-05 =
+* Fixed hiding the history of accrual of bonus points for customers.
+* Fixed a bug in bonus points statistics.
+
+= 5.1.1 - 2022-11-10 =
+* Added shortcode for displaying referral link
+* Woocommerce 7.1.0 compatible
+* WordPress 6.1 compatible
+
+= 5.1.0 - 2022-09-23 =
+* Fixed: check for email existence before sending notification.
+* Added link to the terms and conditions in the client's personal account.
+* Added computy copyright in the client account.
+* Added the ability to create an offline order.
+
+= 5.0.1 - 2022-09-19 =
+* Woocommerce 6.9.2 compatible
+* Added link on documentation
+* Statistics Calculation Optimization
+* Code optimization
+
+= 5.0.0 - 2022-09-11 =
+* Added bonus system description generator.
+* Added a shortcode for displaying the entire personal account [bfw_account]
+* Added a copy icon on the product page.
+* Added a hook for sending a message with a custom method.
+* Added a notification in the basket about how many total points are in the account.
+* Fixed a small security hole
+* Fixed the correct accrual of points for a delayed product review.
+* Fixed the ability to disable the redemption of points for discounted products.
+* Fixed: check for email existence before sending notification.
+* Moved the menu in the admin panel to a separate tab.
+* Moved the birthday field to the top.
+* Database update
+
+= 4.8.1 - 2022-08-29 =
+* fix small bug
+* Code optimization
+
+= 4.8.0 - 2022-08-28 =
+* Added status update when user logs in.
+* Added the ability to not round points.
+* Fixed recalculation of the status when changing the setting "What status of the order can earn points?"
+* Minor bug fixed
+
+= 4.7.0 - 2022-08-25 =
+* Added option: select order status for earning points.
+* Fixed accrual to a referral for the first order of an invite.
+* Fixed a bug where tax was added to deducted points.
+
+= 4.6.0 - 2022-08-23 =
+* Added bonus page template in client account.
+* Added the ability to show how many days are left before points expire.
+* Fixed major bugs
+
+= 4.5.3 - 2022-08-19 =
+* Fixed a bug where it is not possible to remove deducted points if the entire amount is debited.
+* Statistics Calculation Optimization
+
+= 4.5.2 - 2022-08-10 =
+* Minor bug fixed
+
+= 4.5.1 - 2022-07-29 =
+* Fixed role change error when registering a new client.
+* Fixed header ending for coupon activation in personal account.
+
+= 4.5.0 - 2022-07-28 =
+* Added e-mail notification about the imminent burning of points.
+* Fixed the error of incorrect cashback output in the basket.
+* Fixed bug with changing customer status before order status changes.
+* Added exclusion of the payment method from the bonus system.
+
+= 4.4.1 - 2022-07-24 =
+* Fixed a bug where the title of the letter about the appointment of points for the birthday was not saved.
+* Fixed a time error in the history of scoring.
+* Fixed a bug where the status of the client did not change during registration.
+
+= 4.4.0 - 2022-07-19 =
+* Referral system added to statistics.
+* Fixed major bugs
+* Added the ability to add a comment when importing bonus points. Changes are also recorded in history.
+
+= 4.3.0 - 2022-07-05 =
+* Dynamic table of points accrual history on the user account page
+* Fixed currency sliding in the user's personal account.
+* Added statistics page
+
+= 4.2.0 - 2022-07-02 =
+* Added the ability to earn points on your birthday.
+* Added the ability to set cashback in decimal fraction.
+* Fixed bug when email footer text was not set in woocommerce settings.
+
+= 4.1.0 - 2022-06-29 =
+* Added the ability to create coupons to receive bonus points.
+
+= 4.0.0 - 2022-06-27 =
+* Visual changes in the admin panel.
+* Code optimization.
+* Fixed Error.
+* Added the ability to choose a product with 100% cashback.
+
+= 3.4.3 - 2022-06-22 =
+* Fixed a critical bug in version 3.4.2
+
+= 3.4.2 - 2022-06-20 =
+* Added the ability to not show the word "up to" before the number of points.
+* Added option: if the client uses points, cashback is not credited.
+
+= 3.4.1 - 2022-06-06 =
+* Corrected the correct name of the excluded roles in the account.
+
+= 3.4.0 - 2022-05-30 =
+* WordPress 6.0.0 compatible
+* Woocommerce 6.5.1 compatible
+* Multisite support
+* Added the ability to display whether the points that will be returned to the buyer on the category page.
+
+= 3.3.0 - 2022-05-19 =
+* Added the ability to change the initial status of clients without a single order.
+* Fixed a bug with recording 0 points in the accrual history.
+
+= 3.2.1 - 2022-05-02 =
+* Fixed plugin compatibility (woocommerce advanced bulk edit).
+* Fixing scripts.
+* Added display of social media links on the product page(only PRO).
+
+= 3.2.0 - 2022-04-19 =
+* Added the ability for the store manager to change points for customers.
+* Added the ability for the store manager to configure the plugin.
+
+= 3.1.0 - 2022-03-28 =
+* Removed the erroneous display of the referral system for excluded categories
+* Code optimization
+
+= 3.0.0 - 2022-03-13 =
+* Major bugs fixed.
+* WordPress 5.9.2 compatible
+* Woocommerce 6.3.1 compatible
+* Redid the history of bonus points for all customers in reverse order
+* Added removal of bonus points for client inactivity
+
+= 2.10.1 - 2022-03-08 =
+* Minor bugs fixed.
+* Added declension of nouns after numerals for points.
+
+= 2.10.0 - 2022-03-05 =
+* WordPress 5.9.1 compatible
+* Woocommerce 6.2.1 compatible
+* Added shortcode [bfw_cashback_in_product] to display cashback anywhere in the product card.
+
+= 2.9.4 - 2022-03-03 =
+* Minor bugs fixed.
+* Improvement in the admin order editor
+
+= 2.9.3 - 2022-02-18 =
+* Minor bugs fixed.
+
+= 2.9.2 - 2022-02-08 =
+* Added progressbar
+* Minor bugs fixed.
+
+= 2.9.1 - 2022-01-26 =
+* WordPress 5.9 compatible
+
+= 2.9.0 - 2022-01-24 =
+* Major bugs fixed.
+* Added import and export of bonus points.
+
+= 2.8.2 - 2022-01-20 =
+* Minor bugs fixed.
+
+= 2.8.1 - 2022-01-19 =
+* Added a status scale in the pro version.
+* Minor bugs fixed.
+
+= 2.8.0 - 2022-01-14 =
+* Added the ability to insert a referral link into the email template.
+
+= 2.7.0 - 2021-12-09 =
+* Added the order of the "My bonuses" menu item in the client's account in the settings.
+
+= 2.6.0 - 2021-12-07 =
+* Added link to plugin settings on plugins page.
+* Added link for plugin testing.
+
+= 2.5.9 - 2021-11-21 =
+* fix bug
+
+= 2.5.8 - 2021-11-21 =
+* Added the ability to exclude cashback when the minimum order amount is set for using points
+
+= 2.5.7 - 2021-11-20 =
+* Fixed a php error on the history page of crediting points.
+* Fixed a bug with awarding points to guests for purchasing an item.
+
+= 2.5.5 - 2021-11-19 =
+* Added the ability to clear points that a customer wants to write off when the number of items in the cart changes.
+
+= 2.5.4 - 2021-11-19 =
+* Deleting used points when emptying the basket
+
+= 2.5.3 - 2021-11-18 =
+* Fixed a bug
+
+= 2.5.2 - 2021-11-17 =
+* Fixed a bug with incorrect calculation of points write-off in the basket when a percentage of the order amount is indicated.
+
+= 2.5.1 - 2021-11-15 =
+* Optimizing code
+* Fixed a bug with displaying a link to an order in the history of earning points.
+* Fixed translation errors
+
+= 2.5.0 - 2021-11-13 =
+* Added the ability to change the name of bonus points.
+
+= 2.4.3 - 2021-11-12 =
+* Fixed a bug that did not return the ability to write off points when deleting a coupon.
+
+= 2.4.2 - 2021-11-10 =
+* Fixed a bug with clearing points when adding a coupon.
+
+= 2.4.1 - 2021-10-29 =
+* Fixed error showing cashback in the product card
+
+= 2.4.0 - 2021-10-21 =
+* Fixed a bug with creating a database.
+* Added option to destroy all traces of a plugin after deleting it.
+* Added a history of all user charges on a separate page.
+* Code optimization
+
+= 2.3.3 - 2021-10-20 =
+* Added version for plugin scripts.
+* Fixed error displaying cashback in the product card.
+
+= 2.3.2 - 2021-10-19 =
+* Fixed a bug where excluded roles were updated
+* Generation of a referral link at the time of registration
+
+= 2.3.1 - 2021-10-01 =
+* Fixed incompatibility of Bonus for Woo with WPML plugin. Thanks to Maxim Shapovalov.
+
+= 2.3.0 - 2021-09-30 =
+* Added notification of accruals for referral orders
+* Added the ability to add images to email templates
+* Referral link is generated at the time of client registration
+* Code optimization
+* Major bugs fixed.
+
+= 2.2.2 - 2021-09-28 =
+* Added the ability to style the cashback display in the cart and checkout.
+* Minor bugs fixed.
+
+= 2.2.1 - 2021-09-27 =
+* Added full clearing of the scoring history in the client editor.
+* Moved the history in your personal account to one page with bonuses.
+* Fixed the incorrect location of the item "My bonuses" in the menu.
+* Removed "cashback to" from registered users in checkout.
+
+= 2.2.0 - 2021-09-27 =
+* Added templates for email
+
+= 2.1.2 - 2021-09-25 =
+* Fixed incorrect display of cashback with excluded categories.
+* Added notification by email about status change.
+
+= 2.1.1 - 2021-09-23 =
+* Added pdf manual.
+* Minor bugs fixed.
+
+= 2.1.0 - 2021-09-21 =
+* Added. The ability to receive points for registration only to referrals.
+* Added social media buttons to the account page
+* Fixes for checking fields in the admin panel.
+* fixed adaptiv in admin
+* (Optimization) Clearing the history of accruals when deleting a user.
+
+= 2.0 - 2021-09-19 =
+* Added notifications to clients' mail.
+* Fix minor bugs
+
+= 1.9.5 - 2021-09-18 =
+* Added text output above the registration form
+* Added the ability to specify the amount at which you can start using the referral system.
+* When you return the order, the spent and purchased bonus points will be returned.
+
+= 1.9.4 – 2021-09-16 =
+* We made it possible to hide and show cashback in the cart and checkout for all users.
+
+= 1.9.3 – 2021-09-15 =
+* Fix small bugs
+* Added the ability to hide the history of points accrual for clients
+
+= 1.9.2 – 2021-09-12 =
+* Fix small bug
+
+= 1.9 – 2021-09-11 =
+* Added referral system
+* Added bonus points accrual history
+
+= 1.8.2 – 2021-09-08 =
+* Fixed display of cashback in the product card.
+* Ability to exclude roles from the bonus system.
+* Displaying the amount of cashback in the cart and in the product design.
+* Ability to disable cashback accrual for delivery.
+* Ability to disable spending points if a coupon is applied.
+* Ability to set the minimum order amount at which points can be deducted.
+
+= 1.7.9 – 2021-08-29 =
+* Correcting an error where points were awarded for purchases of excluded items.
+* Fixed error with displaying prices in product categories
+* Fixed status change error when deleting an order.
+* Fixed error showing cashback in the product card
+* Added the ability to credit cashback for excluded products and categories.
+* Conclusion of possible points in the product card for unregistered visitors and customers without status.
+* Added the ability to award points for registering in the pro version.
+* Added the ability for pro versions to exclude products and categories when applying bonuses.
+* Possibility to activate the Pro version with new functions.
+
+= 1.6.8 – 2021-07-24 =
+* If points are used, then cashback is calculated from the discounted price.
+* Added the ability to hide the write-off of goods if all the goods are in the cart with a sale. It is regulated in the plugin settings.
+* Fixed a bug with displaying possible bonuses in variable products.
+* Fixed a bug with duplicate write-off of points if the cart page and checkout page are on one page.
+* Fixed a bug where bonus points were deducted only when the order was approved. Points are now deducted upon order confirmation.
+* Improving the look of plugin settings.
+
+= 1.5.4 – 2021-05-09 =
+* withdrawal of the balance to go to the next status in the account.
+* Fixed redirection on the checkout page when entering bonuses.
+* Added the ability to display what cashback you will receive under the price of the product.
+
+= 1.5.1 – 2021-05-05 =
+* Added the ability to insert a shortcode with the display of the number of points.
+* Creat localization.
+* Added the ability to use shortcodes
+
+= 1.0 – 2020-17-11 =
+* Creation of the first version.

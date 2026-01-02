@@ -1,0 +1,634 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Bonus for Woo\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-18 20:26+0000\n"
+"PO-Revision-Date: 2024-07-21 22:43+0000\n"
+"Last-Translator: Pistachito\n"
+"Language-Team: Español\n"
+"Language: es_ES\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.11; wp-6.6\n"
+"X-Domain: bonus-for-woo"
+
+#: pages/statistic.php:31
+msgid " At the moment, the statistics are in testing mode."
+msgstr "Por el momento, las estadísticas están en modo de prueba."
+
+#: classes/BfwPoints.php:1235
+#, php-format
+msgid " You have returned %s bonus points for order number %s."
+msgstr "Has ganado %s puntos de bonificación por el pedido número %s."
+
+#: classes/BfwSingleProduct.php:49 classes/BfwSingleProduct.php:52
+#, php-format
+msgid "%s %s %s"
+msgstr ""
+
+#: classes/BfwAccount.php:747
+#, php-format
+msgid "%s bonus points have been added to you."
+msgstr "Se han añadido %s puntos de bonificación a tu cuenta."
+
+#: classes/BfwAccount.php:474
+#, php-format
+msgid "%s for registration"
+msgstr "%s por registrarte"
+
+#: classes/BfwHistory.php:84 classes/BfwHistory.php:163
+#: classes/BfwCoupons.php:71
+msgid "Action"
+msgstr "Acción"
+
+#: classes/BfwCoupons.php:125
+msgid "Activate"
+msgstr "Activar"
+
+#: classes/BfwCoupons.php:99 pages/coupons.php:135
+msgid "Active"
+msgstr "Activo"
+
+#: pages/coupons.php:111
+msgid "Add a new coupon"
+msgstr "Añadir nuevo cupón"
+
+#: pages/coupons.php:131
+msgid "Add coupon"
+msgstr "Añadir cupón"
+
+#: pages/coupons.php:26
+msgid "added"
+msgstr "añadido"
+
+#: classes/BfwHistory.php:73
+msgid "Are you sure you want to clear this customer bonus points history?"
+msgstr ""
+"¿Está seguro de que desea borrar el historial de puntos de este cliente?"
+
+#: classes/BfwCoupons.php:130
+msgid "Are you sure you want to delete this coupon?"
+msgstr "¿Estás seguro de que deseas eliminar este cupón?"
+
+#: classes/BfwHistory.php:116 classes/BfwHistory.php:196
+msgid ""
+"Are you sure you want to remove this entry from your reward points history?"
+msgstr ""
+"¿Está seguro de que desea eliminar esta entrada de su historial de puntos de "
+"recompensa?"
+
+#: classes/BfwAccount.php:248
+msgid "At the moment, the bonus system is not available."
+msgstr "Por el momento, el sistema de bonificación no está disponible."
+
+#: classes/BfwPoints.php:1354
+msgid "Birthday"
+msgstr "Cumpleaños"
+
+#. Name of the plugin
+msgid "Bonus for Woo"
+msgstr ""
+
+#: classes/BfwAccount.php:21 classes/BfwAccount.php:399
+msgid "Bonus page"
+msgstr "Mis Puntos"
+
+#: classes/BfwAccount.php:63
+msgid "Bonus points"
+msgstr "Puntos de bonificación"
+
+#: classes/BfwPoints.php:322 classes/BfwAccount.php:488
+#: classes/BfwAccount.php:745
+msgid "Bonus points have been added to you!"
+msgstr "¡Se han añadido puntos de bonificación a tu cuenta!"
+
+#: classes/BfwPoints.php:1346
+msgid "Bonus points on your birthday"
+msgstr "Puntos de bonificación en tu cumpleaños"
+
+#: classes/BfwAccount.php:683
+msgid "Bonus points update"
+msgstr "Actualización de puntos de bonificación"
+
+#: pages/statistic.php:30
+msgid "Bonus system statistic"
+msgstr "Estadística del sistema de bonificación"
+
+#: classes/BfwCashback.php:66
+#, php-format
+msgid "Cashback %s"
+msgstr "%s de reembolso"
+
+#: classes/BfwCashback.php:32 classes/BfwSingleProduct.php:45
+msgid "Cashback:"
+msgstr "Reembolso:"
+
+#: classes/BfwReview.php:107 classes/BfwAccount.php:750
+msgid "Cause"
+msgstr "Causa"
+
+#: classes/BfwRoles.php:99
+msgid "Changing your status"
+msgstr "Cambiando tu estado"
+
+#: pages/logs.php:23 pages/list_history.php:35
+msgid "Clear"
+msgstr "Borrar"
+
+#: classes/BfwHistory.php:70
+msgid "Clear the history"
+msgstr "Borrar historial"
+
+#: classes/BfwHistory.php:159 classes/BfwLogs.php:61 classes/BfwCoupons.php:68
+#: classes/BfwRoles.php:55
+msgid "Client"
+msgstr "Cliente"
+
+#: classes/BfwCoupons.php:67 pages/coupons.php:124
+msgid "Comment admin"
+msgstr "Administrador de comentarios"
+
+#. Author of the plugin
+msgid "computy"
+msgstr ""
+
+#: classes/BfwAccount.php:329 classes/BfwAccount.php:380
+msgid "Copy link"
+msgstr "Copiar enlace"
+
+#: pages/coupons.php:26
+msgid "Coupon"
+msgstr "Cupón"
+
+#: pages/coupons.php:20
+#, php-format
+msgid ""
+"Coupon <b>%s</b> is already being used. Enter another code or change the "
+"existing one."
+msgstr ""
+"El cupón <b>%s</b> ya se está utilizando. Ingrese otro código o cambie el "
+"existente."
+
+#: classes/BfwPoints.php:722
+msgid "Coupon activated."
+msgstr "Cupón activado"
+
+#: pages/coupons.php:145
+msgid "Coupon can only be used once."
+msgstr "El cupón sólo se puede utilizar una vez."
+
+#: classes/BfwCoupons.php:64 classes/BfwAccount.php:166
+msgid "Coupon code"
+msgstr "Código promocional"
+
+#: pages/coupons.php:57
+msgid "Coupon status changed"
+msgstr "El estado del cupón cambió"
+
+#: classes/BfwCoupons.php:227
+msgid "Coupon usage"
+msgstr "Uso de cupones"
+
+#: pages/coupons.php:106
+#, php-format
+msgid "Coupons for %s "
+msgstr "Cupones para %s"
+
+#: pages/coupons.php:224
+msgid "Coupons list"
+msgstr "Lista de cupones"
+
+#: pages/coupons.php:143
+msgid "Create a coupon in the form and it will appear in the list of coupons."
+msgstr "Crea un cupón en el formulario y aparecerá en la lista de cupones."
+
+#: classes/BfwCoupons.php:66
+msgid "Create date"
+msgstr "Fecha de Creación"
+
+#: classes/BfwPoints.php:312
+#, php-format
+msgid "Daily %s for the login."
+msgstr "%s diarios para el inicio de sesión."
+
+#: classes/BfwHistory.php:80 classes/BfwHistory.php:158 classes/BfwLogs.php:60
+msgid "Date"
+msgstr "Fecha"
+
+#: classes/BfwAccount.php:531
+msgid "Date of birth"
+msgstr "Fecha de nacimiento"
+
+#: classes/BfwCoupons.php:69
+msgid "Date of use"
+msgstr "Fecha de uso"
+
+#: classes/BfwAccount.php:128 classes/BfwAccount.php:129
+msgid "days"
+msgstr "días"
+
+#: classes/BfwCoupons.php:119
+msgid "Deactivate"
+msgstr "Desactivar"
+
+#: classes/BfwHistory.php:116 classes/BfwHistory.php:196
+#: classes/BfwCoupons.php:130
+msgid "Delete"
+msgstr "Borrar"
+
+#: pages/coupons.php:48 pages/list_history.php:13
+msgid "deleted"
+msgstr "borrado"
+
+#: pages/coupons.php:142
+msgid "Description"
+msgstr "Descripción"
+
+#: classes/BfwAccount.php:159
+#, php-format
+msgid "Enter coupon code to take %s."
+msgstr "Ingrese el código de cupón para obtener %s."
+
+#: classes/BfwCoupons.php:268 classes/BfwPoints.php:927
+msgid "Error opening"
+msgstr "Error al abrir"
+
+#: classes/BfwHistory.php:82 classes/BfwHistory.php:162 classes/BfwLogs.php:59
+msgid "Event"
+msgstr "Evento"
+
+#: pages/coupons.php:158
+msgid "Example of CSV file"
+msgstr ""
+
+#: classes/BfwReview.php:49
+msgid "For review"
+msgstr "Para la revisión"
+
+#: pages/logs.php:17 pages/list_history.php:27
+msgid "From"
+msgstr "De"
+
+#: pages/list_history.php:18
+#, php-format
+msgid "History of %s for all customers"
+msgstr "Historial de %s para todos los clientes"
+
+#. Author URI of the plugin
+msgid "https://computy.ru"
+msgstr ""
+
+#. URI of the plugin
+msgid "https://computy.ru/blog/bonus-for-woo-wordpress"
+msgstr ""
+
+#: pages/coupons.php:166
+msgid "import"
+msgstr "importar"
+
+#: pages/coupons.php:201
+msgid "Import completed successfully!"
+msgstr "¡Importación completada exitosamente!"
+
+#: pages/coupons.php:153
+msgid "Import coupons"
+msgstr "Importar cupones"
+
+#: classes/BfwPoints.php:1319
+msgid "Inactivity %d days"
+msgstr "Inactividad %d días"
+
+#: classes/BfwReview.php:134
+msgid "Leave a review and receive"
+msgstr "Deja una reseña y recibe"
+
+#: pages/logs.php:9
+msgid "Logs"
+msgstr ""
+
+#: classes/BfwLogs.php:62
+msgid "Message"
+msgstr "Mensaje"
+
+#: classes/BfwAccount.php:61
+msgid "My cashback percentage"
+msgstr "Mi porcentaje de reembolso"
+
+#: classes/BfwAccount.php:326 classes/BfwAccount.php:376
+msgid "My referral link"
+msgstr "Mi enlace de referencia"
+
+#: classes/BfwAccount.php:59
+msgid "My status"
+msgstr "Mi estado"
+
+#: classes/BfwRoles.php:45
+msgid "No status"
+msgstr "Sin estado"
+
+#: classes/BfwCoupons.php:102 pages/coupons.php:134
+msgid "Not active"
+msgstr "No activo"
+
+#: classes/BfwAccount.php:669
+msgid "Not specified."
+msgstr "Sin especificar"
+
+#: pages/coupons.php:120
+msgid "Number of points"
+msgstr "Número de puntos"
+
+#: classes/BfwPoints.php:238
+msgid "Offline product"
+msgstr "Producto sin conexión"
+
+#: pages/coupons.php:146
+msgid "Once a coupon has been used, it cannot be activated. Only delete."
+msgstr "Una vez utilizado un cupón, no se puede activar. Sólo borrar."
+
+#: classes/BfwHistory.php:172
+msgid "Order"
+msgstr "Pedido"
+
+#: classes/BfwPoints.php:271
+msgid "Order created by administrator: "
+msgstr "Pedido creado por el administrador"
+
+#: classes/BfwHistory.php:94 classes/BfwHistory.php:98
+msgctxt "Order number"
+msgid "Order"
+msgstr "Pedido"
+
+#: pages/statistic.php:139
+msgid "Order statistics"
+msgstr "Estadísticas de pedidos"
+
+#: pages/statistic.php:173
+#, php-format
+msgid "Out of %s of orders in %s points applied"
+msgstr "Fuera de %s de pedidos en %s puntos aplicados"
+
+#: classes/BfwAccount.php:342 classes/BfwAccount.php:349
+msgid "people"
+msgstr "personas"
+
+#: classes/BfwPoints.php:24
+msgid "Point"
+msgstr "Punto"
+
+#: classes/BfwPoints.php:25 classes/BfwPoints.php:26 classes/BfwPoints.php:44
+#: classes/BfwPoints.php:45
+msgid "Points"
+msgstr "Puntos"
+
+#: classes/BfwAccount.php:753
+msgid "points"
+msgstr "puntos"
+
+#: classes/BfwHistory.php:64 classes/BfwReferral.php:155
+#: classes/BfwReview.php:59 classes/BfwPoints.php:1114
+#: classes/BfwPoints.php:1121
+msgid "Points accrual"
+msgstr "Acumulación de puntos"
+
+#: classes/BfwReferral.php:153
+msgid "Points for referral"
+msgstr "Puntos por referencia"
+
+#: pages/coupons.php:155
+msgid "Possible statuses"
+msgstr "Posibles estados"
+
+#: classes/BfwAccount.php:322
+msgid "Referral link generated. Please refresh the page."
+msgstr "Enlace de referencia creado. Por favor actualiza la pápina."
+
+#: pages/statistic.php:199
+msgid "Referral statistics"
+msgstr "Estadísticas de referencias"
+
+#: pages/statistic.php:219
+msgid "Referral system members:"
+msgstr "Miembros del sistema de referencias:"
+
+#: classes/BfwPoints.php:1207 classes/BfwPoints.php:1245
+msgid "Refund of bonus points"
+msgstr "Reembolso de puntos de bonificación"
+
+#: classes/BfwAccount.php:568
+#, php-format
+msgid "Register and get %s %s."
+msgstr "Regístrate y obtén %s %s."
+
+#: classes/BfwReview.php:104
+#, php-format
+msgid "Return of %s"
+msgstr "Devolución de %s"
+
+#: classes/BfwReview.php:99
+#, php-format
+msgid "Return of %s for Product Review"
+msgstr "Devolución de %s por revisión de producto"
+
+#: classes/BfwEmail.php:31
+#, php-format
+msgid "Reward %s notification"
+msgstr "Notificación de recompensa %s"
+
+#: pages/logs.php:22 pages/list_history.php:33
+msgid "Search"
+msgstr "Buscar"
+
+#: index.php:65
+msgid "Settings"
+msgstr "Opciones"
+
+#: classes/BfwPoints.php:720
+msgid "Sorry, no such coupon found."
+msgstr "Lo sentimos, no se encontró ese cupón."
+
+#: classes/BfwPoints.php:717
+msgid "Sorry. The coupon usage limit has been reached."
+msgstr "Lo siento. Se ha alcanzado el límite de uso del cupón."
+
+#: pages/statistic.php:32
+msgid ""
+"Statistics will be updated. For suggestions on statistics, please email "
+"info@computy.ru."
+msgstr ""
+"Las estadísticas se actualizarán. Para sugerencias sobre estadísticas, envíe "
+"un correo electrónico a info@computy.ru."
+
+#: classes/BfwHistory.php:160 classes/BfwCoupons.php:70
+msgid "Status"
+msgstr "Estado"
+
+#: classes/BfwCoupons.php:65
+msgid "Sum"
+msgstr "Suma"
+
+#: classes/BfwPoints.php:243
+msgid "Technical product for accrual of bonus points"
+msgstr "Producto técnico para la acumulación de puntos de bonificación."
+
+#: classes/BfwPoints.php:1229
+#, php-format
+msgid "The %s bonus points you earned for order no. %s have been canceled."
+msgstr ""
+"Los %s puntos de bonificación que ganó por el pedido no. %s han sido "
+"cancelados."
+
+#: pages/coupons.php:144
+msgid "The customer can only use active coupons."
+msgstr "El cliente sólo puede utilizar cupones activos."
+
+#: pages/logs.php:41 pages/list_history.php:54
+msgid "The last 500 entries are displayed."
+msgstr "Se muestran las últimas 500 entradas."
+
+#: classes/BfwReview.php:108
+#, php-format
+msgid "The sum of your %s is now"
+msgstr "La suma de tus %s es ahora"
+
+#: classes/BfwAccount.php:752
+msgid "The sum of your bonus points is now"
+msgstr "La suma de tus puntos de bonificación es ahora"
+
+#. Description of the plugin
+msgid ""
+"This plugin adds a cashback system to the woocommerce functionality in the "
+"form of bonuses. Also, adding a percentage of cashback depending on the "
+"user's role. Also, changing the user's role, depending on the amount of all "
+"his purchases."
+msgstr ""
+"Este complemento agrega un sistema de devolución de dinero a la "
+"funcionalidad de WooCommerce en forma de bonificaciones. Además, añadiendo "
+"un porcentaje de cashback dependiendo del rol del usuario. Además, cambiar "
+"el rol del usuario, en función del importe de todas sus compras."
+
+#: pages/logs.php:20 pages/list_history.php:31
+msgid "to"
+msgstr "a"
+
+#: pages/coupons.php:154
+msgid ""
+"To create multiple coupons, create a csv file and import it using the form "
+"below."
+msgstr ""
+"Para crear varios cupones, cree un archivo csv e impórtelo utilizando el "
+"siguiente formulario."
+
+#: classes/BfwAccount.php:356
+msgid "To start using the referral system, you need to buy goods for "
+msgstr ""
+"Para comenzar a utilizar el sistema de referencia, debe comprar productos por"
+
+#: classes/BfwAccount.php:168
+msgid "To take"
+msgstr "Tomar"
+
+#: classes/BfwPoints.php:563
+#, php-format
+msgid "To use %s, the order amount must be more than"
+msgstr "Para utilizar %s, el monto del pedido debe ser superior a"
+
+#: classes/BfwPoints.php:529 classes/BfwPoints.php:545
+#, php-format
+msgid "To use %s, you must remove the coupon."
+msgstr "Para utilizar %s, debes eliminar el cupón."
+
+#: pages/statistic.php:77
+#, php-format
+msgid "Total in the bonus system: %s of users"
+msgstr "Total en el sistema de bonificación: %s de usuarios"
+
+#: pages/statistic.php:222
+msgid "Total invitees:"
+msgstr "Invitados totales:"
+
+#: classes/BfwCashback.php:64 classes/BfwSingleProduct.php:111
+#: classes/BfwSingleProduct.php:126 classes/BfwSingleProduct.php:133
+#: classes/BfwSingleProduct.php:188 classes/BfwSingleProduct.php:205
+#: classes/BfwSingleProduct.php:215
+msgid "up to"
+msgstr "Tendrías"
+
+#: classes/BfwAccount.php:233
+msgid ""
+"Up to [percent]% cashback and «[status]» status, you have [sum] left to "
+"spend."
+msgstr ""
+"Hasta un [percent] % de reembolso y estado «[status]», gasta [sum]  más para "
+"llegar al siguiente nivel."
+
+#: pages/statistic.php:33
+msgid "Update user statuses"
+msgstr "Actualizar estados de usuario"
+
+#: pages/coupons.php:163
+msgid "Upload CSV file"
+msgstr "Subir archivo CSV"
+
+#: classes/BfwPoints.php:589
+msgid "Use [points] points to get a [discount] discount on this order."
+msgstr ""
+"Utilice [puntos] puntos para obtener un descuento de [descuento] en este "
+"pedido."
+
+#: classes/BfwPoints.php:980
+#, php-format
+msgid "Use of %s"
+msgstr "%s usados"
+
+#: classes/BfwPoints.php:598
+msgid "Use points"
+msgstr "Usar Puntos"
+
+#: classes/BfwCoupons.php:105
+msgid "Used"
+msgstr "Usado"
+
+#: classes/BfwAccount.php:127
+msgid "will expire after"
+msgstr "caducará después"
+
+#: classes/BfwFunctions.php:135
+msgid "With the support of"
+msgstr "Con el apoyo de"
+
+#: classes/BfwPoints.php:984
+msgid "Writing off bonus points"
+msgstr "Cancelación de puntos de bonificación"
+
+#: pages/coupons.php:175
+msgid "You can only use csv file format!"
+msgstr "¡Solo puedes usar el formato de archivo csv!"
+
+#: classes/BfwAccount.php:244
+msgid "You have the maximum cashback!"
+msgstr "¡Tienes el reembolso máximo!"
+
+#: classes/BfwAccount.php:340
+msgid "You invited"
+msgstr "Estas invitado"
+
+#: classes/BfwAccount.php:347
+msgid "Your friends invited"
+msgstr "Tus amigos invitados"
+
+#: classes/BfwPoints.php:1300
+msgid "Your points will be deleted soon."
+msgstr "Tus puntos se eliminarán pronto."
+
+#: classes/BfwReview.php:105
+#, php-format
+msgid "Your product review has been rejected. %s %s are canceled."
+msgstr "La reseña de tu producto ha sido rechazada. %s %s están cancelados."
+
+#: pages/coupons.php:118
+msgid "Сode coupon"
+msgstr "Código del Cupón"

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="300px" height="600px"
+     style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; "
+     viewBox="0 0 300 600">
+  <polygon fill="#68a4c4" points="195,534 195,155 48,52 48,15 218,135 225,139 225,147 224,555 "/>
+    <polygon fill="#68a4c4" points="165,207 47,125 47,88 158,166 165,170 165,178 165,192 "/>
+    <polygon fill="#68a4c4" points="165,280 48,197 48,161 159,238 165,243 165,251 165,264 "/>
+</svg>
