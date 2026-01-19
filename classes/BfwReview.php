@@ -1,6 +1,6 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Adding bonuses when a product review is added

@@ -7,7 +7,8 @@
  * @since 4.1.0
  */
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
+
 class BfwCoupons
 {
 
@@ -140,7 +141,7 @@ class BfwCoupons
                     <tr style="<?php echo esc_attr($bgtr); ?>">
                         <td><?php echo $i++; ?></td>
                         <td><b><?php
-                                echo esc_html($bfw->code); ?></b>
+                                echo esc_html($bfw->get_code()); ?></b>
                             <?php
                             if ($bfw->reusable == 1) {
                                 echo '<span title="' . __('Reusable',
@@ -586,7 +587,7 @@ class BfwCoupons
             $codes = wp_list_pluck($arrayCoupons, 'code');
             $codes_lower = array_map('strtolower', $codes); // Приводим к нижнему регистру
 
-            if (in_array(strtolower($coupon->code), $codes_lower)) {
+            if (in_array(strtolower($coupon->get_code()), $codes_lower)) {
                 return __('The form for receiving bonus points is located in your personal account.', 'bonus-for-woo');
             }
         }

@@ -1,6 +1,6 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Класс подключения actions, filters, shortcodes
@@ -141,20 +141,6 @@ class BfwRouter
         add_action('woocommerce_before_cart', array('BfwPoints', 'bfwoo_spisaniebonusov_in_cart'), 9);
         add_action('woocommerce_before_checkout_form', array('BfwPoints', 'bfwoo_spisaniebonusov_in_checkout'), 9);
 
-        /*-------Трата баллов-------*/
-        add_action('wp_ajax_computy_trata_points', array('BfwPoints', 'bfwoo_trata_points'));
-        add_action('wp_ajax_nopriv_computy_trata_points', array('BfwPoints', 'bfwoo_trata_points'));
-
-
-        /*-------Вывод кешбэка в корзине woocommerce blocks-------*/
-        add_action('wp_ajax_woo_blocks_cashback', array('BfwCashback', 'getCashbackInCartBlocks'));
-        add_action('wp_ajax_nopriv_woo_blocks_cashback', array('BfwCashback', 'getCashbackInCartBlocks'));
-        add_action('wp_ajax_woo_blocks_spisanie', array('BfwPoints', 'bfwoo_spisaniebonusov_in_cart_blocks'));
-        add_action('wp_ajax_nopriv_woo_blocks_spisanie', array('BfwPoints', 'bfwoo_spisaniebonusov_in_cart_blocks'));
-
-
-        /*-------Получение баллов с купона-------*/
-        add_action('wp_ajax_bfw_take_coupon_action', array('BfwPoints', 'bfw_take_coupon_action'));
 
         /*-------Списание баллов в редакторе заказа-------*/
         add_action('wp_ajax_deduct_points', array('BfwPoints', 'handle_deduct_points_in_order'));
@@ -175,9 +161,6 @@ class BfwRouter
         /*-------Начисляем кешбэк-баллы в редакторе заказа-------*/
         add_action('wp_ajax_bfw_send_points_from_order', array('BfwPoints', 'handleSendPointsFromOrder'));
 
-        /*-------Очистка схваченных баллов-------*/
-        add_action('wp_ajax_clear_fast_bonus', array('BfwPoints', 'bfwoo_clean_fast_bonus'));
-        add_action('wp_ajax_nopriv_clear_fast_bonus', array('BfwPoints', 'bfwoo_clean_fast_bonus'));
 
         /*-------Очищение истории при удалении пользователя-------*/
         add_action('delete_user', array('BfwHistory', 'bfw_when_delete_user'));
@@ -255,14 +238,13 @@ class BfwRouter
         add_action('wp_enqueue_scripts', array('BfwFunctions', 'bfwooComputyStyles'));
 
         /*-------Добавляем скрипты на фронте-------*/
-        add_action('wp_enqueue_scripts',  array('BfwFunctions', 'bfwooComputyScript'));
+        add_action('wp_enqueue_scripts', array('BfwFunctions', 'bfwooComputyScript'));
 
 
         // !!! Очищаем ссылку на пригласителя у приглашённых при удалении пользователя
         add_action('delete_user', array('BfwReferral', 'bfw_clear_referral_invites_on_delete'), 10, 1);
         // Для мультисайта (удаление через сеть)
         add_action('wpmu_delete_user', array('BfwReferral', 'bfw_clear_referral_invites_on_delete'), 10, 1);
-
 
 
         /**
@@ -399,6 +381,60 @@ class BfwRouter
         /*Notices*/
         //Сработает когда бонусные купоны используют в поле woocommerce купонов
         add_filter('woocommerce_coupon_error', array('BfwCoupons', 'usingWrongCoupon'), 10, 3);
+
+
+        /* REST API*/
+        add_action('rest_api_init', function () {
+            //очищение баллов
+            register_rest_route('bfw/v1', '/clear-fast-bonus', [
+                'methods' => 'POST',
+                'callback' => ['BfwPoints', 'bfwoo_clean_fast_bonus_rest'],
+                'permission_callback' => '__return_true',
+                // или свою логику проверки прав
+                //Если действие доступно только авторизованным пользователям — замените '__return_true' на, например, function() { return is_user_logged_in(); }.
+            ]);
+
+            //Списание баллов
+            register_rest_route('bfw/v1', '/apply-points', array(
+                'methods' => 'POST',
+                'callback' => array('BfwPoints', 'rest_trata_points'),
+                'permission_callback' => function () {
+                    return is_user_logged_in(); // Только для авторизованных
+                },
+            ));
+
+            // Получение блока списания  для woo_blocks
+            register_rest_route('bfw/v1', '/get-spisanie-html', [
+                'methods' => 'POST',
+                'callback' => ['BfwPoints', 'rest_get_spisanie_html'],
+                'permission_callback' => '__return_true',
+            ]);
+
+            // Получение блока кешбэка для woo_blocks
+            register_rest_route('bfw/v1', '/get-cashback-html', [
+                'methods' => 'POST',
+                'callback' => ['BfwCashback', 'rest_get_cashback_html'],
+                'permission_callback' => '__return_true',
+            ]);
+
+            //ввод купона дляполучения баллов
+            register_rest_route('bfw/v1', '/activate-coupon', [
+                'methods' => 'POST',
+                'callback' => ['BfwPoints', 'rest_activate_coupon'],
+                'permission_callback' => function () {
+                    return is_user_logged_in(); // Только для авторизованных
+                },
+            ]);
+        });
+
+
+        add_filter('woocommerce_coupon_error', function ($err, $err_code, $coupon) {
+            $bonus_coupon_code = mb_strtolower(trim(BfwSetting::get('bonus-points-on-cart')));
+            if (strtolower($coupon->get_code()) === $bonus_coupon_code) {
+                return false; // Подавляем ошибку для бонусного купона
+            }
+            return $err;
+        }, 10, 3);
 
 
     }

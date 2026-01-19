@@ -1,6 +1,6 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class functions
@@ -13,9 +13,10 @@ class BfwFunctions
 {
 
     /**  Добавляем стили на фронте
+     *
      * @return void
      */
-    public static  function bfwooComputyStyles(): void
+    public static function bfwooComputyStyles(): void
     {
         wp_register_style(
                 'bonus-computy-style',
@@ -28,9 +29,10 @@ class BfwFunctions
 
 
     /** Добавляем скрипты на фронте
+     *
      * @return void
      */
-    public static  function bfwooComputyScript(): void
+    public static function bfwooComputyScript(): void
     {
         wp_register_script(
                 'bonus-computy-script',
@@ -40,6 +42,15 @@ class BfwFunctions
                 true
         );
         wp_enqueue_script('bonus-computy-script');
+        wp_localize_script('bonus-computy-script', 'wpApiSettings', [
+                'nonce' => wp_create_nonce('wp_rest')
+        ]);
+        // Локализуем данные для скрипта
+        /*   wp_localize_script('bonus-computy-script', 'bfw_rest_config', array(
+                   'root' => esc_url_raw(rest_url()),
+                   'nonce' => wp_create_nonce('wp_rest'),
+                   'current_user_id' => get_current_user_id()
+           ));*/
     }
 
 

@@ -1,18 +1,19 @@
 jQuery(document).ready(function ($) {
-
+    /*действие при удалении баллов   */
     $('body').on('click', '#bfw_remove_cart_point', async function () {
-        //$('.remove_points').click() ;
-        var currentURL = window.location.href;
+        const currentURL = window.location.href;
+
         try {
-            const response = await fetch("/wp-admin/admin-ajax.php", {
+            const response = await fetch('/wp-json/bfw/v1/clear-fast-bonus', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                    // Если требуется nonce (для авторизованных действий):
+                    'X-WP-Nonce': wpApiSettings.nonce
                 },
-                body: new URLSearchParams({
-                    action: 'clear_fast_bonus',
+                body: JSON.stringify({
                     redirect: currentURL
-                }).toString()
+                })
             });
 
             if (!response.ok) {
@@ -21,7 +22,7 @@ jQuery(document).ready(function ($) {
 
             const data = await response.json();
 
-            if (data && data.data) {
+            if (data.success && data.data) {
                 window.location.href = data.data;
             } else {
                 throw new Error('Некорректный ответ сервера');
@@ -29,9 +30,43 @@ jQuery(document).ready(function ($) {
         } catch (error) {
             console.error('Ошибка при выполнении запроса:', error.message);
         }
-
     });
+    /*действие при удалении баллов   */
+    $(document).on('click', '.remove_points', async function () {
+        $(this).addClass('loading_button');
 
+        const form = $('.remove_points_form');
+        const redirectUrl = form.find('[name="redirect"]').val() || window.location.href;
+
+        try {
+            const response = await fetch('/wp-json/bfw/v1/clear-fast-bonus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Если используете nonce:
+                    'X-WP-Nonce': wpApiSettings.nonce
+                },
+                body: JSON.stringify({
+                    redirect: redirectUrl
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка сети или сервера');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                window.location.href = data.data;
+            } else {
+                throw new Error('Некорректный ответ сервера');
+            }
+        } catch (error) {
+            console.error('Ошибка при выполнении запроса:', error.message);
+            $(this).removeClass('loading_button'); // опционально: сброс состояния
+        }
+    });
 
     /*при клике списать баллы*/
     $('body').on('click', '.bfw-spisanie-blocks-button', function () {
@@ -82,109 +117,94 @@ jQuery(document).ready(function ($) {
     });
     /*Копирование реферальной ссылки*/
 
-    /*действие при списании баллов*/
-    $(document).on('click', '.write_points', async function () {
-        $(this).addClass('loading_button');
+    /*действие при списании баллов  */
+    $(document).on('click', '.write_points', async function (e) {
+        e.preventDefault();
+        const $button = $(this);
+        $button.addClass('loading_button').prop('disabled', true);
 
         const $form = $('.computy_skidka_form');
         const redirect = $form.find('[name="redirect"]').val();
         const computyInputPoints = $form.find('[name="computy_input_points"]').val();
 
         try {
-            const response = await fetch("/wp-admin/admin-ajax.php", {
+            const response = await fetch("/wp-json/bfw/v1/apply-points", {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                    // Добавляем nonce для безопасности REST API
+                    'X-WP-Nonce': wpApiSettings.nonce // Убедитесь, что передаете nonce через wp_localize_script
                 },
-                body: new URLSearchParams({
-                    action: 'computy_trata_points',
-                    redirect,
-                    computy_input_points: computyInputPoints,
+                body: JSON.stringify({
+                    points: computyInputPoints,
+                    redirect: redirect,
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            const result = await response.json();
 
-            const data = await response.json();
-            window.location.href = data.data;
+            if (result.success) {
+                window.location.href = result.data;
+            } else {
+                alert(result.message || 'Error');
+                $button.removeClass('loading_button').prop('disabled', false);
+            }
         } catch (error) {
-            console.error('There was a problem with the fetch operation:', error);
+            console.error('REST API Error:', error);
+            $button.removeClass('loading_button').prop('disabled', false);
         }
     });
 
     /*Введение купона */
-    $(document).on('submit', '.take_coupon_form', function (e) {
-        let form = $(this);
-        $(this).addClass('loading_coupon');
-        $(".message_coupon").text('');
+    $(document).on('submit', '.take_coupon_form', async function (e) {
         e.preventDefault();
 
-        $.ajax({
-            type: 'POST',
-            url: "/wp-admin/admin-ajax.php",
-            data: {
-                action: 'bfw_take_coupon_action',
-                redirect: $(this).find('[name="redirect"]').val(),
-                code_coupon: $(this).find('[name="code_coupon"]').val(),
-            },
-            success: function (data) {
-                form.removeClass('loading_coupon');
-                if (data.data.cod === '200') {
-                    $(".message_coupon").text(data.data.message);
-                    setTimeout(function () {
-                        document.location.href = data.data.redirect;
-                    }, 2000);
+        const $form = $(this);
+        const $messageBox = $(".message_coupon");
+        const $button = $form.find('button');
 
-                } else {
-                    $(".message_coupon").text(data.data.message);
-                }
+        $form.addClass('loading_coupon');
+        $messageBox.text('');
+        $button.prop('disabled', true);
 
-                //  message_coupon
-            },
-            error: function (error) {
-                console.log(error);
+        const formData = {
+            redirect: $form.find('[name="redirect"]').val(),
+            code_coupon: $form.find('[name="code_coupon"]').val()
+        };
 
+        try {
+            const response = await fetch('/wp-json/bfw/v1/activate-coupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Используем стандартный Nonce WordPress или ваш bfw_params.nonce
+                    'X-WP-Nonce': typeof wpApiSettings !== 'undefined' ? wpApiSettings.nonce : bfw_params.nonce
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.cod === '200') {
+                $messageBox.css('color', 'green').text(result.message);
+                setTimeout(() => {
+                    window.location.href = result.redirect;
+                }, 2000);
+            } else {
+                $messageBox.css('color', 'red').text(result.message || 'Error');
+                $form.removeClass('loading_coupon');
+                $button.prop('disabled', false);
             }
-        });
+        } catch (error) {
+            console.error('Coupon activation error:', error);
+            $messageBox.text('Server error. Please try again later.');
+            $form.removeClass('loading_coupon');
+            $button.prop('disabled', false);
+        }
+
         return false;
     });
 
-    /*действие при удалении баллов*/
-    $(document).on('click', '.remove_points', async function () {
-        $(this).addClass('loading_button');
-
-        const form = $('.remove_points_form');
-        const redirectUrl = form.find('[name="redirect"]').val();
-
-        try {
-            const response = await fetch("/wp-admin/admin-ajax.php", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    action: 'clear_fast_bonus',
-                    redirect: redirectUrl
-                }).toString()
-            });
-
-            if (!response.ok) {
-                throw new Error('Ошибка сети или сервера');
-            }
-
-            const data = await response.json();
-
-            if (data && data.data) {
-                window.location.href = data.data;
-            } else {
-                throw new Error('Некорректный ответ сервера');
-            }
-        } catch (error) {
-            console.error('Ошибка при выполнении запроса:', error.message);
-        }
-    });
 
 
     $('.checkout_coupon').on('submit', function () {
@@ -207,11 +227,11 @@ jQuery(document).ready(function ($) {
 (function ($) {
     $(() => {
         let observer;
-        let isRequestInProgress = false;
-        let lastRequestTime = 0;
-        const MIN_REQUEST_INTERVAL = 5000; // Минимальный интервал между запросами - 2 секунды
+        let isUpdating = false;
 
-        // Функция для ограничения частоты вызовов
+        const API_BASE = '/wp-json/bfw/v1';
+        const NONCE = typeof wpApiSettings !== 'undefined' ? wpApiSettings.nonce : '';
+
         const debounce = (func, delay) => {
             let timeout;
             return function () {
@@ -222,134 +242,89 @@ jQuery(document).ready(function ($) {
             };
         };
 
-        // Безопасный AJAX-запрос с защитой от частых вызовов
-        const safePost = (params, callback) => {
-            const now = Date.now();
-
-            if (isRequestInProgress || (now - lastRequestTime < MIN_REQUEST_INTERVAL)) {
-                return;
-            }
-
-            isRequestInProgress = true;
-            lastRequestTime = now;
-
-            $.post('/wp-admin/admin-ajax.php', params)
-                .done(data => {
-                    // console.log('Ответ от сервера:', data);
-                    try {
-                        callback(data);
-                    } catch (e) {
-                        console.error('Ошибка обработки ответа:', e);
-                    }
-                })
-                .fail((xhr, status, error) => {
-                    console.error("Ошибка запроса:", {
-                        status,
-                        error,
-                        response: xhr.responseText
-                    });
-                })
-                .always(() => {
-                    isRequestInProgress = false;
+        const fetchBlockData = async (endpoint, params = {}) => {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
+                    body: JSON.stringify(params)
                 });
+                return response.ok ? (await response.json()).html : null;
+            } catch (e) { return null; }
         };
 
+        const loadSpisanieBlock = async () => {
+            // СТОП, если поле ввода активно
+            if ($('.bfw-spisanie-blocks input:focus').length) return;
 
-        const observeDOM = () => {
-            if (observer) {
-                observer.disconnect();
-            }
+            isUpdating = true;
+            const html = await fetchBlockData('/get-spisanie-html', { redirect: window.location.href });
 
-            const target = document.querySelector('.wc-block-cart, .wc-block-checkout');
-            if (!target) return;
-
-            observer = new MutationObserver(debounce(() => {
-                initBlocks();
-            }, 300));
-
-            observer.observe(target, {
-                childList: true,
-                subtree: true
-            });
-        };
-
-        const loadSpisanieBlock = () => {
-            safePost({
-                action: 'woo_blocks_spisanie',
-                redirect: window.location.href
-            }, (data) => {
-                const $existing = $('.bfw-spisanie-blocks');
+            if (html) {
                 const $wrapper = $('.wc-block-cart__totals-title, .wp-block-woocommerce-checkout-order-summary-cart-items-block');
+                let $existing = $('.bfw-spisanie-blocks');
 
                 if ($existing.length) {
-                    $existing.html(data);
+                    if ($existing.html() !== html) $existing.html(html);
                 } else if ($wrapper.length) {
-                    $wrapper.after(`<div class="bfw-spisanie-blocks">${data}</div>`);
+                    $wrapper.after(`<div class="bfw-spisanie-blocks">${html}</div>`);
                 }
-            });
+            }
+            // Даем небольшую задержку перед разблокировкой, чтобы Observer "проморгался"
+            setTimeout(() => { isUpdating = false; }, 100);
         };
 
-        let cashbackTimeout = null;
-
-        const debouncePost = (params, callback, delay = 300) => {
-            clearTimeout(cashbackTimeout);
-            cashbackTimeout = setTimeout(() => {
-                $.post('/wp-admin/admin-ajax.php', params)
-                    .done(data => callback(data, null))
-                    .fail((xhr, status, error) => callback(null, {
-                        status,
-                        error,
-                        response: xhr.responseText
-                    }));
-            }, delay);
-        };
-
-        const loadCashbackBlock = () => {
-            debouncePost({action: 'woo_blocks_cashback'}, (data, err) => {
-                if (err) {
-                    console.warn('Ошибка кешбэка:', err);
-                    return;
-                }
-                const $existing = $('.bfw-order-cashback-blocks');
+        const loadCashbackBlock = async () => {
+            isUpdating = true;
+            const html = await fetchBlockData('/get-cashback-html');
+            if (html) {
                 const $wrapper = $('.wc-block-components-totals-footer-item');
+                let $existing = $('.bfw-order-cashback-blocks');
 
                 if ($existing.length) {
-                    $existing.html(data);
+                    if ($existing.html() !== html) $existing.html(html);
                 } else if ($wrapper.length) {
-                    $wrapper.after(`<div class="order-cashback bfw-order-cashback-blocks">${data}</div>`);
+                    $wrapper.after(`<div class="order-cashback bfw-order-cashback-blocks">${html}</div>`);
                 }
-            }, 300); // 300 мс пауза
+            }
+            setTimeout(() => { isUpdating = false; }, 100);
         };
-
 
         const initBlocks = debounce(() => {
-            const hasSpisanieTarget = $('.wc-block-cart__totals-title').length;
-            const hasCashbackTarget = $('.wc-block-components-totals-footer-item').length;
-            const hasSpisanieTargetCheckout = $('.wp-block-woocommerce-checkout-order-summary-cart-items-block').length;
+            if (isUpdating) return;
+            loadSpisanieBlock();
+            loadCashbackBlock();
+        }, 600); // Увеличили debounce
 
-            if (hasSpisanieTargetCheckout || hasSpisanieTarget) loadSpisanieBlock();
-            if (hasCashbackTarget) loadCashbackBlock();
-        }, 300);
+        const observeDOM = () => {
+            const container = document.querySelector('.wc-block-cart, .wc-block-checkout');
+            if (!container) return;
 
-        // Инициализация
+            observer = new MutationObserver((mutations) => {
+                if (isUpdating) return;
+
+                let shouldUpdate = false;
+                for (let mutation of mutations) {
+                    // Игнорируем изменения, если они произошли ВНУТРИ наших блоков
+                    if (mutation.target.closest('.bfw-spisanie-blocks, .bfw-order-cashback-blocks')) {
+                        continue;
+                    }
+
+                    // Реагируем только если изменился состав элементов (добавились/удалились блоки корзины)
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        shouldUpdate = true;
+                        break;
+                    }
+                }
+
+                if (shouldUpdate) initBlocks();
+            });
+
+            observer.observe(container, { childList: true, subtree: true });
+        };
+
         observeDOM();
-        initBlocks();
-
-        // Обработчики событий с debounce
-        $('body').on('click', `
-            .wc-block-components-chip__remove-icon,
-            .wc-block-components-totals-coupon__button .wc-block-components-button__text,
-            .wc-block-cart-item__quantity,
-            .wc-block-components-totals-coupon__button
-        `, debounce(() => {
-            $('.bfw-order-cashback-blocks, .bfw-spisanie-blocks').addClass('opacity05');
-
-            setTimeout(() => {
-                loadSpisanieBlock();
-
-                loadCashbackBlock();
-                $('.bfw-order-cashback-blocks, .bfw-spisanie-blocks').removeClass('opacity05');
-            }, 2000);
-        }, 500));
+        // Первый запуск
+        setTimeout(initBlocks, 1000);
     });
 })(jQuery);

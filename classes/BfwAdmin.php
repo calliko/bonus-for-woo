@@ -1,6 +1,6 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class BfwAdmin
@@ -33,7 +33,8 @@ class BfwAdmin
      * @param string $file Имя файла плагина
      * @return array
      */
-    public static function add_settings_link($links, $file) {
+    public static function add_settings_link($links, $file)
+    {
         // Проверка - наш это плагин или нет
         if ($file !== plugin_basename(BONUS_COMPUTY_PLUGIN_DIR . 'index.php')) {
             return $links;

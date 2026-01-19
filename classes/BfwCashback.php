@@ -1,6 +1,6 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Cashback Management Class
@@ -210,6 +210,45 @@ class BfwCashback
         }
     }
 
+
+// Метод для получения HTML кешбэка
+    public static function rest_get_cashback_html()
+    {
+        // 1. Принудительная инициализация сессии
+        if (null === WC()->session) {
+            $session_class = apply_filters('woocommerce_session_handler', 'WC_Session_Handler');
+            WC()->session = new $session_class();
+            WC()->session->init();
+        }
+
+        // 2. Принудительная загрузка корзины
+        if (null === WC()->cart) {
+            WC()->cart = new WC_Cart();
+            // Загружаем данные корзины из сессии, чтобы get_cart() не был пустым
+            WC()->cart->get_cart();
+        }
+
+        $html = '';
+
+        // 3. Вызов расчета кешбэка
+        $return = self::bfw_get_cashback_in_cart();
+
+        if (!empty($return) && is_array($return)) {
+            $cashback_title = esc_html($return['cashback_title']);
+            $percent_up = esc_html($return['percentUp']);
+
+            // Передаем параметры в howLabel (склонение)
+            $upto_label = BfwPoints::howLabel(
+                $return['upto'] ?? '',
+                (float)$return['cashback_this_order']
+            );
+
+            $html = '<div class="bfw-order-cashback-title-blocks">' . $cashback_title . $percent_up . '</div>'
+                . '<div class="bfw-order-cashback-value-blocks">' . $return['cashback_this_order'] . ' ' . $upto_label . '</div>';
+        }
+
+        return new WP_REST_Response(['html' => $html], 200);
+    }
 
     /**
      * Cashback withdrawal when the cart is implemented using blocks.

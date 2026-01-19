@@ -1,6 +1,6 @@
 <?php
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
@@ -485,6 +485,41 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
         exit();
     }
 
+    // Метод для получения HTML списания
+    public static function rest_get_spisanie_html(WP_REST_Request $request)
+    {
+        // 1. Инициализация сессии
+        if (null === WC()->session) {
+            $session_class = apply_filters('woocommerce_session_handler', 'WC_Session_Handler');
+            WC()->session = new $session_class();
+            WC()->session->init();
+        }
+
+        // 2. Инициализация КЛИЕНТА (решает проблему get_shipping_country)
+        if (null === WC()->customer) {
+            WC()->customer = new WC_Customer(get_current_user_id(), true);
+        }
+
+        // 3. Инициализация корзины
+        if (null === WC()->cart) {
+            WC()->cart = new WC_Cart();
+            WC()->cart->get_cart();
+        }
+        $params = $request->get_json_params();
+        $redirect = isset($params['redirect']) ? $params['redirect'] : '';
+
+        ob_start();
+        $html = self::bfw_write_off_points($redirect);
+        $buffered_content = ob_get_clean();
+
+        // Если метод вернул пустую строку, но что-то попало в буфер
+        if (empty($html)) {
+            $html = $buffered_content;
+        }
+
+        return new WP_REST_Response(['html' => $html], 200);
+    }
+
 
     /**
      * Display of points write-off in order processing
@@ -619,7 +654,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
                 $woo->cart->calculate_totals();
             }
 
-            $bonustext_in_cart = BfwSetting::get('minimal-amount',
+            $bonustext_in_cart = BfwSetting::get('bonustext-in-cart',
                 __('You can use [points] in this order.', 'bonus-for-woo'));
 
             $bonustext_in_cart_array = [
@@ -717,6 +752,50 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
 
     }
 
+    public static function rest_trata_points(WP_REST_Request $request): WP_REST_Response
+    {
+        // Проверка, инициализирован ли WooCommerce и корзина
+        if (null === WC()->cart) {
+            wc_load_cart(); // Принудительная загрузка, если эндпоинт вызван слишком рано
+        }
+        $params = $request->get_json_params();
+        $requestedPoints = isset($params['points']) ? self::roundPoints((float)$params['points']) : 0;
+        $redirect = isset($params['redirect']) ? esc_url($params['redirect']) : wc_get_cart_url();
+
+        $user_id = get_current_user_id();
+
+        if ($requestedPoints <= 0) {
+            return new WP_REST_Response(['success' => true, 'data' => $redirect], 200);
+        }
+
+        try {
+            $woocommerce = WC();
+
+            // Проверка на сторонние купоны
+            if ($woocommerce->cart->applied_coupons && BfwSetting::get('yous_coupon_no_cashback')) {
+                $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+                $applied = $woocommerce->cart->get_applied_coupons();
+
+                if (!in_array($cart_discount, $applied) || count($applied) > 1) {
+                    $requestedPoints = 0;
+                }
+            }
+
+            $maxPossiblePoints = self::maxPossiblePointsInOrder();
+            $userPoints = self::roundPoints(self::getPoints($user_id));
+
+            $pointsToApply = min($requestedPoints, $maxPossiblePoints, $userPoints);
+
+            self::updateFastPoints($user_id, $pointsToApply);
+
+            // Пересчитываем корзину, чтобы купон применился сразу
+            $woocommerce->cart->calculate_totals();
+
+            return new WP_REST_Response(['success' => true, 'data' => $redirect], 200);
+        } catch (Exception $e) {
+            return new WP_REST_Response(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 
     /**
      * Находим максимальное кол-во баллов, которое можно потратить в текущем заказе.
@@ -811,7 +890,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      * @return void
      * @version 5.3.3
      */
-    public static function bfwoo_clean_fast_bonus(): void
+    /*public static function bfwoo_clean_fast_bonus(): void
     {
         // Получаем ID текущего пользователя
         $userId = get_current_user_id();
@@ -838,40 +917,83 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
         if (isset($_POST['redirect'])) {
             wp_send_json_success($_POST['redirect']);
         }
-    }
+    } */
+    public static function bfwoo_clean_fast_bonus_rest(WP_REST_Request $request): WP_REST_Response
+    {
+        $userId = get_current_user_id();
+        self::updateFastPoints($userId, 0);
 
+        $cartDiscount = BfwSetting::get('bonus-points-on-cart');
+        if ($cartDiscount) {
+            $cartDiscount = mb_strtolower(trim($cartDiscount));
+            $cart = WC()->cart;
+
+            if ($cart) {
+                // Удаляем из корзины
+                if (in_array($cartDiscount, array_map('strtolower', $cart->get_applied_coupons()), true)) {
+                    $cart->remove_coupon($cartDiscount);
+                    $cart->calculate_totals();
+                }
+
+                // 🔥 КРИТИЧЕСКИ ВАЖНО: Очистить applied_coupons в сессии
+                $applied = WC()->session->get('applied_coupons', []);
+                $applied = array_filter($applied, function ($code) use ($cartDiscount) {
+                    return strtolower(trim($code)) !== $cartDiscount;
+                });
+                WC()->session->set('applied_coupons', array_values($applied));
+
+                wc_clear_notices();
+            }
+        }
+
+        $redirect = $request->get_param('redirect') ?: home_url();
+        return new WP_REST_Response(['success' => true, 'data' => $redirect], 200);
+    }
 
     /**
      * Earning points from a coupon
      * Получение баллов с купона
+     * REST API Callback
      *
      * @return void
-     * @version 5.3.3
+     * @version 7.6.4
+     *
+     *
      */
-    public static function bfw_take_coupon_action(): void
+    public static function rest_activate_coupon(WP_REST_Request $request): WP_REST_Response
     {
-        if (isset($_POST['code_coupon'])) {
-            $code_coupon = sanitize_text_field($_POST['code_coupon']);
-            $userid = get_current_user_id();
-            $bfw_coupons = new BfwCoupons();
-            $zapros = $bfw_coupons::enterCoupon($userid, $code_coupon);
+        $params = $request->get_json_params();
+        $code_coupon = isset($params['code_coupon']) ? sanitize_text_field($params['code_coupon']) : '';
+        $redirect_url = isset($params['redirect']) ? esc_url($params['redirect']) : home_url();
 
-            if ($zapros === 'limit') {
-                $code_otveta = 404;
-                $message = __('Sorry. The coupon usage limit has been reached.', 'bonus-for-woo');
-            } elseif ($zapros === 'not_coupon') {
-                $code_otveta = 404;
-                $message = __('Sorry, no such coupon found.', 'bonus-for-woo');
-            } else {
-                $message = __('Coupon activated.', 'bonus-for-woo');
-                $code_otveta = 200;
-            }
-
-            $redirect_url = isset($_POST['redirect']) ? esc_url($_POST['redirect']) : home_url();
-
-            $return = array('redirect' => $redirect_url, 'message' => esc_html($message), 'cod' => $code_otveta);
-            wp_send_json_success($return);
+        if (empty($code_coupon)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => __('Please enter a coupon code.', 'bonus-for-woo')
+            ], 400);
         }
+
+        $userid = get_current_user_id();
+        $bfw_coupons = new BfwCoupons();
+        $zapros = $bfw_coupons::enterCoupon($userid, $code_coupon);
+
+        // Логика определения ответа
+        $status_code = 200;
+        if ($zapros === 'limit') {
+            $status_code = 404;
+            $message = __('Sorry. The coupon usage limit has been reached.', 'bonus-for-woo');
+        } elseif ($zapros === 'not_coupon') {
+            $status_code = 404;
+            $message = __('Sorry, no such coupon found.', 'bonus-for-woo');
+        } else {
+            $message = __('Coupon activated.', 'bonus-for-woo');
+        }
+
+        return new WP_REST_Response([
+            'cod' => (string)$status_code,
+            'message' => esc_html($message),
+            'redirect' => $redirect_url
+        ], 200);
     }
 
 
@@ -1101,14 +1223,14 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
             $userid = get_current_user_id();
             $computy_point_old = self::getFastPoints($userid); //узнаем баллы которые он решил списать
             $computy_point_old = self::roundPoints($computy_point_old);
-            $discount_type = 'fixed_cart';
+            // $discount_type = 'fixed_cart';
             if ($computy_point_old > 0) {
                 return array(
                     'id' => time() . wp_rand(2, 9),
                     //ID купона (для виртуальных можно задавать вручную)
-                    'discount_type' => $discount_type,
+                    'discount_type' => 'fixed_cart',
                     //Тип скидки fixed_cart,percent,fixed_product
-                    'amount' => $computy_point_old,
+                    'amount' => max(0, $computy_point_old),
                     //Размер скидки (число).
                     'individual_use' => $individual_use,
                     //применение с другими купонами
