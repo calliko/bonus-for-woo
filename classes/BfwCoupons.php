@@ -141,7 +141,7 @@ class BfwCoupons
                     <tr style="<?php echo esc_attr($bgtr); ?>">
                         <td><?php echo $i++; ?></td>
                         <td><b><?php
-                                echo esc_html($bfw->get_code()); ?></b>
+                                echo esc_html($bfw->code); ?></b>
                             <?php
                             if ($bfw->reusable == 1) {
                                 echo '<span title="' . __('Reusable',

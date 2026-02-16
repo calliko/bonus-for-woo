@@ -186,8 +186,8 @@ class BfwFunctions
 
             if (isset($data['status']) && $data['status'] === 'OK') {
                 if (isset($data['response']) && $data['response']) {
-                    /*Yes, that's it.☺ If you have any questions or suggestions, write to https://t.me/ca666ko , let's chat.*/
-                    /*Да, вот так просто.☺ Есть вопросы и предложения пиши https://t.me/ca666ko , пообщаемся.*/
+                    /*Yes, that's it.☺ If you have any questions or suggestions, write to https://t.me/tokmakov_alex , let's chat.*/
+                    /*Да, вот так просто.☺ Есть вопросы и предложения пиши https://t.me/tokmakov_alex , пообщаемся.*/
                     update_option(base64_decode('Ym9udXMtZm9yLXdvby1wcm8='), base64_decode('YWN0aXZl'));
                     wp_safe_redirect('/wp-admin/admin.php?page=bonus_for_woo-plugin-options');
                     exit;

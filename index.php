@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           7.6.4
+ * Version:           7.6.5
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
@@ -14,7 +14,7 @@
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * WC requires at least: 6.0
- * WC tested up to:   10.4.3
+ * WC tested up to:   10.5.1
  * Requires Plugins:  woocommerce
  * License:           GPL-3.0+
  * License URI:       http://www.gnu.org/licenses/gpl-3.0.txt
@@ -27,7 +27,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 
 // Define plugin constants.
-const BONUS_COMPUTY_VERSION = '7.6.4';
+const BONUS_COMPUTY_VERSION = '7.6.5';
 const BONUS_COMPUTY_VERSION_DB = '6';
 define('BONUS_COMPUTY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BONUS_COMPUTY_PLUGIN_URL', plugin_dir_url(__FILE__));

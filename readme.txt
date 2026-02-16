@@ -5,8 +5,8 @@ Tags: loyalty, cashback, points, reward, referral
 Requires at least:  5.0
 Tested up to:  6.9
 WC requires at least: 6.0
-WC tested up to: 10.4.3
-Stable tag: 7.6.4
+WC tested up to: 10.5.1
+Stable tag: 7.6.5
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -118,6 +118,11 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 7.6.5 - 2026-02-16 =
+* Fixed a duplicate registration credit entry when registering via Telegram.
+* Added mass crediting to the tools.
+* Fixed the display of coupons on the coupons page.
 
 = 7.6.4 - 2026-01-19 =
 * Transformed the frontend from admin-ajax to REST API

@@ -193,8 +193,76 @@ defined( 'ABSPATH' ) || exit;
 
             <hr>
 
+
         </div>
 
     </div>
+
+
+    <div class="card">
+        <h2 class="title"><?php _e('Bulk adding points', 'bonus-for-woo'); ?></h2>
+        <p><?php _e('Works without creating a notification. It won\'t be sent to your email.', 'bonus-for-woo'); ?></p>
+
+        <div style="margin-top:15px;">
+            <label for="mass_points"><?php _e('How many points should I add?', 'bonus-for-woo'); ?></label><br>
+            <input type="number" id="mass_points" value="100" min="1" style="width:200px;">
+        </div>
+
+        <div style="margin-top:10px;">
+            <label for="mass_text"><?php _e('Text in history', 'bonus-for-woo'); ?></label><br>
+            <input type="text" id="mass_text"
+                   value=""
+                   style="width:400px;">
+        </div>
+
+        <div style="margin-top:15px;">
+            <button  id="mass-start" class="pdf-button">
+                <?php _e('Start adding points', 'bonus-for-woo'); ?>
+            </button>
+        </div>
+
+        <div id="mass-progress" style="margin-top:15px;"></div>
+    </div>
+
+    <script>
+        jQuery(function($){
+
+            let page = 1;
+
+            function processBatch() {
+
+                $.post(ajaxurl, {
+                    action: 'computy_mass_add_points',
+                    paged: page,
+                    points: $('#mass_points').val(),
+                    text: $('#mass_text').val()
+                }, function(response){
+
+                    if (!response.success) {
+                        alert('Ошибка');
+                        return;
+                    }
+
+                    if (response.data.done) {
+                        $('#mass-progress').html('✅ Начисление завершено');
+                        return;
+                    }
+
+                    $('#mass-progress').html('Обработана страница: ' + page);
+
+                    page = response.data.next_page;
+
+                    setTimeout(processBatch, 300);
+                });
+            }
+
+            $('#mass-start').on('click', function(){
+                page = 1;
+                $('#mass-progress').html('Запуск...');
+                processBatch();
+            });
+
+        });
+    </script>
 
 </div>

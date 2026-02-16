@@ -438,4 +438,71 @@ class BfwCashback
     }
 
 
+    public static function computyMassAddPoints(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Access denied');
+        }
+
+        $paged  = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
+        $limit  = 200;
+        $offset = ($paged - 1) * $limit;
+
+        $points = isset($_POST['points']) ? (int) $_POST['points'] : 0;
+        $text   = isset($_POST['text']) ? sanitize_text_field($_POST['text']) : '';
+
+        if ($points <= 0) {
+            wp_send_json_error('Invalid points');
+        }
+
+        $users = get_users([
+            'number' => $limit,
+            'offset' => $offset,
+            'fields' => ['ID']
+        ]);
+
+        if (empty($users)) {
+
+            // После завершения — удалить мета f14
+            global $wpdb;
+            $wpdb->delete($wpdb->usermeta, ['meta_key' => 'f14']);
+
+            wp_send_json_success([
+                'done' => true
+            ]);
+        }
+
+        foreach ($users as $user) {
+
+            $user_id = $user->ID;
+
+            // если уже начисляли — пропускаем
+            if (get_user_meta($user_id, 'f14', true) === 'yes') {
+                continue;
+            }
+
+            $current_points = (int) get_user_meta($user_id, 'computy_point', true);
+            $new_points     = $current_points + $points;
+
+            update_user_meta($user_id, 'computy_point', $new_points);
+            update_user_meta($user_id, 'f14', 'yes');
+
+            if (class_exists('BfwHistory')) {
+                BfwHistory::add_history(
+                    $user_id,
+                    '+',
+                    $points,
+                    '0',
+                    $text
+                );
+            }
+        }
+
+        wp_send_json_success([
+            'done'      => false,
+            'next_page' => $paged + 1
+        ]);
+    }
+
+
 }

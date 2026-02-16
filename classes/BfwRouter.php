@@ -319,6 +319,9 @@ class BfwRouter
         add_filter('wp_ajax_cashback_prepare', array('BfwCashback', 'cashbackPrepare'));
         add_filter('wp_ajax_cashback_recount', array('BfwCashback', 'cashbackRecount'));
 
+        /*Массовое начисление баллов без уведомленний*/
+        add_action('wp_ajax_computy_mass_add_points',  array('BfwCashback', 'computyMassAddPoints'));
+
 
         /*-------Возможность менеджерам настраивать плагин-------*/
         add_filter('woocommerce_shop_manager_editable_roles', array('BfwRoles', 'bfwManagerRoleEditCapabilities'));

@@ -775,6 +775,7 @@ class BfwAccount
 
                 // Записываем в историю
                 $bfwHistory = new BfwHistory();
+                $bfwHistory::clearAllHistoryUser($user_id);
                 $bfwHistory::add_history($user_id, '+', $pointsForReg, '0', $reason);
 
                 $user = get_userdata($user_id);
