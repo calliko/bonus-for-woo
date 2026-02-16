@@ -201,6 +201,7 @@ defined( 'ABSPATH' ) || exit;
 
     <div class="card">
         <h2 class="title"><?php _e('Bulk adding points', 'bonus-for-woo'); ?></h2>
+        <?php if (BfwRoles::isPro()) { ?>
         <p><?php _e('Works without creating a notification. It won\'t be sent to your email.', 'bonus-for-woo'); ?></p>
 
         <div style="margin-top:15px;">
@@ -222,6 +223,9 @@ defined( 'ABSPATH' ) || exit;
         </div>
 
         <div id="mass-progress" style="margin-top:15px;"></div>
+        <?php  }else{   ?>
+          <p style="color: #cf2e2e"><?php _e('Works only in Pro version', 'bonus-for-woo'); ?></p>
+        <?php   } ?>
     </div>
 
     <script>
