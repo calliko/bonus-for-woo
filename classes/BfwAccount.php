@@ -297,7 +297,7 @@ class BfwAccount
      */
     public static function accountCoupon(): string
     {
-        if (BfwRoles::isInvalve(get_current_user_id())) {
+        if (BfwRoles::isPro() && BfwSetting::get('coupon-system') && BfwRoles::isInvalve(get_current_user_id())) {
 
             $bonus_text = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
             if ($bonus_text) {

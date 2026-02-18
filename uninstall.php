@@ -10,8 +10,8 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
-
-if (BfwSetting::get('clear-bfw-bd')) {
+$val = get_option('bonus_option_name');
+if ($val['clear-bfw-bd']) {
     //drop tables
     global $wpdb;
 

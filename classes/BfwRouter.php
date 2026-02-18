@@ -196,10 +196,13 @@ class BfwRouter
         /*------------Действие когда клиент подтверждает заказ - списание баллов------------*/
         $order_status_write = BfwSetting::get('write_points_order_status', 'processed');
         if ($order_status_write == 'processed') {
-            $order_status_write_action = 'woocommerce_checkout_order_processed';
+            $order_status_write_action = 'woocommerce_new_order';
         } else {
             $order_status_write_action = 'woocommerce_order_status_' . $order_status_write;
         }
+
+
+
         add_action($order_status_write_action, array('BfwPoints', 'newOrder'), 20, 1);
 
         /*------------Действие когда статус заказа выполнен - начисление баллов------------*/

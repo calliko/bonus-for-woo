@@ -6,7 +6,7 @@ Requires at least:  5.0
 Tested up to:  6.9
 WC requires at least: 6.0
 WC tested up to: 10.5.1
-Stable tag: 7.6.5
+Stable tag: 7.6.6
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -118,6 +118,12 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 7.6.6 - 2026-02-18 =
+* Fixed the display of the "Total" text in the points write-off form.
+* Fixed deletion of tables when deleting the plugin.
+* Fixed the coupon system.
+* Fixed the write-off of points when placing an order.
 
 = 7.6.5 - 2026-02-16 =
 * Fixed a duplicate registration credit entry when registering via Telegram.
