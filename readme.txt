@@ -119,6 +119,12 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
+= 7.6.7 - 2026-03-09 =
+* Minor bug fixes.
+* Added multiple selection for which status points will be returned.
+* Improved code security.
+* Code optimization.
+
 = 7.6.6 - 2026-02-18 =
 * Fixed the display of the "Total" text in the points write-off form.
 * Fixed deletion of tables when deleting the plugin.

@@ -71,6 +71,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    if (document.getElementById('refunded_points_order_status')) {
+        new SlimSelect({
+            select: '#refunded_points_order_status',
+        });
+    }
+
     function hideMessage(container) {
         if (!container) return;
         container.style.display = 'none';

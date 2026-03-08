@@ -104,17 +104,39 @@ jQuery(document).ready(function ($) {
     /*Открытие закрытие использование бонусов в корзине*/
 
     /*Копирование реферальной ссылки*/
+    /*Копирование реферальной ссылки*/
     body.on('click', '#copy_referal', function () {
-        let $tmp = $("<input>");
-        $("body").append($tmp);
-        $tmp.val($('#code_referal').text()).select();
-        document.execCommand("copy");
-        $('#copy_good').text("Скопировано в буфер обмена");
+        const referralText = $('#code_referal').text();
+
+        // Используем современный Clipboard API с fallback
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(referralText)
+                .then(function() {
+                    $('#copy_good').text("Скопировано в буфер обмена");
+                })
+                .catch(function(err) {
+                    // Fallback для старых браузеров
+                    fallbackCopyTextToClipboard(referralText);
+                });
+        } else {
+            // Fallback для очень старых браузеров
+            fallbackCopyTextToClipboard(referralText);
+        }
+
         setTimeout(function () {
             $("#copy_good").text(" ").empty();
         }, 2000);
-        $tmp.remove();
     });
+
+// Вспомогательная функция для fallback
+    function fallbackCopyTextToClipboard(text) {
+        let $tmp = $("<input>");
+        $("body").append($tmp);
+        $tmp.val(text).select();
+        document.execCommand("copy");
+        $tmp.remove();
+        $('#copy_good').text("Скопировано в буфер обмена");
+    }
     /*Копирование реферальной ссылки*/
 
     /*действие при списании баллов  */
@@ -328,3 +350,21 @@ jQuery(document).ready(function ($) {
         setTimeout(initBlocks, 1000);
     });
 })(jQuery);
+
+
+function bfwAddNonceToForms() {
+    // Добавляем nonce ко всем AJAX-запросам
+    jQuery.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (settings.url && settings.url.indexOf('admin-ajax.php') !== -1) {
+                if (!settings.data) settings.data = '';
+                settings.data += '&_wpnonce=' + bfw_ajax.nonce;
+            }
+        }
+    });
+}
+
+// Инициализация
+jQuery(document).ready(function($) {
+    bfwAddNonceToForms();
+});

@@ -93,3 +93,11 @@ function bfw_load_textdomain()
 {
     load_plugin_textdomain('bonus-for-woo', false, dirname(plugin_basename(__FILE__)) . '/lang/');
 }
+
+function bfw_enqueue_scripts_with_nonce() {
+    wp_localize_script('bonus-computy-script', 'bfw_ajax', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('bfw_ajax_global')
+    ));
+}
+add_action('wp_enqueue_scripts', 'bfw_enqueue_scripts_with_nonce');

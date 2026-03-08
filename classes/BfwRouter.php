@@ -26,8 +26,17 @@ class BfwRouter
         */
 
         if (isset($_GET['export_bfw_points']) && current_user_can('manage_options')) {
+
+            
             $file_path = BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv';
+            $file_path = wp_normalize_path($file_path);
+            
+
+            
             $buffer = fopen($file_path, 'w');
+            if (!$buffer) {
+                wp_die('Cannot create export file');
+            }
 
             // Add BOM (Byte Order Mark) to ensure proper UTF-8 encoding
             fwrite($buffer, "\xEF\xBB\xBF");
@@ -40,15 +49,15 @@ class BfwRouter
 
             $data = [];
             foreach ($users as $user) {
-                $points = get_user_meta($user->ID, 'computy_point', true) ?? 0;
+                $points = (int)(get_user_meta($user->ID, 'computy_point', true) ?? 0);
                 $arrayRole = $status->getRole($user->ID);
                 $data[] = [
-                    'id' => $user->ID,
-                    'name' => $user->user_nicename,
-                    'email' => $user->user_email,
-                    'phone' => get_user_meta($user->ID, 'billing_phone', true) ?? '',
+                    'id' => (int)$user->ID,
+                    'name' => sanitize_text_field($user->user_nicename),
+                    'email' => sanitize_email($user->user_email),
+                    'phone' => sanitize_text_field(get_user_meta($user->ID, 'billing_phone', true) ?? ''),
                     'points' => $points,
-                    'status' => $arrayRole['name'],
+                    'status' => sanitize_text_field($arrayRole['name']),
                     'comment' => '',
                 ];
             }
@@ -61,8 +70,22 @@ class BfwRouter
         }
 
         if (isset($_GET['remove_export_bfw_points']) && current_user_can('manage_options')) {
+            // Проверка nonce
+            if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'bfw_remove_export')) {
+                wp_die('Security check failed');
+            }
+            
             $file_path = BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv';
-            wp_delete_file($file_path);
+            $file_path = wp_normalize_path($file_path);
+            
+            // Проверка пути
+            if (strpos($file_path, BONUS_COMPUTY_PLUGIN_DIR) !== 0) {
+                wp_die('Invalid file path');
+            }
+            
+            if (file_exists($file_path)) {
+                wp_delete_file($file_path);
+            }
         }
         /*-------Действие при нажатии кнопки экспорта баллов-------*/
 
@@ -218,8 +241,19 @@ class BfwRouter
 
 
         /*------------Действие когда оформлен возврат баллов-----------*/
-        $order_status_refunded = BfwSetting::get('refunded_points_order_status', 'refunded');
-        add_action('woocommerce_order_status_' . $order_status_refunded, array('BfwPoints', 'refundedPoints'), 10, 1);
+        $order_status_refunded = BfwSetting::get('refunded_points_order_status', array('refunded'));
+        $order_statuses_refunded = is_array($order_status_refunded)
+            ? $order_status_refunded
+            : array($order_status_refunded);
+        $order_statuses_refunded = array_slice(array_values(array_unique(array_filter($order_statuses_refunded))), 0, 2);
+
+        if (empty($order_statuses_refunded)) {
+            $order_statuses_refunded = array('refunded');
+        }
+
+        foreach ($order_statuses_refunded as $status_refunded) {
+            add_action('woocommerce_order_status_' . $status_refunded, array('BfwPoints', 'refundedPoints'), 10, 1);
+        }
         ///add_action( 'woocommerce_order_status_changed' , array('BfwPoints', 'test'), 10, 1 );
         //Если отзыв о товаре одобрен добавляет баллы
         add_action('comment_unapproved_to_approved', array('BfwReview', 'bfwoo_approve_comment_callback'));

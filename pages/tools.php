@@ -230,42 +230,63 @@ defined( 'ABSPATH' ) || exit;
 
     <script>
         jQuery(function($){
-
             let page = 1;
 
             function processBatch() {
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    dataType: 'json',  // Явно указываем ожидаемый тип данных
+                    data: {
+                        action: 'computy_mass_add_points',
+                        paged: page,
+                        points: $('#mass_points').val(),
+                        text: $('#mass_text').val()
+                    },
+                    success: function(response) {
+                        console.log('Server response:', response); // Для отладки
 
-                $.post(ajaxurl, {
-                    action: 'computy_mass_add_points',
-                    paged: page,
-                    points: $('#mass_points').val(),
-                    text: $('#mass_text').val()
-                }, function(response){
+                        $('#mass-progress').html('Обработана страница: ' + page);
 
-                    if (!response.success) {
-                        alert('Ошибка');
-                        return;
+                        if (response.data && response.data.done) {
+                            $('#mass-progress').html('✅ Начисление завершено');
+                            $('#mass-start').prop('disabled', false);
+                            return;
+                        }
+
+                        if (response.data && response.data.next_page) {
+                            page = response.data.next_page;
+                            setTimeout(processBatch, 300);
+                        } else {
+                            $('#mass-progress').html('⚠️ Неожиданный ответ сервера');
+                            $('#mass-start').prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('XHR Response:', xhr.responseText); // Выведет HTML ошибки
+                        console.log('Status:', status);
+                        console.log('Error:', error);
+
+                        // Попробуем извлечь сообщение об ошибке из HTML
+                        if (xhr.responseText.includes('db') || xhr.responseText.includes('SQL')) {
+                            alert('Ошибка базы данных. Проверьте логи.');
+                        } else if (xhr.responseText.includes('Access denied')) {
+                            alert('Ошибка доступа. Проверьте права.');
+                        } else {
+                            alert('Ошибка сервера. Смотрите консоль (F12) для деталей.');
+                        }
+
+                        $('#mass-start').prop('disabled', false);
                     }
-
-                    if (response.data.done) {
-                        $('#mass-progress').html('✅ Начисление завершено');
-                        return;
-                    }
-
-                    $('#mass-progress').html('Обработана страница: ' + page);
-
-                    page = response.data.next_page;
-
-                    setTimeout(processBatch, 300);
                 });
             }
 
             $('#mass-start').on('click', function(){
                 page = 1;
-                $('#mass-progress').html('Запуск...');
+                $(this).prop('disabled', true);
+                $('#mass-progress').html('🚀 Запуск...');
                 processBatch();
             });
-
         });
     </script>
 

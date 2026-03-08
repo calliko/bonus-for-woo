@@ -328,35 +328,46 @@ class BfwRoles
      * @param int $userId
      *
      * @return bool
-     * @version 7.1.4
+     * @version 7.6.7
      */
     public static function isInvalve(int $userId): bool
     {
-        if ($userId === 0) {
-            return false;
-        }
+        static $exclude_roles = null;
+        static $cache = [];
 
-        $user_info = get_userdata($userId);
-        if (!$user_info) {
-            return false;
-        }
-
-        $roles = $user_info->roles;
-        if (empty($roles)) {
-            return false;
-        }
-
-        $exclude_roles = BfwSetting::get('exclude-role', array());
-
-        // Проверка: если есть пересечения, значит пользователь исключён
-        foreach ($roles as $role) {
-            if (in_array($role, $exclude_roles, true)) {
-                return false;
+        // Инициализация исключенных ролей один раз
+        if ($exclude_roles === null) {
+            $exclude_roles = BfwSetting::get('exclude-role', array());
+            if (empty($exclude_roles)) {
+                $exclude_roles = []; // оптимизация для пустого массива
             }
         }
 
-        return true;
+        // Проверка кэша
+        if (isset($cache[$userId])) {
+            return $cache[$userId];
+        }
+
+        if ($userId === 0) {
+            return $cache[$userId] = false;
+        }
+
+        // Быстрая проверка - если нет исключенных ролей, все участвуют
+        if (empty($exclude_roles)) {
+            return $cache[$userId] = true;
+        }
+
+        $user = get_user_by('id', $userId);
+        if (!$user || empty($user->roles)) {
+            return $cache[$userId] = false;
+        }
+
+        $result = empty(array_intersect($user->roles, $exclude_roles));
+        return $cache[$userId] = $result;
+
     }
+
+
 
     /**
      * Check for pro
