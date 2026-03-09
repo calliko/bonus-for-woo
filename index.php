@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           7.6.6
+ * Version:           7.6.7
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
