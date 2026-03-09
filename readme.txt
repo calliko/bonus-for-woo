@@ -6,7 +6,7 @@ Requires at least:  5.0
 Tested up to:  6.9
 WC requires at least: 6.0
 WC tested up to: 10.5.1
-Stable tag: 7.6.7
+Stable tag: 7.6.8
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -119,7 +119,7 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
-= 7.6.7 - 2026-03-09 =
+= 7.6.8 - 2026-03-09 =
 * Minor bug fixes.
 * Added multiple selection for which status points will be returned.
 * Improved code security.
