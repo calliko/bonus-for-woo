@@ -217,7 +217,7 @@ class BfwAccount
             );
         }
 
-        $output .= '</div>';
+        $output .=  '</div>';
         return $output;
     }
 
@@ -233,12 +233,12 @@ class BfwAccount
     private static function calculatePointsExpirationDays(array $options, int $userId, float $points): int
     {
         if (
-                !empty($options['burn_point_in_account']) ||
+                !empty($options['burn_point_in_account']) ||  // Если чекбокс НЕ отмечен
                 !isset($options['day-inactive']) ||
                 $options['day-inactive'] <= 0 ||
                 $points <= 0
         ) {
-            return 0;
+            return 0;  // НЕ показываем срок сжигания
         }
 
         try {
@@ -543,20 +543,18 @@ class BfwAccount
 
     private static function getSecondLevelReferralCount(array $directReferrals): int
     {
-        $count = 0;
-        foreach ($directReferrals as $referral) {
-            $args = [
-                    'meta_query' => [
-                            [
-                                    'key' => 'bfw_points_referral_invite',
-                                    'value' => $referral->ID,
-                                    'compare' => '=='
-                            ]
-                    ]
-            ];
-            $count += count(get_users($args));
+        if (empty($directReferrals)) {
+            return 0;
         }
-        return $count;
+        $directReferralIds = wp_list_pluck($directReferrals, 'ID');
+        global $wpdb;
+
+        return (int)$wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->usermeta} 
+         WHERE meta_key = 'bfw_points_referral_invite' 
+         AND meta_value IN (" . implode(',', array_fill(0, count($directReferralIds), '%d')) . ")",
+                $directReferralIds
+        ));
     }
 
     private static function renderRemainingAmountMessage(float $remainingAmount): string
@@ -761,7 +759,8 @@ class BfwAccount
             // Только для рефералов
             if (BfwSetting::get('register-points-only-referal')) {
                 $cookieVal = isset($_COOKIE['bfw_ref_cookie_set']) ? sanitize_text_field(wp_unslash($_COOKIE['bfw_ref_cookie_set'])) : '';
-                if (empty($cookieVal)) {
+                // Дополнительная проверка значения cookie
+                if (empty($cookieVal) || !preg_match('/^[a-zA-Z0-9_-]+$/', $cookieVal)) {
                     $allowPoints = 0;
                 }
             }
@@ -849,7 +848,11 @@ class BfwAccount
     public static function bfwDobSaveAccountDetails(int $user_id): void
     {
         if (isset($_POST['dob'])) {
-            update_user_meta($user_id, 'dob', sanitize_text_field($_POST['dob']));
+            $dob = sanitize_text_field($_POST['dob']);
+            // Проверка формата даты
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+                update_user_meta($user_id, 'dob', $dob);
+            }
         }
     }
 
