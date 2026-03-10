@@ -218,13 +218,8 @@ class BfwPoints
         global $wpdb;
 
 
-        // Безопасная обработка статусов заказов
-        $order_statuses = is_array($order_staus) ? $order_staus : [$order_staus];
-        $order_statuses = array_map('esc_sql', $order_statuses);
-        $statuses_str = "'" . implode("','", $order_statuses) . "'";
-
         if (class_exists(OrderUtil::class) && OrderUtil::custom_orders_table_usage_is_enabled()) {
-            $total_all = $wpdb->get_var($wpdb->prepare("SELECT SUM(total_amount) FROM {$wpdb->prefix}wc_orders  WHERE status IN ({$statuses_str}) AND customer_id = %d {$data_start}",
+            $total_all = $wpdb->get_var($wpdb->prepare("SELECT SUM(total_amount) FROM {$wpdb->prefix}wc_orders  WHERE status IN ({$order_staus}) AND customer_id = %d {$data_start}",
                 $userId));
 
             $total_shipping = 0;
@@ -238,7 +233,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
         FROM 
             {$wpdb->prefix}wc_orders
         WHERE 
-          status IN ({$statuses_str}) AND customer_id = %d {$data_start})", $userId));
+          status IN ({$order_staus}) AND customer_id = %d {$data_start})", $userId));
             }
 
 
@@ -268,7 +263,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
                 $wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
   INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
   INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
-  WHERE p.post_status IN ({$statuses_str})  AND p.post_type LIKE 'shop_order'
+  WHERE p.post_status IN ({$order_staus})  AND p.post_type LIKE 'shop_order'
   AND pm.meta_key LIKE '_order_total' AND pm2.meta_key LIKE '_customer_user'
   AND pm2.meta_value LIKE %d $data_start 
   ", $userId));
@@ -277,7 +272,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
             $total_refunds = $wpdb->get_var($wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
         INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
         INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
-        WHERE p.post_status IN  ({$statuses_str}) AND p.post_type LIKE 'shop_order'
+        WHERE p.post_status IN  ({$order_staus}) AND p.post_type LIKE 'shop_order'
         AND pm.meta_key LIKE '_order_refund_amount' AND pm2.meta_key LIKE '_customer_user'
         AND pm2.meta_value LIKE %d $data_start", $userId));
 
@@ -484,18 +479,8 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      */
     public static function bfwoo_spisaniebonusov_in_cart_blocks()
     {
-        // Проверка nonce
-        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_cart_blocks')) {
-            wp_send_json_error('Security check failed');
-            return;
-        }
-        
-        $redirect = esc_url_raw($_POST['redirect'] ?? '');
-        if (empty($redirect)) {
-            wp_send_json_error('Invalid redirect URL');
-            return;
-        }
-        
+
+        $redirect = $_POST['redirect'];
         echo self::bfw_write_off_points($redirect);
         exit();
     }
@@ -681,7 +666,6 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
 
             $return = '<div class="text_how_many_points">' . $bonustext_in_carts . '</div>
 <div class="write_points_form">
-<input type="hidden" name="_wpnonce" value="'.wp_create_nonce('bfw_trata_points').'">
         <input type="hidden" name="action" value="computy_trata_points">
         <input type="hidden" name="redirect" value="' . $redirect . '">
         <input type="text" name="computy_input_points" class="input-text" value="' . self::roundPoints(($user_fast_points > 0 ? $user_fast_points : $vozmojniy_ball)) . '">
@@ -726,12 +710,6 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      */
     public static function bfwoo_trata_points(): void
     {
-        // Проверка nonce
-        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_trata_points')) {
-            wp_send_json_error('Security check failed');
-            return;
-        }
-        
         if (!isset($_POST['computy_input_points'], $_POST['redirect'])) {
             wp_send_json_error(__('The required data is missing from the request.', 'bonus-for-woo'));
             return;
@@ -742,12 +720,9 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
             wp_send_json_error(__('Error getting user ID.', 'bonus-for-woo'));
             return;
         }
-        
-        $requestedPoints = self::roundPoints((float)($_POST['computy_input_points'] ?? 0));
-        $redirect = esc_url_raw($_POST['redirect'] ?? '');
-        
+        $requestedPoints = self::roundPoints((float)$_POST['computy_input_points']);
         if ($requestedPoints <= 0) {
-            wp_send_json_success($redirect);
+            wp_send_json_success($_POST['redirect']);
             return;
         }
         try {
@@ -1030,32 +1005,13 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      */
     public static function handle_deduct_points_in_order(): void
     {
-        // Проверка nonce и прав
-        if (!current_user_can('edit_shop_orders') || !wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_deduct_points')) {
-            wp_send_json_error('Permission denied');
-            return;
-        }
-        
-        if (!isset($_POST['order_id'], $_POST['points'])) {
+        if (!isset($_POST['order_id']) || !isset($_POST['points'])) {
             wp_send_json_error(__('Not enough data.', 'bonus-for-woo'));
-            return;
         }
 
         $order_id = (int)$_POST['order_id'];
-        $order = wc_get_order($order_id);
-        
-        if (!$order) {
-            wp_send_json_error('Order not found');
-            return;
-        }
-        
+        $order = new WC_Order($_POST['order_id']);
         $user_id = $order->get_user_id();
-        $points = (float)$_POST['points'];
-        
-        if ($points <= 0) {
-            wp_send_json_error('Invalid points amount');
-            return;
-        }
         //сколько баллов у пользователя
         $balluser = BfwPoints::getPoints($user_id);
         if ($balluser < $_POST['points']) {

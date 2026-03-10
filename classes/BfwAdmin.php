@@ -624,13 +624,8 @@ class BfwAdmin
                 BONUS_COMPUTY_VERSION);
         wp_enqueue_style('slimselectcss');
 
-        wp_register_script('slimselect', BONUS_COMPUTY_PLUGIN_URL . '_inc/slimselect.min.js', array('jquery'),
-                BONUS_COMPUTY_VERSION, true);
-        wp_enqueue_script('slimselect');
-
         wp_register_script('bonus-computy-script-admin',
-                BONUS_COMPUTY_PLUGIN_URL . '_inc/bonus-computy-script-admin.js', array('jquery', 'slimselect'),
-                BONUS_COMPUTY_VERSION,
+                BONUS_COMPUTY_PLUGIN_URL . '_inc/bonus-computy-script-admin.js', array('jquery'), BONUS_COMPUTY_VERSION,
                 true);
         wp_enqueue_script('bonus-computy-script-admin');
         wp_localize_script('bonus-computy-script-admin', 'bfwScriptAdmin', [
@@ -640,6 +635,9 @@ class BfwAdmin
             wp_enqueue_script('custom-admin-script', BONUS_COMPUTY_PLUGIN_URL . '_inc/write-points-in-order-admin.js',
                     array('jquery'), BONUS_COMPUTY_VERSION, true);
         }
+        wp_register_script('slimselect', BONUS_COMPUTY_PLUGIN_URL . '_inc/slimselect.min.js', array('jquery'),
+                BONUS_COMPUTY_VERSION, true);
+        wp_enqueue_script('slimselect');
     }
 
 
@@ -2415,25 +2413,17 @@ class BfwAdmin
      */
     public static function fill_refunded_points_order_status(): void
     {
-        $refunded_points_order_status = BfwSetting::get('refunded_points_order_status', array('refunded'));
-        if (!is_array($refunded_points_order_status)) {
-            $refunded_points_order_status = array($refunded_points_order_status);
-        }
-        $refunded_points_order_status = array_values(array_unique(array_filter($refunded_points_order_status)));
+        $refunded_points_order_status = BfwSetting::get('refunded_points_order_status', 'refunded');
         ?>
-        <select multiple="multiple" id="refunded_points_order_status"
-                name="bonus_option_name[refunded_points_order_status][]">
-            <option disabled><?php echo __('Select order statuses', 'bonus-for-woo'); ?></option>
+        <select id="refunded_points_order_status" name="bonus_option_name[refunded_points_order_status]">
             <?php
             foreach (wc_get_order_statuses() as $status => $status_name) {
                 $short_status = mb_substr($status, 3);
-                $selected = in_array($short_status, $refunded_points_order_status, true) ? 'selected="selected"' : '';
+                $selected = ($refunded_points_order_status == $short_status) ? 'selected="selected"' : '';
                 echo '<option value="' . esc_attr($short_status) . '" ' . $selected . '>' . esc_html($status_name) . '</option>';
             }
             ?>
         </select>
-        <small style="color:#999999">* <?php echo __('No more than 2 statuses can be selected.',
-                    'bonus-for-woo'); ?></small>
         <?php
     }
 
@@ -2777,27 +2767,6 @@ class BfwAdmin
         } else {
             /*Убрать крон*/
             wp_clear_scheduled_hook('bfw_daily_cashback_check');
-        }
-
-        if (isset($options['refunded_points_order_status'])) {
-            $refunded_statuses = $options['refunded_points_order_status'];
-
-            if (!is_array($refunded_statuses)) {
-                $refunded_statuses = array($refunded_statuses);
-            }
-
-            $refunded_statuses = array_values(array_unique(array_filter(array_map('sanitize_key',
-                    $refunded_statuses))));
-            $allowed_statuses = array_map(static function ($status) {
-                return mb_substr($status, 3);
-            }, array_keys(wc_get_order_statuses()));
-
-            $refunded_statuses = array_values(array_intersect($refunded_statuses, $allowed_statuses));
-            if (empty($refunded_statuses)) {
-                $refunded_statuses = array('refunded');
-            }
-
-            $options['refunded_points_order_status'] = array_slice($refunded_statuses, 0, 2);
         }
 
 
