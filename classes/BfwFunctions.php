@@ -51,6 +51,10 @@ class BfwFunctions
                    'nonce' => wp_create_nonce('wp_rest'),
                    'current_user_id' => get_current_user_id()
            ));*/
+
+        wp_localize_script('bonus-computy-script', 'bfw_ajax', array(
+                'nonce' => wp_create_nonce('bfw_ajax_nonce')
+        ));
     }
 
 

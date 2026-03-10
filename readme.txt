@@ -5,8 +5,8 @@ Tags: loyalty, cashback, points, reward, referral
 Requires at least:  5.0
 Tested up to:  6.9
 WC requires at least: 6.0
-WC tested up to: 10.5.1
-Stable tag: 7.6.9
+WC tested up to: 10.5.3
+Stable tag: 7.6.10
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -119,8 +119,7 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
-= 7.6.9 - 2026-03-10 =
-* Minor bug fixes.
+= 7.6.10 - 2026-03-10 =
 
 = 7.6.8 - 2026-03-09 =
 * Minor bug fixes.

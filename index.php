@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           7.6.9
+ * Version:           7.6.10
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
@@ -27,7 +27,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 
 // Define plugin constants.
-const BONUS_COMPUTY_VERSION = '7.6.9';
+const BONUS_COMPUTY_VERSION = '7.6.10';
 const BONUS_COMPUTY_VERSION_DB = '6';
 define('BONUS_COMPUTY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BONUS_COMPUTY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -94,10 +94,3 @@ function bfw_load_textdomain()
     load_plugin_textdomain('bonus-for-woo', false, dirname(plugin_basename(__FILE__)) . '/lang/');
 }
 
-function bfw_enqueue_scripts_with_nonce() {
-    wp_localize_script('bonus-computy-script', 'bfw_ajax', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('bfw_ajax_global')
-    ));
-}
-add_action('wp_enqueue_scripts', 'bfw_enqueue_scripts_with_nonce');

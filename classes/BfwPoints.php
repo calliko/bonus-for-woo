@@ -174,7 +174,6 @@ class BfwPoints
      */
     public static function getSumUserOrders($userId = null): float
     {
-
         if ($userId == null) {
             $current_user = get_current_user_id();
             if ($current_user === 0) {
@@ -182,11 +181,9 @@ class BfwPoints
             } else {
                 $userId = $current_user;
             }
-
         }
 
         $order_staus = sanitize_text_field(BfwSetting::get('add_points_order_status', 'completed'));
-
 
         $data_start = '';
         if (BfwRoles::isPro()) {
@@ -200,26 +197,33 @@ class BfwPoints
                 } else {
                     $data_start = "AND p.post_date >=   '$datastart' ";
                 }
-
             }
         }
 
-        $order_staus = "'wc-" . $order_staus . "'";
+        // Обработка статусов - добавляем префикс wc- к каждому статусу
         $order_staus = apply_filters('bfw_add_points_order_status_filter', $order_staus);
 
-        if (is_array($order_staus)) {
-            // Добавляем префикс 'wc-' к каждому элементу массива
-            $prefixed_statuses = array_map(function ($status) {
-                return "'wc-" . $status . "'";
-            }, $order_staus);
-            $order_staus = implode(', ', $prefixed_statuses);
+        // Преобразуем в массив если это строка
+        if (!is_array($order_staus)) {
+            $order_staus = [$order_staus];
         }
+
+        // Добавляем префикс 'wc-' к каждому статусу
+        $prefixed_statuses = array_map(function ($status) {
+            return 'wc-' . $status;
+        }, $order_staus);
+
+        // Экранируем для SQL
+        $prefixed_statuses = array_map('esc_sql', $prefixed_statuses);
+
+
+        // Создаем строку для IN запроса (БЕЗ дополнительных кавычек вокруг каждого статуса)
+        $statuses_str = "'" . implode("','", $prefixed_statuses) . "'";
 
         global $wpdb;
 
-
         if (class_exists(OrderUtil::class) && OrderUtil::custom_orders_table_usage_is_enabled()) {
-            $total_all = $wpdb->get_var($wpdb->prepare("SELECT SUM(total_amount) FROM {$wpdb->prefix}wc_orders  WHERE status IN ({$order_staus}) AND customer_id = %d {$data_start}",
+            $total_all = $wpdb->get_var($wpdb->prepare("SELECT SUM(total_amount) FROM {$wpdb->prefix}wc_orders  WHERE status IN ({$statuses_str}) AND customer_id = %d {$data_start}",
                 $userId));
 
             $total_shipping = 0;
@@ -233,61 +237,56 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
         FROM 
             {$wpdb->prefix}wc_orders
         WHERE 
-          status IN ({$order_staus}) AND customer_id = %d {$data_start})", $userId));
+          status IN ({$statuses_str}) AND customer_id = %d {$data_start})", $userId));
             }
-
 
             // Получаем общую сумму возвратов
             $total_refunds = $wpdb->get_var($wpdb->prepare("SELECT SUM(meta_value) 
-     FROM {$wpdb->prefix}wc_orders_meta 
-     WHERE meta_key = '_refund_amount' 
-     AND order_id IN (
+ FROM {$wpdb->prefix}wc_orders_meta 
+ WHERE meta_key = '_refund_amount' 
+ AND order_id IN (
+     SELECT id 
+     FROM {$wpdb->prefix}wc_orders 
+     WHERE parent_order_id IN (
          SELECT id 
          FROM {$wpdb->prefix}wc_orders 
-         WHERE parent_order_id IN (
-             SELECT id 
-             FROM {$wpdb->prefix}wc_orders 
-             WHERE customer_id = %d
-         )
-     )", $userId));
+         WHERE customer_id = %d
+     )
+ )", $userId));
 
             if ($total_refunds) {
                 $total_all -= $total_refunds;
             }
 
             $total_alls = $total_all - $total_shipping;
-
         } else {
-
             $total_all = $wpdb->get_var(
                 $wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
-  INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
-  INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
-  WHERE p.post_status IN ({$order_staus})  AND p.post_type LIKE 'shop_order'
-  AND pm.meta_key LIKE '_order_total' AND pm2.meta_key LIKE '_customer_user'
-  AND pm2.meta_value LIKE %d $data_start 
-  ", $userId));
+INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
+INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
+WHERE p.post_status IN ({$statuses_str})  AND p.post_type LIKE 'shop_order'
+AND pm.meta_key LIKE '_order_total' AND pm2.meta_key LIKE '_customer_user'
+AND pm2.meta_value LIKE %d $data_start 
+", $userId));
 
             // Получаем общую сумму возвратов
             $total_refunds = $wpdb->get_var($wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
-        INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
-        INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
-        WHERE p.post_status IN  ({$order_staus}) AND p.post_type LIKE 'shop_order'
-        AND pm.meta_key LIKE '_order_refund_amount' AND pm2.meta_key LIKE '_customer_user'
-        AND pm2.meta_value LIKE %d $data_start", $userId));
+    INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
+    INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
+    WHERE p.post_status IN  ({$statuses_str}) AND p.post_type LIKE 'shop_order'
+    AND pm.meta_key LIKE '_order_refund_amount' AND pm2.meta_key LIKE '_customer_user'
+    AND pm2.meta_value LIKE %d $data_start", $userId));
 
             // Вычитаем сумму возвратов из общей суммы заказов
             if ($total_refunds) {
                 $total_all -= $total_refunds;
             }
 
-
             $total_shipping = 0;
             if (BfwSetting::get('shipping-total-sum')) {
-
                 $query = $wpdb->prepare("SELECT post_id
-    FROM {$wpdb->prefix}postmeta
-    WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
+FROM {$wpdb->prefix}postmeta
+WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
                 $order_ids = $wpdb->get_col($query);
 
@@ -295,11 +294,8 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
                     // Получаем статус заказа
                     $order_statust = get_post_status($order_id);
 
-                    if (!is_array($order_staus)) {
-                        $order_staus = (array)$order_staus;
-                    }
-                    // Проверяем, что статус заказа - wc-completed
-                    if (in_array($order_statust, $order_staus)) {
+                    // Проверяем, что статус заказа в списке разрешенных
+                    if (in_array($order_statust, $prefixed_statuses)) {
                         // Получаем стоимость доставки для заказа
                         $shipping_cost = get_post_meta($order_id, '_order_shipping', true);
 
@@ -309,24 +305,17 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
                         }
                     }
                 }
-
-
             }
 
-
             $total_alls = $total_all - $total_shipping;
-
         }
-
 
         if (empty($total_alls)) {
             $total_alls = 0;
         }
 
-
         return $total_alls;
     }
-
 
     /**
      * Carrying out an offline order
@@ -479,8 +468,18 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      */
     public static function bfwoo_spisaniebonusov_in_cart_blocks()
     {
+        // Проверка nonce
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_cart_blocks')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
 
-        $redirect = $_POST['redirect'];
+        $redirect = esc_url_raw($_POST['redirect'] ?? '');
+        if (empty($redirect)) {
+            wp_send_json_error('Invalid redirect URL');
+            return;
+        }
+
         echo self::bfw_write_off_points($redirect);
         exit();
     }
@@ -666,6 +665,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
 
             $return = '<div class="text_how_many_points">' . $bonustext_in_carts . '</div>
 <div class="write_points_form">
+<input type="hidden" name="_wpnonce" value="'.wp_create_nonce('bfw_trata_points').'">
         <input type="hidden" name="action" value="computy_trata_points">
         <input type="hidden" name="redirect" value="' . $redirect . '">
         <input type="text" name="computy_input_points" class="input-text" value="' . self::roundPoints(($user_fast_points > 0 ? $user_fast_points : $vozmojniy_ball)) . '">
@@ -710,6 +710,12 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      */
     public static function bfwoo_trata_points(): void
     {
+        // Проверка nonce
+        if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_trata_points')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+
         if (!isset($_POST['computy_input_points'], $_POST['redirect'])) {
             wp_send_json_error(__('The required data is missing from the request.', 'bonus-for-woo'));
             return;
@@ -720,9 +726,12 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
             wp_send_json_error(__('Error getting user ID.', 'bonus-for-woo'));
             return;
         }
-        $requestedPoints = self::roundPoints((float)$_POST['computy_input_points']);
+
+        $requestedPoints = self::roundPoints((float)($_POST['computy_input_points'] ?? 0));
+        $redirect = esc_url_raw($_POST['redirect'] ?? '');
+
         if ($requestedPoints <= 0) {
-            wp_send_json_success($_POST['redirect']);
+            wp_send_json_success($redirect);
             return;
         }
         try {
@@ -935,7 +944,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
                     $cart->calculate_totals();
                 }
 
-                // 🔥 КРИТИЧЕСКИ ВАЖНО: Очистить applied_coupons в сессии
+                // Очистить applied_coupons в сессии
                 $applied = WC()->session->get('applied_coupons', []);
                 $applied = array_filter($applied, function ($code) use ($cartDiscount) {
                     return strtolower(trim($code)) !== $cartDiscount;
@@ -1005,13 +1014,32 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      */
     public static function handle_deduct_points_in_order(): void
     {
-        if (!isset($_POST['order_id']) || !isset($_POST['points'])) {
+        // Проверка nonce и прав
+        if (!current_user_can('edit_shop_orders') || !wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_deduct_points')) {
+            wp_send_json_error('Permission denied');
+            return;
+        }
+
+        if (!isset($_POST['order_id'], $_POST['points'])) {
             wp_send_json_error(__('Not enough data.', 'bonus-for-woo'));
+            return;
         }
 
         $order_id = (int)$_POST['order_id'];
-        $order = new WC_Order($_POST['order_id']);
+        $order = wc_get_order($order_id);
+
+        if (!$order) {
+            wp_send_json_error('Order not found');
+            return;
+        }
+
         $user_id = $order->get_user_id();
+        $points = (float)$_POST['points'];
+
+        if ($points <= 0) {
+            wp_send_json_error('Invalid points amount');
+            return;
+        }
         //сколько баллов у пользователя
         $balluser = BfwPoints::getPoints($user_id);
         if ($balluser < $_POST['points']) {
@@ -1834,7 +1862,7 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
             }
 
             // Если уже начислены баллы, то выходим
-            if ($order->get_meta('cashback_receipt') == 'received') {
+            if ($order->get_meta('cashback_receipt') === 'received') {
                 return false;
             }
 
@@ -2146,20 +2174,5 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
     }
 
 
-    /**
-     * Метод для теста. Выводит текущее изменение статуса
-     *
-     * @param $order_id
-     * @return void
-     * @testMethod
-     */
-    public static function test($order_id): void
-    {
-        $order = wc_get_order($order_id);
 
-        // Возвращаем статус заказа
-        $status = $order->get_status();
-
-        error_log('Изменение статуса:' . $status);
-    }
 }

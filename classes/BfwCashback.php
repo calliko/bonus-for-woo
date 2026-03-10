@@ -438,56 +438,86 @@ class BfwCashback
     }
 
 
+
     public static function computyMassAddPoints(): void
     {
+        ob_start();
+        global $wpdb;
+        $wpdb->hide_errors();
+        $wpdb->suppress_errors(true);
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Access denied');
         }
 
-        $paged  = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
-        $limit  = 200;
-        $offset = ($paged - 1) * $limit;
-
         $points = isset($_POST['points']) ? (int) $_POST['points'] : 0;
         $text   = isset($_POST['text']) ? sanitize_text_field($_POST['text']) : '';
 
-        if ($points <= 0) {
-            wp_send_json_error('Invalid points');
+        if ($points <= 0 || $points > 10000) {
+            wp_send_json_error('Invalid points amount');
         }
 
-        $users = get_users([
-            'number' => $limit,
-            'offset' => $offset,
-            'fields' => ['ID']
-        ]);
+        /*
+         * 1. Создаем meta computy_point если её нет
+         */
 
-        if (empty($users)) {
+        $wpdb->query("
+        INSERT INTO {$wpdb->usermeta} (user_id, meta_key, meta_value)
+        SELECT ID, 'computy_point', 0
+        FROM {$wpdb->users}
+        WHERE ID NOT IN (
+            SELECT user_id
+            FROM {$wpdb->usermeta}
+            WHERE meta_key = 'computy_point'
+        )
+    ");
 
-            // После завершения — удалить мета f14
-            global $wpdb;
-            $wpdb->delete($wpdb->usermeta, ['meta_key' => 'f14']);
+        /*
+         * 2. Начисляем баллы всем пользователям,
+         * которым ещё не начисляли (нет f14)
+         */
 
-            wp_send_json_success([
-                'done' => true
-            ]);
-        }
+        $wpdb->query(
+            $wpdb->prepare("
+            UPDATE {$wpdb->usermeta} p
+            LEFT JOIN {$wpdb->usermeta} f
+                ON f.user_id = p.user_id
+                AND f.meta_key = 'f14'
+            SET p.meta_value = p.meta_value + %d
+            WHERE p.meta_key = 'computy_point'
+            AND f.umeta_id IS NULL
+        ", $points)
+        );
 
-        foreach ($users as $user) {
+        /*
+         * 3. Помечаем что начислили
+         */
 
-            $user_id = $user->ID;
+        $wpdb->query("
+        INSERT INTO {$wpdb->usermeta} (user_id, meta_key, meta_value)
+        SELECT user_id, 'f14', 'yes'
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'computy_point'
+        AND user_id NOT IN (
+            SELECT user_id
+            FROM {$wpdb->usermeta}
+            WHERE meta_key = 'f14'
+        )
+    ");
 
-            // если уже начисляли — пропускаем
-            if (get_user_meta($user_id, 'f14', true) === 'yes') {
-                continue;
-            }
+        /*
+         * 4. История (опционально)
+         */
 
-            $current_points = (int) get_user_meta($user_id, 'computy_point', true);
-            $new_points     = $current_points + $points;
+        if (class_exists('BfwHistory')) {
 
-            update_user_meta($user_id, 'computy_point', $new_points);
-            update_user_meta($user_id, 'f14', 'yes');
+            $user_ids = $wpdb->get_col("
+            SELECT user_id
+            FROM {$wpdb->usermeta}
+            WHERE meta_key = 'f14'
+        ");
 
-            if (class_exists('BfwHistory')) {
+            foreach ($user_ids as $user_id) {
                 BfwHistory::add_history(
                     $user_id,
                     '+',
@@ -498,11 +528,19 @@ class BfwCashback
             }
         }
 
+        // удаляем временную метку
+        $wpdb->query("
+    DELETE FROM {$wpdb->usermeta}
+    WHERE meta_key = 'f14'
+");
+
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
         wp_send_json_success([
-            'done'      => false,
-            'next_page' => $paged + 1
+            'done' => true
         ]);
     }
-
 
 }
