@@ -665,7 +665,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
             $return = '<div class="text_how_many_points">' . $bonustext_in_carts . '</div>
 <div class="write_points_form">
-<input type="hidden" name="_wpnonce" value="'.wp_create_nonce('bfw_trata_points').'">
+ 
         <input type="hidden" name="action" value="computy_trata_points">
         <input type="hidden" name="redirect" value="' . $redirect . '">
         <input type="text" name="computy_input_points" class="input-text" value="' . self::roundPoints(($user_fast_points > 0 ? $user_fast_points : $vozmojniy_ball)) . '">
@@ -710,11 +710,11 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
      */
     public static function bfwoo_trata_points(): void
     {
-        // Проверка nonce
+      /*  // Проверка nonce
         if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_trata_points')) {
             wp_send_json_error('Security check failed');
             return;
-        }
+        } */
 
         if (!isset($_POST['computy_input_points'], $_POST['redirect'])) {
             wp_send_json_error(__('The required data is missing from the request.', 'bonus-for-woo'));

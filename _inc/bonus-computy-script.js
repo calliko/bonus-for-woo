@@ -352,19 +352,3 @@ jQuery(document).ready(function ($) {
 })(jQuery);
 
 
-function bfwAddNonceToForms() {
-    // Добавляем nonce ко всем AJAX-запросам
-    jQuery.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (settings.url && settings.url.indexOf('admin-ajax.php') !== -1) {
-                if (!settings.data) settings.data = '';
-                settings.data += '&_wpnonce=' + bfw_ajax.nonce;
-            }
-        }
-    });
-}
-
-// Инициализация
-jQuery(document).ready(function($) {
-    bfwAddNonceToForms();
-});
