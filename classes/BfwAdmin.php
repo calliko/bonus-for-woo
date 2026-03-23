@@ -2004,7 +2004,7 @@ class BfwAdmin
      */
     public static function fill_primer_field18(): void
     {
-        $value = BfwSetting::get('exclude-payment-method', '');
+        $value =BfwSetting::get('exclude-tovar-cashback', '');
         ?>
         <input style="width: 250px" placeholder="3124,524,231" type="text"
                name="bonus_option_name[exclude-tovar-cashback]" value="<?php echo esc_attr($value) ?>"/>
@@ -3145,7 +3145,7 @@ class BfwAdmin
                                 <div class="countdown">
                                     <p class="price-pro"><?php
                                         if (determine_locale() === 'ru_RU') {
-                                            echo __('Цена версии Pro: <del>4500</del> <b>3500 рублей</b>',
+                                            echo __('Цена версии Pro: <del>4500</del> <b>2990 рублей</b>',
                                                     'bonus-for-woo');
                                         } else {
                                             echo 'Pro version price: <del>$60</del> <b>$46</b>';

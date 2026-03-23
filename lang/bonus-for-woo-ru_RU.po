@@ -332,8 +332,8 @@ msgid "Text in the form of writing off points."
 msgstr "Текст в форме списания баллов."
 
 #: classes/BfwAdmin.php:2744
-msgid "Цена версии Pro: <del>4500</del> <b>3500 рублей</b>"
-msgstr "Цена версии Pro: <del>4500</del> <b>3500 рублей</b>"
+msgid "Цена версии Pro: <del>4500</del> <b>2990 рублей</b>"
+msgstr "Цена версии Pro: <del>4500</del> <b>2990 рублей</b>"
 
 #: classes/BfwAdmin.php:611
 msgid "Do not include shipping when calculating the order amount."

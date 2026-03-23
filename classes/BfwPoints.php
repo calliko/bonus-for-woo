@@ -1014,11 +1014,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
      */
     public static function handle_deduct_points_in_order(): void
     {
-        // Проверка nonce и прав
-        if (!current_user_can('edit_shop_orders') || !wp_verify_nonce($_POST['_wpnonce'] ?? '', 'bfw_deduct_points')) {
-            wp_send_json_error('Permission denied');
-            return;
-        }
+
 
         if (!isset($_POST['order_id'], $_POST['points'])) {
             wp_send_json_error(__('Not enough data.', 'bonus-for-woo'));
