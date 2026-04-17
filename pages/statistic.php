@@ -162,8 +162,8 @@ defined( 'ABSPATH' ) || exit;
             <div class="bfw-badge-time">
                 <span class="dashicons dashicons-calendar-alt"></span>
                 <?php _e('Range:', 'bonus-for-woo'); ?> 
-                <strong><?php echo !empty($stats['date_start']) ? esc_html($stats['date_start']) : 'All time'; ?> - <?php echo !empty($stats['date_end']) ? esc_html($stats['date_end']) : 'All time'; ?></strong>
-                <span style="font-size: 11px; margin-left:10px;">(Upd: <?php echo date_i18n('H:i', $stats['timestamp']); ?>)</span>
+                <strong><?php echo !empty($stats['date_start']) ? esc_html($stats['date_start']) :  _e('All time', 'bonus-for-woo'); ?> - <?php echo !empty($stats['date_end']) ? esc_html($stats['date_end']) : 'All time'; ?></strong>
+                <span style="font-size: 11px; margin-left:10px;">(<?php _e('Updated', 'bonus-for-woo'); ?>: <?php echo date_i18n('H:i', $stats['timestamp']); ?>)</span>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="date" id="bfw-date-start" class="regular-text" value="<?php echo esc_attr($stats['date_start'] ?? date('Y-m-d', strtotime('-30 days'))); ?>" style="height:35px; width: 140px;">
