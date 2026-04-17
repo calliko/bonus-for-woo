@@ -119,7 +119,7 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
-= 8.0.0 - 2026-04-16 =
+= 8.0.0 - 2026-04-17 =
 * Fixed an issue with incorrect point accrual for the first order.
 * Improved security.
 * Added standard WordPress tables to the point and coupon accrual history in the admin panel.
