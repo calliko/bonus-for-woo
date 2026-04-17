@@ -46,7 +46,8 @@ jQuery(document).ready(function ($) {
                 data: {
                     action: 'deduct_points', // Название действия
                     order_id: woocommerce_admin_meta_boxes.post_id, // ID заказа
-                    points: points // Количество баллов
+                    points: points, // Количество баллов
+                    security: bfw_order_points.nonce
                 },
                 success: function (response) {
                     if (response.success) {
@@ -83,7 +84,8 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'track_coupon_removal',
                 order_id: orderId,
-                coupon_code: couponCode
+                coupon_code: couponCode,
+                security: bfw_order_points.nonce
             },
             success: function (response) {
                 console.log(response);

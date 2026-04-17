@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
         jQuery.post(ajaxurl, {
             action: 'cashback_recount',
             offset: offset,
+            nonce: bfwScriptAdmin.recount_nonce
         }, function (response) {
             offset = response.nextOffset;
             total = response.total;
@@ -43,7 +44,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Предотвращаем действие по умолчанию (если нужно)
 
-        jQuery.post(ajaxurl, {action: 'cashback_prepare'}, function (res) {
+        jQuery.post(ajaxurl, {
+            action: 'cashback_prepare',
+            nonce: bfwScriptAdmin.recount_nonce
+        }, function (res) {
             offset = 0;
             total = res.total;
 
@@ -113,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: new URLSearchParams({
                         action: 'bfw_send_points_from_order',
                         orderId: orderId,
-                        //  wpnonce: wpnonce
+                        nonce: bfwScriptAdmin.send_points_nonce
                     }),
                 });
 
@@ -184,5 +188,49 @@ function countdown(endDate) {
         countdown('2024-10-25T23:59:59');
     }
 })();
+
+/**
+ * Функция умной печати таблицы
+ */
+window.bfwPrintTable = function (e) {
+    if (e) e.preventDefault();
+    
+    const wrap = jQuery('.wrap');
+    const table = wrap.find('.wp-list-table').clone();
+    const title = wrap.find('h1').first().text();
+
+    // Удаляем ненужные колонки из клона
+    table.find('.column-cb, .check-column, .column-actions').remove();
+    // Удаляем все формы внутри ячеек (например, кнопки удаления)
+    table.find('form').remove();
+
+    const win = window.open('', 'PRINT', 'height=800,width=1000');
+    
+    win.document.write('<html><head><title>' + title + '</title>');
+    win.document.write('<style>');
+    win.document.write('body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; padding: 30px; color: #000; }');
+    win.document.write('h1 { font-size: 18pt; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }');
+    win.document.write('table { border-collapse: collapse; width: 100%; border: 1px solid #000; }');
+    win.document.write('th, td { border: 1px solid #000; padding: 10px 8px; text-align: left; font-size: 10pt; word-break: break-all; }');
+    win.document.write('th { background: #f0f0f1; font-weight: bold; }');
+    win.document.write('.bfw-status-badge { font-weight: bold; text-transform: uppercase; font-size: 8pt; border: 1px solid #000; padding: 2px 4px; }');
+    win.document.write('</style>');
+    win.document.write('</head><body>');
+    win.document.write('<h1>' + title + '</h1>');
+    win.document.write(table[0].outerHTML);
+    win.document.write('</body></html>');
+    
+    win.document.close();
+    
+    // Небольшая задержка для рендеринга
+    setTimeout(function() {
+        win.focus();
+        win.print();
+        win.close();
+    }, 300);
+
+    return false;
+};
+
 
 

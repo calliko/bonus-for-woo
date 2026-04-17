@@ -41,8 +41,11 @@ class BfwReview
     {
 
         if (BfwSetting::get('bonus-for-otziv')) {
-            $bonusfor_otziv_new = BfwSetting::get('bonus-for-otziv');
-            $computy_user_point = BfwPoints::getPoints($comment->user_id) + $bonusfor_otziv_new;
+            $bonusfor_otziv_raw = (float)BfwSetting::get('bonus-for-otziv');
+            // Применяем округление согласно настройкам плагина
+            $bonusfor_otziv_new = BfwPoints::roundPoints($bonusfor_otziv_raw);
+            $current_points = BfwPoints::getPoints($comment->user_id);
+            $computy_user_point = $current_points + $bonusfor_otziv_new;
 
             if (get_post_type($comment->comment_post_ID) === 'product') {
                 add_filter('woocommerce_order_is_paid_statuses', array('BfwReview', 'bfw_paid_is_paid_status'));
@@ -110,7 +113,8 @@ class BfwReview
     public static function bfwoo_unapproved_comment_callback($comment): void
     {
         $bonusfor_otziv_new = (float)BfwSetting::get('bonus-for-otziv');
-        $computy_user_point = BfwPoints::getPoints($comment->user_id) - $bonusfor_otziv_new;
+        $current_points = BfwPoints::getPoints($comment->user_id);
+        $computy_user_point = max(0, $current_points - $bonusfor_otziv_new);
         if (get_post_type($comment->comment_post_ID) === 'product') {
             global $wpdb;
             $count_comment = $wpdb->get_var($wpdb->prepare('SELECT COUNT(comment_ID) FROM ' . $wpdb->prefix . 'comments WHERE user_id = %d AND comment_post_ID = %d AND comment_approved ="1"',

@@ -18,13 +18,13 @@ class BfwRoles
      * Добавления статуса
      *
      * @param $name string
-     * @param $percent
+     * @param float $percent
      * @param $summaStart float
      *
-     * @return void
+     * @return string
      * @version 6.4.3
      */
-    public static function addRole(string $name, $percent, float $summaStart): void
+    public static function addRole(string $name, float $percent, float $summaStart): string
     {
         global $wpdb;
         // Удаление лишних преобразований
@@ -78,10 +78,10 @@ class BfwRoles
         $existing_sumaStart = $wpdb->get_row($wpdb->prepare("SELECT summa_start, name FROM $table_name WHERE summa_start = %s",
             $summaStart));
         $message = '';
-        $message_type = 'notice-warning';
+        $message_type = 'bfw-notice-warning';
         if (!empty($existing_name)) {
             $message = __('Status',
-                    'bonus-for-woo') . ' <b>' . esc_html($name) . '</b> ' . __('is already in use. Please enter another status name.',
+                    'bonus-for-woo') . ' «' . esc_html($name) . '» ' . __('is already in use. Please enter another status name.',
                     'bonus-for-woo');
         } elseif ($summaStart < 0) {
             $message = __('The accumulated amount cannot be less than 0', 'bonus-for-woo');
@@ -93,20 +93,18 @@ class BfwRoles
         } else {
             $inserted = $wpdb->insert($table_name,
                 array('name' => $name, 'slug' => $slug, 'percent' => $percent, 'summa_start' => $summaStart),
-                array("%s", "%s", "%s", "%s"));
-            if ($inserted) {
-                $message_type = 'notice-success';
-                $message = __('Status', 'bonus-for-woo') . '<b> ' . esc_html($name) . '</b> ' . __('added',
-                        'bonus-for-woo') . '.';
-            } else {
-                $message_type = 'notice-error';
+                array("%s", "%s", "%f", "%f"));
+            if (!$inserted) {
+                $message_type = 'bfw-notice-error';
                 $message = __('Error adding status. Please try again.', 'bonus-for-woo');
+            }else{
+                $message_type = 'bfw-notice-success';
+                $message = __('Status', 'bonus-for-woo') . ' «' . esc_html($name) . '» ' . __('added', 'bonus-for-woo') . '.';
             }
         }
 
-        if (!empty($message)) {
-            echo '<div id="message" class="notice ' . $message_type . ' is-dismissible"><p>' . $message . '</p></div>';
-        }
+        return '<div class="bfw-notice ' . esc_attr($message_type) . '"><span class="dashicons dashicons-yes-alt"></span>  ' . wp_kses_post($message) . '</div>';
+
     }
 
 
@@ -114,26 +112,25 @@ class BfwRoles
      * Обновление статуса админом
      *
      * @param string $name
-     * @param $percent
+     * @param float $percent
      * @param float $summaStart
      *
-     * @return void
+     * @return string
      * @version 6.4.3
      */
-    public static function updateStatus(string $name, float $percent, float $summaStart): void
+    public static function updateStatus(string $name, float $percent, float $summaStart): string
     {
         global $wpdb;
         $updated = $wpdb->update($wpdb->prefix . "bfw_computy",
             array('percent' => $percent, 'summa_start' => $summaStart), array('name' => $name));
 
         if ($updated === false) {
-            echo '<div id="message" class="notice notice-error is-dismissible"><p>' . __('Error updating status. Please try again.',
+            return '<div   class="bfw-notice bfw-notice-error is-dismissible"><p>' . __('Error updating status. Please try again.',
                     'bonus-for-woo') . '</p></div>';
-        } else {
-            echo '<div id="message" class="notice notice-success is-dismissible"><p>' . __('Status',
-                    'bonus-for-woo') . '<b> ' . esc_html($name) . '</b> ' . __('updated',
-                    'bonus-for-woo') . '.</p></div>';
         }
+
+        return '<div class="bfw-notice bfw-notice-success"><span class="dashicons dashicons-yes-alt"></span> '. __('Status',
+                'bonus-for-woo') . ' «' . esc_html($_POST['name_role']) . '» ' . __('updated','bonus-for-woo').'</div>';
     }
 
 
@@ -141,20 +138,15 @@ class BfwRoles
      * Удаление статуса
      *
      * @param int $id
-     * @param string $name
      *
      * @return void
      * @version 6.4.3
      */
-    public static function deleteStatus(int $id, string $name): void
+    public static function deleteStatus(int $id): void
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_computy';
         $wpdb->query($wpdb->prepare("DELETE FROM {$table_name} WHERE id = %d", $id));
-
-        echo '<div id="message" class="notice notice-warning is-dismissible">
-	<p>' . __('Status', 'bonus-for-woo') . ' <b>' . $name . '</b> ' . __('deleted', 'bonus-for-woo') . '.</p>
-</div>';
     }
 
     /**
@@ -189,7 +181,6 @@ class BfwRoles
             return ['name' => __('User deleted', 'bonus-for-woo'), 'percent' => 0, 'slug' => 'no_status'];
         }
 
-        //$role = $user_info->roles[0] ?? $user_info->roles[1];
         // Получаем первую роль пользователя безопасно
         $roles = is_array($user_info->roles) ? $user_info->roles : [];
         $role = reset($roles); // получаем первую роль
@@ -201,8 +192,15 @@ class BfwRoles
             return ['name' => __('No status', 'bonus-for-woo'), 'percent' => 0, 'slug' => 'no_status'];
         }
 
-        $you_role = $wpdb->get_row($wpdb->prepare("SELECT name, percent, slug FROM {$wpdb->prefix}bfw_computy WHERE id = %d",
-            $status_id));
+
+        $cache_key = 'bfw_computy_role_'.$status_id;
+        $you_role = wp_cache_get($cache_key);
+        if (false === $you_role) {
+            $you_role = $wpdb->get_row($wpdb->prepare("SELECT name, percent, slug FROM {$wpdb->prefix}bfw_computy WHERE id = %d",
+                $status_id));
+            wp_cache_set($cache_key, $you_role, '', HOUR_IN_SECONDS);
+        }
+
 
         return [
             'name' => $you_role->name ?? __('Client', 'bonus-for-woo'),
@@ -244,6 +242,10 @@ class BfwRoles
             if (!empty($status_id)) {
                 if ((int)$status_id !== (int)get_user_meta($userId, 'bfw_status', true)) {
                     update_user_meta($userId, 'bfw_status', $status_id);
+
+                    // Добавляем лог
+                    BfwLogs::addLog('status_change', $userId, sprintf(__('Status changed to: %s', 'bonus-for-woo'), $status_name));
+
                     if (BfwSetting::get('email-when-status-chenge') && !empty($sendEmail)) {
                         $text_email = BfwSetting::get('email-when-status-chenge-text', '');
                         $title_email = BfwSetting::get('email-when-status-chenge-title',

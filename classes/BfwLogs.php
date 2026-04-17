@@ -61,6 +61,7 @@ class BfwLogs
             $limit = '';
             $endDate = $date_finish ?? gmdate('Y-m-d');
             $where = " WHERE created BETWEEN '" . $date_start . "' AND '" . $endDate . "'";
+
         }
         global $wpdb;
         $table_bfw = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bfw_logs_computy {$where}  ORDER BY created DESC {$limit}");
@@ -100,7 +101,8 @@ class BfwLogs
                         } else {
                             $nameuser = $user->user_login ?? 'login';
                         }
-                        echo '<td><a href="/wp-admin/user-edit.php?user_id=' . $bfw->user . '" target="_blank">' . $nameuser . '</a></td>';
+                        $edit_user_url = admin_url('user-edit.php?user_id=' . $bfw->user);
+                        echo '<td><a href="' . esc_url($edit_user_url) . '" target="_blank">' . esc_html($nameuser) . '</a></td>';
                     }
 
 

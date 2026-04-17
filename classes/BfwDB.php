@@ -80,7 +80,7 @@ class BfwDB
                    ) $charset_collate;";
 
         $bfw_coupon_usages = $wpdb->prefix . 'bfw_coupon_usages';
-        $sql4 = "CREATE TABLE $bfw_coupons_computy (
+        $sql4 = "CREATE TABLE $bfw_coupon_usages (
 		id mediumint NOT NULL AUTO_INCREMENT,
 		code varchar(250) NOT NULL,		 
 		user int(10) NOT NULL,

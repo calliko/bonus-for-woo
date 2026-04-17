@@ -45,13 +45,6 @@ class BfwFunctions
         wp_localize_script('bonus-computy-script', 'wpApiSettings', [
                 'nonce' => wp_create_nonce('wp_rest')
         ]);
-        // Локализуем данные для скрипта
-        /*   wp_localize_script('bonus-computy-script', 'bfw_rest_config', array(
-                   'root' => esc_url_raw(rest_url()),
-                   'nonce' => wp_create_nonce('wp_rest'),
-                   'current_user_id' => get_current_user_id()
-           ));*/
-
     }
 
 
@@ -143,7 +136,7 @@ class BfwFunctions
 
 
     /**
-     * Copyright computy
+     * Copyright computy.ru
      * Копирайт computy.ru
      *
      * @return void
@@ -156,8 +149,7 @@ class BfwFunctions
             <div class="computy_copyright"><?php
                 echo __('Works on', 'bonus-for-woo'); ?> <a
                         href="https://computy.ru/blog/bonus-for-woo-wordpress/" target="_blank"
-                        title="<?php echo __('About the bonus for woo plugin.', 'bonus-for-woo'); ?>"> Bonus for
-                    woo.</a></div>
+                        title="<?php echo __('About the bonus for woo plugin.', 'bonus-for-woo'); ?>"> Bonus for woo.</a></div>
             <?php
         }
     }
@@ -190,7 +182,7 @@ class BfwFunctions
                     /*Yes, that's it.☺ If you have any questions or suggestions, write to https://t.me/tokmakov_alex , let's chat.*/
                     /*Да, вот так просто.☺ Есть вопросы и предложения пиши https://t.me/tokmakov_alex , пообщаемся.*/
                     update_option(base64_decode('Ym9udXMtZm9yLXdvby1wcm8='), base64_decode('YWN0aXZl'));
-                    wp_safe_redirect('/wp-admin/admin.php?page=bonus_for_woo-plugin-options');
+                    wp_safe_redirect(admin_url('admin.php?page=bonus_for_woo-plugin-options'));
                     exit;
                 } else {
                     echo '<div class="notice notice-error is-dismissible">' . __('The key is not correct! Contact info@computy.ru',
@@ -448,7 +440,7 @@ class BfwFunctions
      */
     public static function helpTip(string $text, string $event = 'faq'): string
     {
-        return '<span class="bfw-help-tip ' . esc_attr($event) . '" data-tip="' . $text . '"></span>';
+        return '<span class="bfw-help-tip ' . esc_attr($event) . '" data-tip="' . esc_attr($text) . '"></span>';
     }
 
 
@@ -476,14 +468,14 @@ class BfwFunctions
     /**
      * Получает количество заказов пользователя
      */
-    public static function get_customer_order_count(int $user_id, array $order_status = null): int
+    public static function get_customer_order_count(int $user_id, array $order_status = null, $exclude_order_id = null): int
     {
         if (!$user_id) {
             return 0;
         }
 
         if (!$order_status) {
-            $order_status = array('completed', 'processing', 'on-hold');
+            $order_status = array('completed', 'processing');
         }
         $args = array(
                 'customer_id' => $user_id,
@@ -491,6 +483,10 @@ class BfwFunctions
                 'limit' => -1, // Получаем все заказы
                 'return' => 'ids',
         );
+
+        if ($exclude_order_id) {
+            $args['exclude'] = [$exclude_order_id];
+        }
 
         return count(wc_get_orders($args));
     }

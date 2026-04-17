@@ -100,6 +100,20 @@ class BfwAccount
 
         $output .= self::renderPointsRow($roundedPoints, $pointLabel, $options, $userId, $titleBonusPoints);
 
+        // Pending-баллы: показываем ожидаемый кешбэк по заказам в обработке
+        $pending = (float)get_user_meta($userId, 'computy_point_pending', true);
+        if ($pending > 0) {
+            $pendingRounded = BfwPoints::roundPoints($pending);
+            $pendingLabel = BfwPoints::pointsLabel($pendingRounded);
+            $output .= sprintf(
+                '<div class="bonus_computy_account bfw-account_pending_points">
+                    <span class="bfw-pending-badge"><svg class="bfw-icon bfw-icon-pending" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> %s: <b>+%s %s</b></span>
+                </div>',
+                esc_html(__('Awaiting accrual', 'bonus-for-woo')),
+                number_format($pendingRounded, 0, '', ' '),
+                esc_html($pendingLabel)
+            );
+        }
 
         $output .= '</div>';
 
@@ -578,11 +592,23 @@ class BfwAccount
         $description = get_bloginfo('description');
         $bfwReferral = new BfwReferral();
 
-        $output = sprintf(
-                '<div class="bonus_computy_account bfw-account_referral">
-            <span class="title_bca">%s</span> 
-            <code id="code_referal" class="value_bca">%s</code> 
-            <span title="%s" id="copy_referal"></span>
+        $text_before = BfwSetting::get('referral-text-before', '');
+        
+        $output = '<div class="bfw-referral-container">';
+
+        if (!empty($text_before)) {
+            $output .= sprintf('<div class="bfw-referral-instructions">%s</div>', wpautop($text_before));
+        }
+
+        $output .= '<div class="bfw-referral-card">';
+
+        $output .= sprintf(
+                '<div class="bfw-referral-link-section">
+            <span class="bfw-referral-label">%s</span> 
+            <div class="bfw-referral-url-wrapper">
+                <code id="code_referal" class="bfw-referral-url">%s</code> 
+                <span title="%s" id="copy_referal" class="bfw-copy-btn"></span>
+            </div>
             <span id="copy_good"></span>
         </div>',
                 __('My referral link', 'bonus-for-woo'),
@@ -590,16 +616,19 @@ class BfwAccount
                 __('Copy link', 'bonus-for-woo')
         );
 
+        $output .= '<div class="bfw-referral-actions">';
         $output .= $bfwReferral::bfwSocialLinks($url, $title, $description);
 
         if ($showQrCode) {
-            $output .= self::renderQrCode($referralCode, $url);
+            $output .= sprintf('<div class="bfw-qr-code-wrapper">%s</div>', self::renderQrCode($referralCode, $url));
         }
+        $output .= '</div>'; // End bfw-referral-actions
 
+        $output .= '<div class="bfw-referral-stats">';
         $output .= sprintf(
-                '<div class="bonus_computy_account">
-            <span class="title_bca">%s</span> 
-            <span class="value_bca">%d %s</span>
+                '<div class="bfw-stat-item">
+            <span class="bfw-stat-label">%s</span> 
+            <span class="bfw-stat-value">%d %s</span>
         </div>',
                 __('You invited', 'bonus-for-woo'),
                 $directReferralCount,
@@ -608,15 +637,19 @@ class BfwAccount
 
         if ($secondLevelReferralCount > 0) {
             $output .= sprintf(
-                    '<div class="bonus_computy_account">
-                <span class="title_bca">%s</span> 
-                <span class="value_bca">%d %s</span>
+                    '<div class="bfw-stat-item">
+                <span class="bfw-stat-label">%s</span> 
+                <span class="bfw-stat-value">%d %s</span>
             </div>',
                     __('Your friends invited', 'bonus-for-woo'),
                     $secondLevelReferralCount,
                     __('people', 'bonus-for-woo')
             );
         }
+        $output .= '</div>'; // End bfw-referral-stats
+
+        $output .= '</div>'; // End bfw-referral-card
+        $output .= '</div>'; // End bfw-referral-container
 
         return $output;
     }
@@ -644,7 +677,7 @@ class BfwAccount
                 QRcode::png($url, $qrCodePath, 'L', '6px');
                 chmod($qrCodePath, 0644); // Set proper permissions
             } catch (Exception $e) {
-                error_log('QR Code generation failed: ' . $e->getMessage());
+                BfwLogs::addLog('error', get_current_user_id(), 'QR Code generation failed: ' . $e->getMessage());
                 return '';
             }
         }
@@ -776,6 +809,9 @@ class BfwAccount
                 $bfwHistory = new BfwHistory();
                 $bfwHistory::clearAllHistoryUser($user_id);
                 $bfwHistory::add_history($user_id, '+', $pointsForReg, '0', $reason);
+
+                // Добавляем лог
+                BfwLogs::addLog('add_points', $user_id, $reason);
 
                 $user = get_userdata($user_id);
 
@@ -982,7 +1018,8 @@ class BfwAccount
     {
         if (!empty($_POST['bfw_offline_order_price'])) {
             $points->addOfflineOrder(sanitize_text_field($_POST['bfw_offline_order_price']), $user_id);
-            wp_safe_redirect('/wp-admin/user-edit.php?user_id=' . $user_id);
+
+            wp_safe_redirect(admin_url('user-edit.php?user_id=' . $user_id));
             exit;
         }
     }
@@ -1041,7 +1078,8 @@ class BfwAccount
     ): void {
         // Проверка на наличие цены заказа, если есть - перенаправляем
         if (!empty($_POST['bfw_offline_order_price'])) {
-            wp_safe_redirect('/wp-admin/user-edit.php?user_id=' . $user_id);
+            wp_safe_redirect(admin_url('user-edit.php?user_id=' . $user_id));
+
             exit;
         }
 
@@ -1058,6 +1096,9 @@ class BfwAccount
 
         // Добавление истории
         $history::add_history($user_id, $action, $diff, '0', $reason);
+
+        // Добавляем лог
+        BfwLogs::addLog($action === '+' ? 'add_points' : 'remove_points', $user_id, $reason . ' (' .$action.$diff.' '. __('Manual adjustment', 'bonus-for-woo') . ')');
 
         // Отправка email
         self::sendPointsChangeEmail($user_id, $email, $new_points, $old_points, $diff, $reason);

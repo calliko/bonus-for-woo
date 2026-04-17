@@ -105,7 +105,7 @@ class BfwHistory
                     function confirmClearHistory() {
                         if (confirm("<?php echo esc_js(__('Are you sure you want to clear this customer bonus points history?',
                                 'bonus-for-woo')); ?>")) {
-                            window.location = "/wp-admin/user-edit.php?user_id=<?php echo esc_js($user_id); ?>&bfw_delete_all_post_history_points=<?php echo esc_js($user_id); ?>";
+                            window.location = "<?php echo esc_js(wp_nonce_url(admin_url('user-edit.php?user_id=' . $user_id . '&bfw_delete_all_post_history_points=' . $user_id), 'bfw_delete_all_history')); ?>";
                         }
                     }
                 </script>
@@ -168,10 +168,11 @@ class BfwHistory
                     <td>
                         <span style="color: <?php echo esc_attr($color); ?>"><?php echo esc_html($item->symbol . BfwPoints::roundPoints($item->points)); ?></span>
                     </td>
-                    <td><?php echo $order_link . esc_html($item->comment_admin); ?></td>
+                    <td><?php echo $order_link . wp_kses_post($item->comment_admin); ?></td>
                     <?php if (current_user_can('manage_options')): ?>
                         <td>
                             <form method="post" class="list_role_computy">
+                                <?php wp_nonce_field('bfw_action_history', 'bfw_nonce_history'); ?>
                                 <input type="hidden" name="bfw_delete_post_history_points"
                                        value="<?php echo esc_attr($item->id); ?>">
                                 <input type="submit" value="+" class="delete_role-bfw"
@@ -203,16 +204,29 @@ class BfwHistory
      */
     public static function getListHistory($date_start = false, $date_finish = false): void
     {
-        $where = '';
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bfw_history_computy';
+        $query = "SELECT * FROM {$table_name}";
+        $args = [];
+
         if ($date_start) {
+            $endDate = $date_finish ?: gmdate('Y-m-d');
+            $query .= " WHERE date BETWEEN %s AND %s";
+            $args[] = $date_start . ' 00:00:00';
+            $args[] = $endDate . ' 23:59:59';
             $limit = '';
-            $endDate = $date_finish ?? gmdate('Y-m-d');
-            $where = " WHERE date BETWEEN '" . $date_start . "' AND '" . $endDate . "'";
         } else {
             $limit = ' LIMIT 500';
         }
-        global $wpdb;
-        $table_bfw = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bfw_history_computy {$where}  ORDER BY date DESC {$limit}");
+
+        $query .= " ORDER BY date DESC {$limit}";
+
+        if (!empty($args)) {
+            $table_bfw = $wpdb->get_results($wpdb->prepare($query, ...$args));
+        } else {
+            $table_bfw = $wpdb->get_results($query);
+        }
+
         if ($table_bfw) { ?>
 
             <table class="table-bfw table-bfw-history-points"
@@ -245,27 +259,32 @@ class BfwHistory
                 foreach ($table_bfw as $bfw) {
                     $getorderz = '';
                     if ($bfw->orderz != '0') {
-                        $getorderz = '<a href="/wp-admin/post.php?post=' . $bfw->orderz . '&action=edit">' . __('Order',
+                        $editPostUrl = admin_url('post.php?post=' . $bfw->orderz. '&action=edit');
+                        $getorderz = '<a href="'.esc_url($editPostUrl).'">' . __('Order',
                                         'bonus-for-woo') . ' №' . $bfw->orderz . '</a> ';
                     }
                     $color = $bfw->symbol === '+' ? '#23CE48' : ($bfw->symbol === '-' ? '#FF001D' : '');
                     echo '<tr><td>' . $i++ . '</td>
 <td>' . date_format(date_create($bfw->date), 'd.m.Y H:i') . '</td>';
-                    echo '<td>' . $bfw->user . '</td>';
+                    echo '<td>' .esc_html($bfw->user) . '</td>';
 
                     $user = get_userdata($bfw->user);
-                    echo '<td>' . $user->user_email . '</td>';
+                    echo '<td>' . esc_html($user->user_email ?? '') . '</td>';
                     $role = BfwRoles::getRole($bfw->user);
                     if (!empty($user->first_name)) {
                         $nameuser = $user->first_name . ' ' . $user->last_name;
                     } else {
                         $nameuser = $user->user_login ?? 'login';
                     }
-                    echo '<td><a href="/wp-admin/user-edit.php?user_id=' . $bfw->user . '" target="_blank">' . $nameuser . '</a></td><td>' . $role['name'] . '</td>
+                    $edit_user_url = admin_url('user-edit.php?user_id=' . $bfw->user);
+
+                    echo '<td><a href="'.esc_url($edit_user_url).'" target="_blank">' . esc_html($nameuser) . '</a></td><td>' . $role['name'] . '</td>
 <td><span style="color:' . $color . ' ">' . $bfw->symbol . BfwPoints::roundPoints($bfw->points) . '</span></td>
-<td>' . $getorderz . $bfw->comment_admin . '</td>';
+<td>' . $getorderz . wp_kses_post($bfw->comment_admin) . '</td>';
                     if (current_user_can('manage_options')) {
-                        echo '<td><form method="post" action="" class="list_role_computy"><input type="hidden" name="bfw_delete_post_history_points" value="' . $bfw->id . '" >
+                        echo '<td><form method="post" action="" class="list_role_computy">
+                        ' . wp_nonce_field('bfw_action_history', 'bfw_nonce_history', true, false) . '
+                        <input type="hidden" name="bfw_delete_post_history_points" value="' . $bfw->id . '" >
    <input type="submit" value="+" class="delete_role-bfw" title="' . __('Delete',
                                         'bonus-for-woo') . '" onclick="return window.confirm(\' ' . __('Are you sure you want to remove this entry from your reward points history?',
                                         'bonus-for-woo') . ' \');">

@@ -18,21 +18,28 @@ class BfwRouter
         BfwStatistic::init();
         add_action('wp_ajax_bfw_get_stats_timestamp', ['BfwStatistic', 'ajax_get_stats_timestamp']);
 
+        /* Экспорт данных */
+        Bfw_Export::init();
+
+
 
         /*
          * Действие при нажатии кнопки экспорта баллов
-        * @since 4.4.0
-        * @version 4.4.0
-        */
+         * @since 4.4.0
+         * @version 4.4.0
+         */
 
         if (isset($_GET['export_bfw_points']) && current_user_can('manage_options')) {
+            if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'bfw_export_points')) {
+                wp_die('Security check failed');
+            }
 
-            
+
             $file_path = BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv';
             $file_path = wp_normalize_path($file_path);
-            
 
-            
+
+
             $buffer = fopen($file_path, 'w');
             if (!$buffer) {
                 wp_die('Cannot create export file');
@@ -49,10 +56,10 @@ class BfwRouter
 
             $data = [];
             foreach ($users as $user) {
-                $points = (int)(get_user_meta($user->ID, 'computy_point', true) ?? 0);
+                $points = (int) (get_user_meta($user->ID, 'computy_point', true) ?? 0);
                 $arrayRole = $status->getRole($user->ID);
                 $data[] = [
-                    'id' => (int)$user->ID,
+                    'id' => (int) $user->ID,
                     'name' => sanitize_text_field($user->user_nicename),
                     'email' => sanitize_email($user->user_email),
                     'phone' => sanitize_text_field(get_user_meta($user->ID, 'billing_phone', true) ?? ''),
@@ -74,15 +81,15 @@ class BfwRouter
             if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'bfw_remove_export')) {
                 wp_die('Security check failed');
             }
-            
+
             $file_path = BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv';
             $file_path = wp_normalize_path($file_path);
-            
+
             // Проверка пути
             if (strpos($file_path, BONUS_COMPUTY_PLUGIN_DIR) !== 0) {
                 wp_die('Invalid file path');
             }
-            
+
             if (file_exists($file_path)) {
                 wp_delete_file($file_path);
             }
@@ -101,8 +108,12 @@ class BfwRouter
         add_action('upgrader_process_complete', array('BfwFunctions', 'bfwUpdateCompleted'), 10, 2);
 
         // Исключаем скидку из налогов
-        add_action('woocommerce_cart_totals_get_fees_from_cart_taxes', array('BfwPoints', 'excludeCartFeesTaxes'), 10,
-            3);
+        add_action(
+            'woocommerce_cart_totals_get_fees_from_cart_taxes',
+            array('BfwPoints', 'excludeCartFeesTaxes'),
+            10,
+            3
+        );
 
 
         /** Accounts */
@@ -172,14 +183,12 @@ class BfwRouter
         add_action('wp_ajax_track_coupon_removal', array('BfwPoints', 'handle_track_coupon_removal'));
         /*-------Экспорт csv файла бонусов  */
         add_action('wp_ajax_bfw_export_bonuses', array('BfwPoints', 'bfw_export_bonuses'));
-        add_action('wp_ajax_nopriv_bfw_export_bonuses', array('BfwPoints', 'bfw_export_bonuses'));
 
         /*-------Экспорт csv файла купонов  */
         add_action('wp_ajax_bfw_export_coupons', array('BfwCoupons', 'bfwExportCoupons'));
-        add_action('wp_ajax_nopriv_bfw_export_coupons', array('BfwCoupons', 'bfwExportCoupons'));
 
         /*-------Добавляем скидку-------*/
-        add_action('woocommerce_cart_calculate_fees', array('BfwPoints', 'bfwoo_add_fee'), 10, 1);
+        add_action('woocommerce_cart_calculate_fees', array('BfwPoints', 'bfwoo_add_fee'), 1, 1);
 
         /*-------Начисляем кешбэк-баллы в редакторе заказа-------*/
         add_action('wp_ajax_bfw_send_points_from_order', array('BfwPoints', 'handleSendPointsFromOrder'));
@@ -189,8 +198,12 @@ class BfwRouter
         add_action('delete_user', array('BfwHistory', 'bfw_when_delete_user'));
 
         /*-------Удаление временных баллов при очистке корзины-------*/
-        add_action('woocommerce_remove_cart_item', array('BfwPoints', 'actionWoocommerceBeforeCartItemQuantityZero'),
-            10, 1);
+        add_action(
+            'woocommerce_remove_cart_item',
+            array('BfwPoints', 'actionWoocommerceBeforeCartItemQuantityZero'),
+            10,
+            1
+        );
 
         /*Действие сработает при изменении количества товаров*/
         add_action('woocommerce_cart_item_set_quantity', array('BfwPoints', 'bfwCartItemSetQuantity'), 10, 3);
@@ -205,8 +218,12 @@ class BfwRouter
             add_action('wp_footer', array('BfwFunctions', 'updatePageIfChangePaymentMethod'));
         }
 
-        add_action('woocommerce_checkout_create_order_line_item',
-            array('BfwFunctions', 'saveSaleStatusToOrderItemMeta'), 10, 4);
+        add_action(
+            'woocommerce_checkout_create_order_line_item',
+            array('BfwFunctions', 'saveSaleStatusToOrderItemMeta'),
+            10,
+            4
+        );
 
         /*-------Реферальная система-------*/
         if (BfwSetting::get('referal-system')) {
@@ -234,27 +251,32 @@ class BfwRouter
         //Когда необходимо учитывать несколько значений.
         $order_status = apply_filters('bfw_add_points_order_status_filter', $order_status);
 
-        $statuses = (array)$order_status;
+        $statuses = (array) $order_status;
         foreach ($statuses as $status) {
             add_action('woocommerce_order_status_' . $status, array('BfwPoints', 'ifCompletedOrder'), 10, 1);
         }
 
+        /*------------Очистка кэша суммы покупок при изменении заказа------------*/
+        add_action('woocommerce_order_status_changed', array('BfwPoints', 'clearUserOrdersSumCache'), 10, 1);
+        add_action('woocommerce_delete_order', array('BfwPoints', 'clearUserOrdersSumCache'), 10, 1);
+        add_action('woocommerce_trash_order', array('BfwPoints', 'clearUserOrdersSumCache'), 10, 1);
+        add_action('woocommerce_refund_created', function($refund_id, $args) {
+            if (!empty($args['order_id'])) {
+                BfwPoints::clearUserOrdersSumCache($args['order_id']);
+            }
+        }, 10, 2);
 
-        /*------------Действие когда оформлен возврат баллов-----------*/
-        $order_status_refunded = BfwSetting::get('refunded_points_order_status', array('refunded'));
-        $order_statuses_refunded = is_array($order_status_refunded)
-            ? $order_status_refunded
-            : array($order_status_refunded);
-        $order_statuses_refunded = array_slice(array_values(array_unique(array_filter($order_statuses_refunded))), 0, 2);
+        /*------------Pending-баллы: начисляем "ожидающие" при оформлении заказа------------*/
+        add_action('woocommerce_order_status_processing', array('BfwPoints', 'setPendingPoints'), 5, 1);
+        add_action('woocommerce_order_status_on-hold', array('BfwPoints', 'setPendingPoints'), 5, 1);
+        // Очищаем pending при отмене/отказе/возврате
+        add_action('woocommerce_order_status_cancelled', array('BfwPoints', 'clearPendingPoints'), 5, 1);
+        add_action('woocommerce_order_status_failed', array('BfwPoints', 'clearPendingPoints'), 5, 1);
+        add_action('woocommerce_order_status_refunded', array('BfwPoints', 'clearPendingPoints'), 5, 1);
 
-        if (empty($order_statuses_refunded)) {
-            $order_statuses_refunded = array('refunded');
-        }
+        // Обработка возвратов (полных и частичных) пропорционально
+        add_action('woocommerce_order_refunded', array('BfwPoints', 'refundedPoints'), 10, 2);
 
-        foreach ($order_statuses_refunded as $status_refunded) {
-            add_action('woocommerce_order_status_' . $status_refunded, array('BfwPoints', 'refundedPoints'), 10, 1);
-        }
-        ///add_action( 'woocommerce_order_status_changed' , array('BfwPoints', 'test'), 10, 1 );
         //Если отзыв о товаре одобрен добавляет баллы
         add_action('comment_unapproved_to_approved', array('BfwReview', 'bfwoo_approve_comment_callback'));
 
@@ -309,8 +331,12 @@ class BfwRouter
         /*Вид купонов в корзине*/
         add_filter('woocommerce_cart_totals_coupon_html', array('BfwPoints', 'bfw_coupon_html'), 99, 2);
         /* Убираем слово "купон" в корзине*/
-        add_filter('woocommerce_cart_totals_coupon_label', array('BfwPoints', 'woocommerceChangeCouponLabelBfw'), 10,
-            2);
+        add_filter(
+            'woocommerce_cart_totals_coupon_label',
+            array('BfwPoints', 'woocommerceChangeCouponLabelBfw'),
+            10,
+            2
+        );
 
         /*Выводим свое уведомление при добавлении баллов*/
         add_filter('woocommerce_coupon_message', function ($msg, $msg_code, $coupon) {
@@ -322,9 +348,11 @@ class BfwRouter
             $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
 
             // Проверяем: 1) что это объект купона, 2) что это нужный купон, 3) что код сообщения указывает на успешное применение
-            if ($coupon instanceof WC_Coupon &&
+            if (
+                $coupon instanceof WC_Coupon &&
                 mb_strtolower($coupon->get_code()) === $cart_discount &&
-                $msg_code === WC_Coupon::WC_COUPON_SUCCESS) {
+                $msg_code === WC_Coupon::WC_COUPON_SUCCESS
+            ) {
 
                 /* translators: "applied" in the plural. */
                 return BfwSetting::get('bonus-points-on-cart') . ' ' . __('applied', 'bonus-for-woo') . '.';
@@ -345,19 +373,24 @@ class BfwRouter
                     $coupon = new WC_Coupon($coupon_code);
                     if ($coupon->get_id()) {
                         wc_clear_notices();
-                        wc_add_notice(BfwSetting::get('bonus-points-on-cart') . ' ' . __('removed',
-                                'bonus-for-woo') . '.', 'notice');
+                        wc_add_notice(BfwSetting::get('bonus-points-on-cart') . ' ' . __(
+                            'removed',
+                            'bonus-for-woo'
+                        ) . '.', 'notice');
                     }
                 }
             }
         }, 10, 1);
 
         /*Начисление кешбэка за прошлые заказы*/
-        add_filter('wp_ajax_cashback_prepare', array('BfwCashback', 'cashbackPrepare'));
-        add_filter('wp_ajax_cashback_recount', array('BfwCashback', 'cashbackRecount'));
+        add_action('wp_ajax_cashback_prepare', array('BfwCashback', 'cashbackPrepare'));
+        add_action('wp_ajax_cashback_recount', array('BfwCashback', 'cashbackRecount'));
 
         /*Массовое начисление баллов без уведомленний*/
-        add_action('wp_ajax_computy_mass_add_points',  array('BfwCashback', 'computyMassAddPoints'));
+        add_action('wp_ajax_computy_mass_add_points', array('BfwCashback', 'computyMassAddPoints'));
+
+        /*Пересчет баллов у всех пользователей на основе истории*/
+        add_action('wp_ajax_computy_recalculation_points', array('BfwPoints', 'computyRecalculationPoints'));
 
 
         /*-------Возможность менеджерам настраивать плагин-------*/
@@ -394,8 +427,10 @@ class BfwRouter
         add_shortcode('bfw-write-off-bonuses', array('BfwPoints', 'bfwoo_spisaniebonusov_in_cart_shortcode'));
 
         /*шорткод списания баллов в оформлении заказа*/
-        add_shortcode('bfw-write-off-bonuses-checkout',
-            array('BfwPoints', 'bfwoo_spisaniebonusov_in_checkout_shortcode'));
+        add_shortcode(
+            'bfw-write-off-bonuses-checkout',
+            array('BfwPoints', 'bfwoo_spisaniebonusov_in_checkout_shortcode')
+        );
 
         /*Вывод ссылки на условия бонусной системы*/
         add_shortcode('link_on_rulles', array('BfwAccount', 'accountRules'));
@@ -430,8 +465,6 @@ class BfwRouter
                 'methods' => 'POST',
                 'callback' => ['BfwPoints', 'bfwoo_clean_fast_bonus_rest'],
                 'permission_callback' => '__return_true',
-                // или свою логику проверки прав
-                //Если действие доступно только авторизованным пользователям — замените '__return_true' на, например, function() { return is_user_logged_in(); }.
             ]);
 
             //Списание баллов

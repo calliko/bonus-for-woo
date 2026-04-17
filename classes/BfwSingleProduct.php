@@ -316,7 +316,7 @@ class BfwSingleProduct
         if (BfwSetting::get('cashback-on-sale-products')) {
             //Если товар со скидкой, то за него кешбэк не получим
             $productc = wc_get_product($product_id);
-            if ($productc->is_on_sale()) {
+            if ($productc && $productc->is_on_sale()) {
                 return [
                     'amount' => 0.0,
                     'percent' => 0
@@ -363,7 +363,13 @@ class BfwSingleProduct
 
 
         if (BfwSetting::get('cashback_for_first_order') && (new BfwFunctions())->get_customer_order_count($user_id) === 0) {
+            update_user_meta($user_id, 'first_order', 'yes');
             $percent = BfwSetting::get('cashback_for_first_order');
+        }else{
+          $first =  get_user_meta($user_id, 'first_order', true);
+            if(!empty($first) && $first =='yes'){
+                $percent = BfwSetting::get('cashback_for_first_order');
+            }
         }
 
 

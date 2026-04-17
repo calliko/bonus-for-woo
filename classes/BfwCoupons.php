@@ -70,7 +70,7 @@ class BfwCoupons
                             'date_use' => current_time('mysql'),
                             'user' => $user_id
                     ],
-                    ['%s', '%s', '%s']
+                    ['%s', '%s', '%d']
             );
         }
     }
@@ -85,12 +85,12 @@ class BfwCoupons
     {
         global $wpdb;
 
-// Получаем информацию о колонках
-        $columns = $wpdb->get_results("SELECT COUNT(id) FROM `{$wpdb->prefix}bfw_coupon_usages` WHERE code = '{$coupon_id}'",
-                ARRAY_A);
+        $count = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(id) FROM {$wpdb->prefix}bfw_coupon_usages WHERE code = %s",
+            $coupon_id
+        ));
 
-// Получаем количество столбцов
-        return $columns[0]['COUNT(id)'] ?? 0;
+        return $count;
     }
 
 
@@ -160,10 +160,10 @@ class BfwCoupons
                         } elseif (!empty($bfw->user)) {
                             $user = get_userdata($bfw->user);
                             $nameuser = !empty($user->first_name) ? $user->first_name . ' ' . $user->last_name : $user->user_login;
+
+                            $edit_user_url = admin_url('user-edit.php?user_id=' . $bfw->user);
                             ?>
-                            <td><a href="/wp-admin/user-edit.php?user_id=<?php
-                                echo $bfw->user; ?>" target="_blank"><?php
-                                    echo $nameuser; ?></a></td>
+                            <td><a href="<?php echo esc_url($edit_user_url); ?>" target="_blank"><?php echo esc_html($nameuser); ?></a></td>
                             <?php
                         } else { ?>
                             <td>-</td>
@@ -194,6 +194,7 @@ class BfwCoupons
                             if ($bfw->status === 'active') { ?>
                                 <form method="post" action=""
                                       class="list_role_computy">
+                                    <?php wp_nonce_field('bfw_action_coupon', 'bfw_nonce_coupon'); ?>
                                     <input type="hidden" name="status_coupon"
                                            value="active">
                                     <input type="hidden"
@@ -210,6 +211,7 @@ class BfwCoupons
                             } elseif ($bfw->status === 'noactive') { ?>
                                 <form method="post" action=""
                                       class="list_role_computy">
+                                    <?php wp_nonce_field('bfw_action_coupon', 'bfw_nonce_coupon'); ?>
                                     <input type="hidden" name="status_coupon"
                                            value="noactive">
                                     <input type="hidden"
@@ -226,6 +228,7 @@ class BfwCoupons
                             } ?>
                             <form method="post" action=""
                                   class="list_role_computy">
+                                <?php wp_nonce_field('bfw_action_coupon', 'bfw_nonce_coupon'); ?>
                                 <input type="hidden" name="bfw_delete_coupon"
                                        value="<?php
                                        echo esc_attr($bfw->id); ?>">
@@ -307,7 +310,7 @@ class BfwCoupons
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_coupons_computy';
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM  %i WHERE code=%s", $table_name, $code));
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_name} WHERE code = %s", $code));
     }
 
 
@@ -426,8 +429,24 @@ class BfwCoupons
 
     public static function bfwExportCoupons(): void
     {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
+            return;
+        }
+
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'bfw_export_coupons')) {
+            wp_send_json_error(__('Security check failed.', 'bonus-for-woo'));
+            return;
+        }
+
         $response = json_decode(stripslashes($_POST['response']), true);
         $url_export_file = $response['data']['url']; // ссылка на загруженный файл экспорта
+
+        $upload_dir = wp_upload_dir();
+        if (strpos($url_export_file, $upload_dir['baseurl']) !== 0 && strpos($url_export_file, $upload_dir['basedir']) !== 0) {
+            wp_send_json_error(__('Invalid file path.', 'bonus-for-woo'));
+            return;
+        }
 
         $limit = 100; // сколько строк обрабатывать в каждом пакете
         $fileHandle = fopen($url_export_file, "rb");

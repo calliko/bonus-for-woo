@@ -2,301 +2,336 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Страница купонов
+ * Модернизированная страница купонов
  *
- * @version 4.1.0
+ * @version 8.0.0
  */
 
-/*Обработчик запроса добавления купона*/
+/* Обработка форм купонов (логика сохранена без изменений) */
 if (isset($_POST['bfw_computy_add_coupon_ajax'])) {
     if ($_POST['bfw_computy_add_coupon_ajax'] === 'bfw_computy_add_coupon_ajax') {
+        if (!isset($_POST['bfw_nonce_coupon']) || !wp_verify_nonce($_POST['bfw_nonce_coupon'], 'bfw_action_coupon')) {
+            wp_die('Ошибка безопасности!');
+        }
         global $wpdb;
-        $code = _sanitize_text_fields($_POST['code']);
-        $sum = _sanitize_text_fields($_POST['sum']);
-        $comment_admin = _sanitize_text_fields($_POST['comment_admin']);
-        $status = _sanitize_text_fields($_POST['status']);
+        $code = sanitize_text_field($_POST['code']);
+        $sum = sanitize_text_field($_POST['sum']);
+        $comment_admin = sanitize_text_field($_POST['comment_admin']);
+        $status = sanitize_text_field($_POST['status']);
         $reusable = $_POST['reusable'] ?? 0;
 
-        if ($wpdb->get_results(
-                $wpdb->prepare("SELECT * FROM " . $wpdb->prefix . "bfw_coupons_computy  WHERE `code` = %s", $code))) {
-            echo '<div id="message" class="notice notice-warning is-dismissible">
-<p>' . sprintf(__('Coupon <b>%s</b> is already being used. Enter another code or change the existing one.',
-                            'bonus-for-woo'), $code) . '
-	</p></div>';
+        if ($wpdb->get_results($wpdb->prepare("SELECT * FROM " . $wpdb->prefix . "bfw_coupons_computy WHERE `code` = %s", $code))) {
+            echo '<div class="bfw-notice bfw-notice-warning"><span class="dashicons dashicons-warning"></span> ' . sprintf(__('Coupon <b>%s</b> is already being used.', 'bonus-for-woo'), $code) . '</div>';
         } else {
             BfwCoupons::addCoupon($code, $sum, $comment_admin, $status, $reusable);
-            echo '<div id="message" class="notice notice-success is-dismissible">
-	<p>' . __('Coupon', 'bonus-for-woo') . ' <b>' . $code . '</b> ' . __(
-                            'added',
-                            'bonus-for-woo'
-                    ) . '.</p>
-</div>';
+            echo '<div class="bfw-notice bfw-notice-success"><span class="dashicons dashicons-yes-alt"></span> ' . __('Coupon', 'bonus-for-woo') . ' <b>' . $code . '</b> ' . __('added', 'bonus-for-woo') . '.</div>';
         }
-    } elseif ($_POST['bfw_computy_ajax'] === 'editrolehidden') {
-        global $wpdb;
-        $percent_role = sanitize_text_field($_POST['percent_role']);
-        $summa_start = sanitize_text_field($_POST['summa_start']);
-        $name_role = sanitize_text_field($_POST['name_role']);
-        $wpdb->update(
-                $wpdb->prefix . "bfw_computy",
-                array('percent' => $percent_role, 'summa_start' => $summa_start),
-                array('name' => $name_role)
-        );
     }
 }
 
-
-/*Обработчик запроса удаления купона*/
 if (isset($_POST['bfw_delete_coupon'])) {
-    BfwCoupons::deleteCoupon($_POST['bfw_delete_coupon']);
-    echo '<div id="message" class="notice notice-warning is-dismissible">
-	<p>' . __('deleted', 'bonus-for-woo') . '.</p></div>';
-}
-/*Обработчик запроса удаления купона*/
-
-/*Обработчик запроса изменения статуса купона*/
-if (isset($_POST['bfw_edit_status_coupon'])) {
-    if (sanitize_text_field($_POST['status_coupon']) == 'active') {
-        $status = 'noactive';
-    } else {
-        $status = 'active';
+    if (!isset($_POST['bfw_nonce_coupon']) || !wp_verify_nonce($_POST['bfw_nonce_coupon'], 'bfw_action_coupon')) {
+        wp_die('Ошибка безопасности!');
     }
-    BfwCoupons::editStatusCoupon(
-            $_POST['bfw_edit_status_coupon'],
-            $status
-    );
-    echo '<div id="message" class="notice notice-warning is-dismissible">
-	<p>' . __('Coupon status changed', 'bonus-for-woo') . '.</p></div>';
+    BfwCoupons::deleteCoupon($_POST['bfw_delete_coupon']);
+    echo '<div class="bfw-notice bfw-notice-warning"><span class="dashicons dashicons-trash"></span> ' . __('deleted', 'bonus-for-woo') . '.</div>';
 }
-/*Обработчик запроса изменения статуса купона*/
 
-if (determine_locale() === 'ru_RU') {
-    $language = ' language: {
-                        "sProcessing":   "Подождите...",
-                        "sLengthMenu":   "Показать _MENU_ купонов",
-                        "sZeroRecords":  "Купоны отсутствуют.",
-                        "sInfo":         "Купоны с _START_ до _END_ из _TOTAL_ купонов",
-                        "sInfoEmpty":    "Купоны с 0 до 0 из 0 купонов",
-                        "sInfoFiltered": "(отфильтровано из _MAX_ купонов)",
-                        "sInfoPostFix":  "",
-                        "sSearch":       "Поиск:",
-                        "sUrl":          "",
-                        "oPaginate": {
-                            "sFirst": "Первая",
-                            "sPrevious": "Предыдущая",
-                            "sNext": "Следующая",
-                            "sLast": "Последняя"
-                        },
-                        "oAria": {
-                            "sSortAscending":  ": активировать для сортировки столбца по возрастанию",
-                            "sSortDescending": ": активировать для сортировки столбцов по убыванию"
-                        }}';
-} else {
-    $language = '';
+if (isset($_POST['bfw_edit_status_coupon'])) {
+    if (!isset($_POST['bfw_nonce_coupon']) || !wp_verify_nonce($_POST['bfw_nonce_coupon'], 'bfw_action_coupon')) {
+        wp_die('Ошибка безопасности!');
+    }
+    $status = (sanitize_text_field($_POST['status_coupon']) == 'active') ? 'noactive' : 'active';
+    BfwCoupons::editStatusCoupon($_POST['bfw_edit_status_coupon'], $status);
+    echo '<div class="bfw-notice bfw-notice-warning"><span class="dashicons dashicons-update"></span> ' . __('Coupon status changed', 'bonus-for-woo') . '.</div>';
 }
 ?>
-<script>
-    jQuery(document).ready(function () {
-        jQuery('#table-coupons').DataTable(
-            {
-                <?php  echo $language; ?>
-            }
-        );
-    });
 
-</script>
-<?php
-wp_register_style(
-        'datatables.min.css',
-        BONUS_COMPUTY_PLUGIN_URL . '_inc/datatables/datatables.min.css',
-        array(),
-        BONUS_COMPUTY_VERSION
-);
-wp_register_script(
-        'jquery.dataTables.min.js',
-        BONUS_COMPUTY_PLUGIN_URL . '_inc/datatables/jquery.dataTables.min.js',
-        array(),
-        BONUS_COMPUTY_VERSION
-);
+<style>
+    :root {
+        --bfw-primary: #2271b1;
+        --bfw-bg: #f0f2f5;
+        --bfw-card-bg: #ffffff;
+        --bfw-border: #dcdcde;
+        --bfw-text: #1d2327;
+        --bfw-text-muted: #646970;
+        --bfw-success: #2ecc71;
+        --bfw-warning: #f39c12;
+        --bfw-danger: #e74c3c;
+        --bfw-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
 
-wp_enqueue_style('datatables.min.css');
-wp_enqueue_script('jquery.dataTables.min.js');
+    .bfw-coupons-dashboard {
+        margin: 20px 20px 20px 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    }
 
-?>
-<div class="wrap bonus-for-woo-admin">
-    <?php
-    echo '<h1>' . sprintf(
-                    __('Coupons for %s ', 'bonus-for-woo'),
-                    BfwPoints::pointsLabel(5)
-            ) . '</h1>';
-    ?>
-    <hr>
-    <div class="bfw_texts_wrap">
-        <div class="bfw_text">
-            <h3><?php
-                echo __('Add a new coupon', 'bonus-for-woo'); ?></h3>
-            <form method="post" action="" id="add_coupon_form">
-                <input type="hidden" id="bfw_computy_add_coupon_ajax"
-                       name="bfw_computy_add_coupon_ajax"
-                       value="bfw_computy_add_coupon_ajax">
-                <table class="form">
-                    <tbody>
-                    <tr style="display: flex;gap: 10px;">
-                        <td class="table-bfw">
-                            <label for="add_coupon_form_code"><b><?php
-                                    echo __('Сode coupon', 'bonus-for-woo'); ?></b></label>
-                            <input type="text" id="add_coupon_form_code"
-                                   name="code" value="" placeholder="" required><br>
-                            <label for="add_coupon_form_sum"><b><?php
-                                    echo __('Number of points', 'bonus-for-woo'); ?></b></label>
-                            <input min="1" type="number"
-                                   id="add_coupon_form_sum" name="sum" value=""
-                                   placeholder="300" required>
-                        </td>
-                        <td class="table-bfw">
-                            <label for="add_coupon_form_comment_admin"><b><?php
-                                    echo __(
-                                            'Comment admin',
-                                            'bonus-for-woo'
-                                    ); ?></b></label>
-                            <textarea style="width: 300px; height: 93px;"
-                                      id="add_coupon_form_comment_admin"
-                                      name="comment_admin"
-                                      placeholder="<?php echo __('Only the administrator can see it.',
-                                              'bonus-for-woo'); ?>"></textarea>
-                        </td>
-                    </tr>
+    /* Header */
+    .bfw-dashboard-header {
+        background: linear-gradient(135deg, #0d1d29 0%, #71c4fc 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 25px rgba(34, 113, 177, 0.15);
+    }
 
-                    </tbody>
-                </table>
-                <input type="submit" name="submit" class="button button-primary"
-                       value="<?php
-                       echo __('Add coupon', 'bonus-for-woo'); ?>">
+    .bfw-dashboard-header h1 {
+        color: white;
+        font-size: 28px;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
 
-                <select name="status">
-                    <option value="noactive"><?php
-                        echo __('Not active', 'bonus-for-woo'); ?></option>
-                    <option value="active"><?php echo __('Active', 'bonus-for-woo'); ?></option>
-                </select>
+    .bfw-dashboard-header p { margin: 0; opacity: 0.9; font-size: 15px; }
 
-                <label><input type="checkbox" name="reusable" value="1"> <?php echo __('Reusable', 'bonus-for-woo'); ?>
-                </label>
+    /* Action Cards Grid */
+    .bfw-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
 
+    .bfw-action-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        border: 1px solid var(--bfw-border);
+        box-shadow: var(--bfw-shadow);
+    }
+
+    .bfw-action-card h3 {
+        margin: 0 0 20px 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        color: var(--bfw-text);
+    }
+
+    /* Form Styles */
+    .bfw-form-group { margin-bottom: 15px; }
+    .bfw-form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; }
+    
+    .bfw-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--bfw-border);
+        border-radius: 8px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    .bfw-input:focus { border-color: var(--bfw-primary); outline: none; box-shadow: 0 0 0 1px var(--bfw-primary); }
+
+    .bfw-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-size: 14px;
+        text-decoration: none;
+    }
+    .bfw-btn-primary { background: var(--bfw-primary); color: white; }
+    .bfw-btn-primary:hover { background: #135e96; transform: translateY(-1px); }
+
+    /* Notices */
+    .bfw-notice {
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
+        border-left: 5px solid;
+    }
+    .bfw-notice-success { background: #ecfdf5; border-color: var(--bfw-success); color: #065f46; }
+    .bfw-notice-warning { background: #fff7ed; border-color: var(--bfw-warning); color: #9a3412; }
+
+    /* Table Container */
+    .bfw-table-container {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--bfw-border);
+        box-shadow: var(--bfw-shadow);
+    }
+
+    /* Import Section */
+    .bfw-import-box {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+    .file-input-wrapper { margin: 15px 0; }
+</style>
+
+<div class="bfw-coupons-dashboard">
+    <header class="bfw-dashboard-header">
+        <h1>
+            <span class="dashicons dashicons-tickets" style="font-size: 32px; width:32px; height:32px;"></span>
+            <?php echo sprintf(__('Coupons for %s ', 'bonus-for-woo'), BfwPoints::pointsLabel(5)); ?>
+        </h1>
+        <p><?php _e('Create, import and manage loyalty bonus coupons for your customers.', 'bonus-for-woo'); ?></p>
+    </header>
+
+    <div class="bfw-cards-grid">
+        <!-- Card: Add Coupon -->
+        <div class="bfw-action-card">
+            <h3><span class="dashicons dashicons-plus-alt"></span> <?php _e('Add a new coupon', 'bonus-for-woo'); ?></h3>
+            <form method="post" id="add_coupon_form">
+                <?php wp_nonce_field('bfw_action_coupon', 'bfw_nonce_coupon'); ?>
+                <input type="hidden" name="bfw_computy_add_coupon_ajax" value="bfw_computy_add_coupon_ajax">
+                
+                <div class="bfw-form-group">
+                    <label><?php _e('Сode coupon', 'bonus-for-woo'); ?></label>
+                    <input type="text" name="code" class="bfw-input" placeholder="SUMMER2024" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="bfw-form-group">
+                        <label><?php _e('Number of points', 'bonus-for-woo'); ?></label>
+                        <input type="number" name="sum" class="bfw-input" min="1" placeholder="500" required>
+                    </div>
+                    <div class="bfw-form-group">
+                        <label><?php _e('Status', 'bonus-for-woo'); ?></label>
+                        <select name="status" class="bfw-input">
+                            <option value="active"><?php _e('Active', 'bonus-for-woo'); ?></option>
+                            <option value="noactive"><?php _e('Not active', 'bonus-for-woo'); ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bfw-form-group">
+                    <label><?php _e('Comment admin', 'bonus-for-woo'); ?></label>
+                    <textarea name="comment_admin" class="bfw-input" style="height: 60px;"></textarea>
+                </div>
+
+                <div class="bfw-form-group">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" name="reusable" value="1"> <?php _e('Reusable', 'bonus-for-woo'); ?>
+                    </label>
+                </div>
+
+                <button type="submit" class="bfw-btn bfw-btn-primary" style="width: 100%;">
+                    <span class="dashicons dashicons-saved"></span> <?php _e('Add coupon', 'bonus-for-woo'); ?>
+                </button>
             </form>
         </div>
 
-        <div class="bfw_text">
-            <h3><?php
-                echo __('Description', 'bonus-for-woo'); ?></h3>
-            <p><?php
-                echo __('Create a coupon in the form and it will appear in the list of coupons.', 'bonus-for-woo'); ?>
-                <br>
-                <?php echo __('The customer can only use active coupons.', 'bonus-for-woo'); ?><br>
-                <?php echo __('Coupon can only be used once.', 'bonus-for-woo'); ?><br>
-                <?php echo __('Once a coupon has been used, it cannot be activated. Only delete.', 'bonus-for-woo'); ?>
-                <br>
-                <?php echo __('If the "Reusable" box is checked, then all users can use it.', 'bonus-for-woo'); ?>
+        <!-- Card: Import -->
+        <div class="bfw-action-card">
+            <h3><span class="dashicons dashicons-upload"></span> <?php _e('Import coupons', 'bonus-for-woo'); ?></h3>
+            <p style="font-size: 13px; color: var(--bfw-text-muted); margin-bottom: 15px;">
+                <?php _e('To create multiple coupons, create a csv file and import it using the form below.', 'bonus-for-woo'); ?>
             </p>
+            
+            <div class="bfw-import-box">
+                <form action="<?php echo admin_url("admin-post.php"); ?>" class="bfw_export_bonuses" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="bfw_import_coupons">
+                    <div class="file-input-wrapper">
+                        <input name="file" type="file" id="bfw-file-export" required>
+                    </div>
+                    <button type="button" class="bfw-btn bfw-btn-primary" onclick="upload();">
+                        <span class="dashicons dashicons-database-import"></span> <?php _e('Import', 'bonus-for-woo'); ?>
+                    </button>
+                </form>
+                <div id="bfw-file-export-result" style="margin-top: 10px;"></div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <a href="<?php echo BONUS_COMPUTY_PLUGIN_URL; ?>templates/coupons_bfw.csv" class="bfw-btn bfw-btn-outline" style="border: 1px solid #ddd; justify-content: center;">
+                    <span class="dashicons dashicons-download"></span> <?php _e('Example of CSV file', 'bonus-for-woo'); ?>
+                </a>
+            </div>
+        </div>
+
+        <!-- Card: Info -->
+        <div class="bfw-action-card" style="background: #f8fafc;">
+            <h3><span class="dashicons dashicons-info"></span> <?php _e('Description', 'bonus-for-woo'); ?></h3>
+            <ul style="font-size: 13px; line-height: 1.6; color: #475569; padding-left: 20px; margin: 0;">
+                <li><?php _e('Create a coupon in the form and it will appear in the list of coupons.', 'bonus-for-woo'); ?></li>
+                <li><?php _e('The customer can only use active coupons.', 'bonus-for-woo'); ?></li>
+                <li><?php _e('Coupon can only be used once.', 'bonus-for-woo'); ?></li>
+                <li><?php _e('Once a coupon has been used, it cannot be activated. Only delete.', 'bonus-for-woo'); ?></li>
+                <li><?php _e('If the "Reusable" box is checked, then all users can use it.', 'bonus-for-woo'); ?></li>
+            </ul>
 
 
         </div>
-
-        <div class="bfw_text">
-            <h3><?php
-                echo __('Import coupons', 'bonus-for-woo'); ?></h3>
-            <p><?php
-                echo __(
-                        'To create multiple coupons, create a csv file and import it using the form below.',
-                        'bonus-for-woo'
-                ); ?><br>
-                <?php
-                echo __('Possible statuses', 'bonus-for-woo') ?>: active,
-                noactive, used
-            </p>
-            <a href="<?php
-            echo BONUS_COMPUTY_PLUGIN_URL; ?>templates/coupons_bfw.csv"
-               download=""><i class="exporticon"></i>
-                <?php
-                echo __('Example of CSV file', 'bonus-for-woo'); ?></a>
-            <br><br>
-            <?php
-            echo '<form action="' . admin_url("admin-post.php") . '" class="bfw_export_bonuses"  method="post"  enctype="multipart/form-data">
-                        <input type="hidden" name="action" value="bfw_import_coupons" />
-                        <lable for="bfw-file-export">' . __(
-                            'Upload CSV file',
-                            'bonus-for-woo'
-                    ) . '<br></lable>
-                        <input name="file" type="file" id="bfw-file-export" required>';
-
-            echo '<input class="button button-primary" type="submit" value="'
-                    . __(
-                            'import',
-                            'bonus-for-woo'
-                    ) . '" onclick="upload();return false;">
-                        <div id="bfw-file-export-result"></div>
-                    </form>';
-            ?>
-            <script type="text/javascript">
-                function upload() {
-                    let fileExtension = ['csv'];
-                    if (jQuery.inArray(jQuery('#bfw-file-export').val().split('.').pop().toLowerCase(), fileExtension) === -1) {
-                        jQuery('#bfw-file-export-result').html('<span style="color:red"><?php echo __(
-                                'You can only use csv file format!',
-                                'bonus-for-woo'
-                        );?></span>');
-                    } else {
-                        jQuery('.bfw_export_bonuses').addClass('bfv_uplouads');
-                        let formData = new FormData();
-                        formData.append("action", "upload-attachment");
-                        let fileInputElement = document.getElementById("bfw-file-export");
-
-                        formData.append("async-upload", fileInputElement.files[0]);
-                        formData.append("name", fileInputElement.files[0].name);
-                        <?php $my_nonce = wp_create_nonce('media-form'); ?>
-                        formData.append("_wpnonce", "<?php echo $my_nonce; ?>");
-                        let xhr = new XMLHttpRequest();
-                        xhr.onreadystatechange = function () {
-                            if (xhr.readyState === 4 && xhr.status === 200) {
-                                //  console.log(xhr.responseText);
-                                jQuery.ajax({
-                                    type: 'POST',
-                                    url: "/wp-admin/admin-ajax.php",
-                                    data: {
-                                        action: 'bfw_export_coupons',
-                                        response: xhr.responseText,
-                                    },
-                                    success: function (data) {
-                                        console.log(data);
-                                        if (data === 'good') {
-                                            jQuery('#bfw-file-export-result').html('<span style="color:green;font-size: 20px;"><?php echo __(
-                                                    'Import completed successfully!',
-                                                    'bonus-for-woo'
-                                            );?></span>');
-                                            jQuery('.bfw_export_bonuses').removeClass('bfv_uplouads');
-                                            jQuery('#bfw-file-export').val('');
-                                            setTimeout(function () {
-                                                location.reload();
-                                            }, 1000);
-                                        }
-                                    },
-                                    error: function (error) {
-                                        console.log(error);
-                                    }
-                                });
-                            }
-                        }
-                        xhr.open("POST", "/wp-admin/async-upload.php", true);
-                        xhr.send(formData);
-                    }
-                }
-            </script>
-        </div>
-
     </div>
 
-    <h2><?php
-        echo __('Coupons list', 'bonus-for-woo'); ?></h2>
-    <?php
-    BfwCoupons::getListCoupons();
-    ?>
+    <div class="bfw-table-container">
+        <h2 style="margin: 0 0 20px 0;"><?php _e('Coupons list', 'bonus-for-woo'); ?></h2>
+        <?php
+        $coupons_table = new Bfw_Coupons_List_Table();
+        $coupons_table->prepare_items();
+        ?>
+        <form method="get">
+            <input type="hidden" name="page" value="<?php echo esc_attr($_REQUEST['page']); ?>" />
+            <?php
+            $coupons_table->search_box(__('Search Coupons', 'bonus-for-woo'), 'bfw-search-coupons');
+            $coupons_table->display();
+            ?>
+        </form>
+    </div>
 </div>
+
+<script type="text/javascript">
+    function upload() {
+        let fileExtension = ['csv'];
+        if (jQuery.inArray(jQuery('#bfw-file-export').val().split('.').pop().toLowerCase(), fileExtension) === -1) {
+            jQuery('#bfw-file-export-result').html('<span style="color:red"><?php _e('Only CSV format allowed!', 'bonus-for-woo'); ?></span>');
+        } else {
+            jQuery('.bfw_export_bonuses').css('opacity', '0.5');
+            let formData = new FormData();
+            formData.append("action", "upload-attachment");
+            let fileInputElement = document.getElementById("bfw-file-export");
+
+            formData.append("async-upload", fileInputElement.files[0]);
+            formData.append("name", fileInputElement.files[0].name);
+            formData.append("_wpnonce", "<?php echo wp_create_nonce('media-form'); ?>");
+            
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    jQuery.ajax({
+                        type: 'POST',
+                        url: ajaxurl,
+                        data: {
+                            action: 'bfw_export_coupons',
+                            nonce: '<?php echo wp_create_nonce('bfw_export_coupons'); ?>',
+                            response: xhr.responseText,
+                        },
+                        success: function (data) {
+                            if (data === 'good') {
+                                jQuery('#bfw-file-export-result').html('<span style="color:green;font-weight:bold;"><?php _e('Import successful! Reloading...', 'bonus-for-woo'); ?></span>');
+                                setTimeout(function () { location.reload(); }, 1500);
+                            } else {
+                                jQuery('#bfw-file-export-result').html('<span style="color:red"><?php _e('Import failed.', 'bonus-for-woo'); ?></span>');
+                                jQuery('.bfw_export_bonuses').css('opacity', '1');
+                            }
+                        }
+                    });
+                }
+            }
+            xhr.open("POST", "/wp-admin/async-upload.php", true);
+            xhr.send(formData);
+        }
+    }
+</script>
+
+
+

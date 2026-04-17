@@ -65,10 +65,6 @@ class BfwCashback
 
             $product_percent = $product_cashback_info['percent'] ?? $user_percent;
 
-            // Распределяем купон пропорционально стоимости товара
-            //   $product_share = ($cart_item['line_total'] / $woocommerce->cart->get_subtotal()) * $filtered_discounts;
-            //   $coupon_deduction += $product_share * $product_percent / 100;
-
 
         }
 
@@ -306,7 +302,7 @@ class BfwCashback
     /**
      * Считает сумму всех примененных купонов в корзине
      *
-     * @return int
+     * @return float
      */
     public static function calculate_coupons_total_except_specific(): float
     {
@@ -372,6 +368,12 @@ class BfwCashback
      */
     public static function cashbackPrepare()
     {
+        check_ajax_referer('bfw_cashback_recount_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce') && !current_user_can('manage_options')) {
+            wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
+            return;
+        }
         $order_status = BfwSetting::get('add_points_order_status', 'completed');
         $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
         $args = [
@@ -413,6 +415,12 @@ class BfwCashback
      */
     public static function cashbackRecount()
     {
+        check_ajax_referer('bfw_cashback_recount_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce') && !current_user_can('manage_options')) {
+            wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
+            return;
+        }
         $batch = 20; // количество заказов за шаг
 
         $order_ids = get_option('cashback_orders_to_recount', []);
@@ -448,6 +456,10 @@ class BfwCashback
 
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Access denied');
+        }
+
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'bfw_mass_add')) {
+            wp_send_json_error('Security check failed');
         }
 
         $points = isset($_POST['points']) ? (int) $_POST['points'] : 0;

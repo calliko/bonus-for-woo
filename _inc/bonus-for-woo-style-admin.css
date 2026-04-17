@@ -1,3 +1,297 @@
+:root {
+    --bfw-primary: #2271b1;
+    --bfw-primary-hover: #135e96;
+    --bfw-bg: #f5f7f9;
+    --bfw-card-bg: #ffffff;
+    --bfw-border: #dcdcde;
+    --bfw-text: #1d2327;
+    --bfw-text-muted: #646970;
+    --bfw-success: #2ecc71;
+    --bfw-danger: #e74c3c;
+    --bfw-warning: #f39c12;
+    --bfw-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.bfw-admin-dashboard {
+    margin: 20px 20px 20px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* Header Section */
+.bfw-dashboard-header {
+    background: linear-gradient(135deg, #0d1d29 0%, #71c4fc 100%);
+    color: white;
+    padding: 35px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 25px rgba(34, 113, 177, 0.15);
+    position: relative;
+}
+
+.bfw-dashboard-header h1 {
+    color: white;
+    font-size: 32px;
+    margin: 0 0 10px 0;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.bfw-pro-tag {
+    background: #f1c40f;
+    color: #2c3e50;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bfw-dashboard-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 16px;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+.bfw-header-links {
+    margin-top: 20px;
+    display: flex;
+    gap: 25px;
+}
+
+.bfw-header-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px dashed rgba(255,255,255,0.4);
+    transition: all 0.2s;
+}
+
+.bfw-header-links a:hover { opacity: 0.8; border-bottom-color: #fff; }
+
+/* Grid for Info Cards */
+.bfw-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.bfw-info-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--bfw-border);
+    box-shadow: var(--bfw-shadow);
+    transition: transform 0.2s;
+}
+
+.bfw-info-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--bfw-text);
+}
+
+/* Modern Tabs */
+.bfw-main-tabs-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--bfw-border);
+    box-shadow: var(--bfw-shadow);
+    overflow: hidden;
+}
+
+.bfw-tabs-nav {
+    display: flex;
+    background: #fcfcfc;
+    border-bottom: 1px solid var(--bfw-border);
+    padding: 0 10px;
+}
+
+.bfw-tab-btn {
+    padding: 18px 25px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--bfw-text-muted);
+    transition: all 0.3s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bfw-tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--bfw-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+}
+
+.bfw-tab-btn.active {
+    color: var(--bfw-primary);
+    background: white;
+}
+
+.bfw-tab-btn.active::after {
+    transform: scaleX(1);
+}
+
+.bfw-tab-btn:hover:not(.active) {
+    background: #f0f4f8;
+    color: var(--bfw-primary);
+}
+
+.bfw-tab-content {
+    padding: 40px;
+    display: none;
+    animation: bfwFadeIn 0.3s ease-out;
+}
+
+.bfw-tab-content.active { display: block; }
+
+@keyframes bfwFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tables & Statuses */
+.bfw-status-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.bfw-status-table th {
+    text-align: left;
+    padding: 15px;
+    background: #f9fafb;
+    border-bottom: 2px solid var(--bfw-border);
+    font-weight: 700;
+    color: var(--bfw-text);
+}
+
+.bfw-status-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.bfw-status-table tr:hover { background: #fcfdfe; }
+
+.role-badge {
+    background: #eef6fc;
+    color: var(--bfw-primary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Buttons */
+.bfw-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.bfw-btn-primary { background: var(--bfw-primary); color: white; }
+.bfw-btn-primary:hover { color: white; background: var(--bfw-primary-hover); transform: translateY(-1px); }
+
+.bfw-btn-danger { background: #fee2e2; color: #dc2626; }
+.bfw-btn-danger:hover { background: #fecaca; color: #b91c1c; }
+
+.bfw-btn.bfw-btn-outline { background: white; border: 1px solid var(--bfw-border); color: var(--bfw-text); }
+.bfw-btn.bfw-btn-outline:hover { background: #f9fafb; border-color: #c3c4c7; }
+
+/* Settings Forms Styles */
+.bfw-tab-content .form-table th {
+    width: 320px;
+    padding: 20px 10px 20px 0;
+    font-weight: 600;
+    color: var(--bfw-text);
+}
+
+.bfw-tab-content .form-table td {
+    padding: 15px 10px;
+}
+
+.bfw-input-custom {
+    padding: 10px 14px;
+    border: 1px solid var(--bfw-border);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.bfw-input-custom:focus {
+    border-color: var(--bfw-primary);
+    box-shadow: 0 0 0 1px var(--bfw-primary);
+    outline: none;
+}
+
+/* Pro List */
+.bfw-pro-benefits {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.bfw-pro-benefits li {
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 4px solid var(--bfw-warning);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+}
+
+/* Notifications & Success */
+.bfw-notice {
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border-left: 5px solid;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.bfw-notice p{
+    margin: 0;
+}
+.bfw-notice-success { background: #ecfdf5; border-color: var(--bfw-success); color: #065f46; }
+.bfw-notice-warning { background: #fffbeb; border-color: var(--bfw-warning); color: #92400e; }
+
 .table-bfw {
     border-collapse: collapse
 }
@@ -107,8 +401,9 @@
     background-size: contain;
 }
 
-.bonus-for-woo-admin h2 small {
-    color: #979696;
+.bfw-admin-dashboard h1  small {
+    color: #e7e2e2;
+    font-size: 17px;
 }
 
 .pencil {
@@ -319,12 +614,7 @@
     margin: 0 5px -3px 0;
 }
 
-.tabs_bfw label.ref-social {
-    border: 0;
-    padding: 0;
-    position: unset;
-    font-size: 0;
-}
+
 
 .ref-social {
     margin: 0 15px 0 0;
@@ -333,6 +623,7 @@
     background-repeat: no-repeat;
     background-size: contain;
     display: inline-block;
+    font-size: 0;
 }
 
 .ref-social-vk {
@@ -595,6 +886,7 @@
 
 .bfw-save-button {
     padding: 14px 45px 14px 20px;
+    position: relative;
 }
 
 .bfw-admin-button:hover {
@@ -615,7 +907,7 @@
     background-repeat: no-repeat;
 }
 
-.tab_bfw input[type="checkbox"] {
+.bfw-tab-content input[type="checkbox"] {
     box-shadow: inset 0 0 3px #666565;
     position: relative;
     transform: scale(1);
@@ -630,7 +922,7 @@
     border: none;
 }
 
-.tab_bfw input[type="checkbox"]::after {
+.bfw-tab-content input[type="checkbox"]::after {
     position: absolute;
     content: "";
     width: 24px;
@@ -642,20 +934,20 @@
     transition: 0.4s;
 }
 
-.tab_bfw input:checked[type="checkbox"] {
+.bfw-tab-content input:checked[type="checkbox"] {
     background: #49d761;
 }
 
-.tab_bfw input[type=file] {
+.bfw-tab-content input[type=file] {
     padding: 17px 12px;
     background: #f0f0f1;
 }
 
-.tab_bfw input:checked[type="checkbox"]::after {
+.bfw-tab-content input:checked[type="checkbox"]::after {
     left: 47%;
 }
 
-.tab_bfw input[type="checkbox"]:checked::before {
+.bfw-tab-content input[type="checkbox"]:checked::before {
     content: "";
 }
 
@@ -793,4 +1085,150 @@
 
 #custom-modal button:hover {
     background: #135e96;
+}
+
+/* --- WP_List_Table UI Improvements --- */
+.bfw-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    text-transform: uppercase;
+}
+
+.wp-list-table th.column-id {
+    width: 50px;
+}
+
+.wp-list-table .column-user_info strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.wp-list-table .column-user_info small {
+    color: #666;
+    display: block;
+    line-height: 1.2;
+}
+
+.wp-list-table .column-actions form {
+    display: inline-block;
+    margin: 0;
+}
+
+.wp-list-table .column-code strong {
+    font-family: monospace;
+    font-size: 13px;
+    background: #f0f0f1;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.bfw-export-wrapper {
+    margin: 5px 10px 5px 0;
+    display: inline-flex;
+    gap: 5px;
+}
+
+.bfw-export-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    height: 30px !important;
+    line-height: 28px !important;
+    padding: 0 10px !important;
+}
+
+.bfw-excel-btn {
+    color: #1d6f42 !important;
+    border-color: #1d6f42 !important;
+}
+
+.bfw-excel-btn:hover {
+    background: #1d6f42 !important;
+    color: #fff !important;
+}
+
+.bfw-print-btn {
+    color: #2271b1 !important;
+    border-color: #2271b1 !important;
+}
+
+.bfw-print-btn:hover {
+    background: #2271b1 !important;
+    color: #fff !important;
+}
+
+.bfw-export-btn .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+}
+
+/* Print Styles - Чистая печать ТОЛЬКО таблицы */
+@media print {
+    /* Скрываем всё лишнее на уровне движка WP */
+    #wpwrap > :not(#wpcontent),
+    #wpadminbar,
+    #wpfooter,
+    #screen-meta,
+    .screen-reader-shortcut {
+        display: none !important;
+    }
+
+    /* Убираем все отступы и растягиваем контент */
+    #wpcontent, #wpbody, #wpbody-content, .wrap {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        float: none !important;
+        background: #fff !important;
+    }
+
+    /* Внутри страницы оставляем ТОЛЬКО таблицу */
+    .wrap > :not(form):not(.wp-list-table),
+    .wrap form > :not(.wp-list-table),
+    .tablenav,
+    .search-box,
+    .subsubsub,
+    .wp-header-end,
+    .bfw-export-wrapper,
+    .column-actions,
+    .column-cb,
+    .check-column {
+        display: none !important;
+    }
+
+    /* Оформление таблицы */
+    .wp-list-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid #000 !important;
+        table-layout: auto !important;
+    }
+
+    .wp-list-table th, 
+    .wp-list-table td {
+        border: 1px solid #999 !important;
+        padding: 8px 5px !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+
+    /* ЧБ статусы */
+    .bfw-status-badge {
+        background: transparent !important;
+        color: #000 !important;
+        border: none !important;
+        font-weight: bold !important;
+        padding: 0 !important;
+    }
 }

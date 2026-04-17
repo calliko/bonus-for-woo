@@ -254,6 +254,9 @@ class BfwAdmin
 
                 /*Обработчик удаления записи истории начисления баллов*/
                 if (isset($_POST['bfw_delete_post_history_points'])) {
+                    if (!isset($_POST['bfw_nonce_history']) || !wp_verify_nonce($_POST['bfw_nonce_history'], 'bfw_action_history')) {
+                        wp_die('Ошибка безопасности!');
+                    }
                     BfwHistory::deleteHistoryId(sanitize_text_field($_POST['bfw_delete_post_history_points']));
                     echo '<div id="message" class="notice notice-warning is-dismissible">
 	<p>' . esc_html__('deleted', 'bonus-for-woo') . '.</p></div>';
@@ -262,6 +265,9 @@ class BfwAdmin
 
                 /*Обработчик удаления всей истории начисления баллов*/
                 if (isset($_GET['bfw_delete_all_post_history_points'])) {
+                    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_delete_all_history')) {
+                        wp_die('Ошибка безопасности!');
+                    }
                     $delete_history_points = sanitize_text_field($_GET['bfw_delete_all_post_history_points']);
                     BfwHistory::clearAllHistoryUser($delete_history_points);
 
@@ -635,10 +641,15 @@ class BfwAdmin
         wp_enqueue_script('bonus-computy-script-admin');
         wp_localize_script('bonus-computy-script-admin', 'bfwScriptAdmin', [
                 'done' => __('Done! Orders processed:', 'bonus-for-woo'),
+                'recount_nonce' => wp_create_nonce('bfw_cashback_recount_nonce'),
+                'send_points_nonce' => wp_create_nonce('bfw_send_points_from_order_nonce'),
         ]);
         if (BfwRoles::isPro()) {
             wp_enqueue_script('custom-admin-script', BONUS_COMPUTY_PLUGIN_URL . '_inc/write-points-in-order-admin.js',
                     array('jquery'), BONUS_COMPUTY_VERSION, true);
+            wp_localize_script('custom-admin-script', 'bfw_order_points', [
+                'nonce' => wp_create_nonce('bfw_order_points_nonce')
+            ]);
         }
     }
 
@@ -696,7 +707,7 @@ class BfwAdmin
                         'bonus-for-woo') . BfwFunctions::helpTip(__('When the checkbox is selected, the points cannot be spent, but the cashback will be accrued.',
                         'bonus-for-woo'));
         $transefees = __('Ignore coupons and discounts when calculating cashback', 'bonus-for-woo');
-        if (function_exists('BfwFunctions::helpTip')) {
+        if (method_exists('BfwFunctions', 'helpTip')) {
             $transefees .= BfwFunctions::helpTip(__('Cashback will be credited without taking into account discounts.',
                     'bonus-for-woo'));
         }
@@ -720,19 +731,17 @@ class BfwAdmin
         $trans29 = __('The Sum of orders after which the referral system will become available to the client.',
                 'bonus-for-woo');
         $trans_soc = __('Social links for the referral system', 'bonus-for-woo');
-        if (function_exists('BfwFunctions::helpTip')) {
-            $trans_soc .= BfwFunctions::helpTip(__('The icons will appear on the user\'s account page.',
-                    'bonus-for-woo'));
-        }
+
+        $trans_referral_text_before = __('The text before the referral link block in the user account.', 'bonus-for-woo');
         $buy_balls = __('Product for which 100% cashback is charged.', 'bonus-for-woo');
         $order_start_date = __('From what date to count the amount of orders?', 'bonus-for-woo');
         $birthday = __('Points on your birthday', 'bonus-for-woo');
-        if (function_exists('BfwFunctions::helpTip')) {
+        if (method_exists('BfwFunctions', 'helpTip')) {
             $birthday .= BfwFunctions::helpTip(__('If more than 0 is specified, then the client will have a date entry field in the account settings.',
                     'bonus-for-woo'));
         }
         $every_days = __('Daily points for the first login', 'bonus-for-woo');
-        if (function_exists('BfwFunctions::helpTip')) {
+        if (method_exists('BfwFunctions', 'helpTip')) {
             $every_days .= BfwFunctions::helpTip(__('Awarding points to the client for logging in. Charged once a day.',
                     'bonus-for-woo'));
         }
@@ -751,7 +760,7 @@ class BfwAdmin
                 array('type' => 'array', 'sanitize_callback' => array('BfwAdmin', 'sanitize_callback_bfw'),));
         add_settings_section('bonus_section_id', $trans1, '', 'primer_page_bonus');
         //позднее включим когда время будет все доделать
-        if (function_exists('BfwFunctions::helpTip')) {
+        if (method_exists('BfwFunctions', 'helpTip')) {
             add_settings_field('bonus_field0', __('Points Label',
                             'bonus-for-woo') . BfwFunctions::helpTip(__('First field singular, second plural.',
                             'bonus-for-woo')), array('BfwAdmin', 'name_points'), 'primer_page_bonus',
@@ -807,6 +816,8 @@ class BfwAdmin
 
 
         register_setting('option_mail_group_bonus', 'bonus_option_name',
+                array('type' => 'array', 'sanitize_callback' => array('BfwAdmin', 'sanitize_callback_bfw'),));
+        register_setting('option_pro_group_bonus', 'bonus_option_name',
                 array('type' => 'array', 'sanitize_callback' => array('BfwAdmin', 'sanitize_callback_bfw'),));
         add_settings_section('bonus_section_id', __('Pro settings', 'bonus-for-woo'), '', 'pro_page_bonus');
 
@@ -876,6 +887,8 @@ class BfwAdmin
                     add_settings_field('my_cashback_two_level', $trans_referral_cashback_two_level,
                             array('BfwAdmin', 'fill_referal_cashback_two_level'), 'pro_page_bonus', 'bonus_section_id');
                 }
+                add_settings_field('my_referral_text_before', $trans_referral_text_before,
+                        array('BfwAdmin', 'fill_referral_text_before'), 'pro_page_bonus', 'bonus_section_id');
                 add_settings_field('my_checkbox_field29', $trans29, array('BfwAdmin', 'fill_primer_field29'),
                         'pro_page_bonus', 'bonus_section_id');
                 add_settings_field('social_icons', $trans_soc, array('BfwAdmin', 'fill_primer_field_social'),
@@ -1196,6 +1209,36 @@ class BfwAdmin
         <label for="ref-social-qrcode" class="ref-social ref-social-qrcode">QR</label>
 
     <?php }
+
+
+    /**
+     * Текст перед реферальным блоком
+     * @return void
+     */
+    public static function fill_referral_text_before(): void
+    {
+        $value = BfwSetting::get('referral-text-before', '');
+        $settings = array(
+                'textarea_name' => 'bonus_option_name[referral-text-before]',
+                'media_buttons' => true,
+                'textarea_rows' => 10,
+                'teeny' => false
+        );
+        wp_editor($value, 'referral-text-before-editor', $settings);
+    }
+
+    /**
+     * Процент кэшбэка второго уровня
+     * @return void
+     */
+    public static function fill_referal_cashback_two_level(): void
+    {
+        $value = BfwSetting::get('level-two-referral-percent', 0);
+        ?>
+        <input style="width: 100px" step="0.1" type="number" name="bonus_option_name[level-two-referral-percent]"
+               value="<?php echo esc_attr($value) ?>"/> %
+        <?php
+    }
 
 
     /**
@@ -2238,20 +2281,7 @@ class BfwAdmin
     <?php }
 
 
-    /**
-     * кешбэк за инвайта второго уровня
-     *
-     * @return void
-     */
-    public static function fill_referal_cashback_two_level(): void
-    {
-        $val = BfwSetting::get('referal-cashback-two-level', 0);
-        ?>
 
-        <input style="width: 60px" placeholder="0" min="0" max="100" type="number"
-               name="bonus_option_name[referal-cashback-two-level]" value="<?php echo esc_attr($val) ?>"/>
-        <small style="color:#999999">%</small>
-    <?php }
 
 
     /**
@@ -2744,6 +2774,17 @@ class BfwAdmin
      */
     public static function sanitize_callback_bfw($options)
     {
+        $existing = get_option('bonus_option_name', []);
+        if (!is_array($existing)) {
+            $existing = [];
+        }
+        
+        if (is_array($options)) {
+            $options = array_merge($existing, $options);
+        } else {
+            $options = $existing;
+        }
+
         if (BfwSetting::get('bonus-for-otziv')) {
             update_option('comment_moderation', '1');/*баллы утверждаются вручную*/
         }
@@ -2815,454 +2856,423 @@ class BfwAdmin
     /**
      * @return void
      */
+    /**
+     * Модернизированная главная страница настроек плагина
+     *
+     * @return void
+     * @version 8.0.0
+     */
     public static function bonus_plugin_options(): void
     {
-        if (current_user_can('manage_options')) {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
 
-            if (BfwRoles::isPro()) {
-                $pro_text = ' Pro';
-            } else {
-                $pro_text = '';
-            }
-            ?>
-            <div class="wrap bonus-for-woo-admin">
-
-                <h2><?php echo _e('Bonus for Woo',
-                            'bonus-for-woo'), $pro_text, ' <small>V', BONUS_COMPUTY_VERSION . '</small>'; ?> </h2>
-                <p><?php echo __('With the support of', 'bonus-for-woo'); ?> <a href="https://computy.ru"
-                                                                                target="_blank"
-                                                                                title="Разработка и поддержка сайтов на WordPress">
-                        computy</a> <br>
-                    <?php echo __('Thank you for rating', 'bonus-for-woo'); ?> <a
-                            class="tfr" href="https://wordpress.org/plugins/bonus-for-woo/#reviews"
-                            target="_blank">★★★★★</a> | <a
-                            href="https://computy.ru/blog/kakie-novye-funkczii-vam-nuzhny/"
-                            target="_blank"><?php echo __('Vote for new features!', 'bonus-for-woo'); ?></a> <br>
-                    <a href="https://computy.ru/plugins.php"
-                       target="_blank"><?php echo __('Our other plugins', 'bonus-for-woo'); ?></a>
-                </p>
-                <hr>
-                <div class="bfw_texts_wrap">
-                    <div class="bfw_text">
-                        <h3><?php echo __('Description', 'bonus-for-woo'); ?></h3>
-                        <p><?php echo __('This plugin is designed to create a bonus system with cashback.',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            <?php echo __('The cashback percentage is calculated based on the users status in the form of bonus points.',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            <?php echo __('Each user status has a corresponding cashback percentage.',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            <?php echo __('The users status depends on the total amount of the users orders.',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            <?php echo __('You can add points to your customers on the page  <a href="users.php" target="_blank">users</a>,by selecting the desired client.',
-                                    'bonus-for-woo'); ?>
-                        </p>
-                        <a href="https://computy.ru/blog/bonus-for-woo-wordpress/"
-                           target="_blank" class="pdf-button"><?php echo __('About plugin', 'bonus-for-woo'); ?></a>
-                        <a class="pdf-button" href="https://computy.ru/blog/docs/bonus-for-woo/"
-                           target="_blank"><?php echo __('Documentation', 'bonus-for-woo'); ?></a>
-
-                    </div>
-                    <div class="bfw_text">
-                        <h3><?php echo __('Shordcodes', 'bonus-for-woo'); ?></h3>
-                        <p>
-                            1. <?php echo __('You can place the client status anywhere in the site using a shortcode:  [bfw_status]',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            2. <?php echo __('To display the percentage of cachek, use a shortcode: [bfw_cashback]',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            3. <?php echo __('To display the number of points awarded, use the shortcode: [bfw_points]',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            4. <?php echo __('Withdrawal of the bonus page from the personal account: [bfw_account]',
-                                    'bonus-for-woo'); ?>
-                            <br>
-                            5. <?php echo __('Withdrawal of a block of information of the referral system from the account: [bfw_account_referral]',
-                                    'bonus-for-woo'); ?>
+        $is_pro = BfwRoles::isPro();
+        $pro_tag = $is_pro ? '<span class="bfw-pro-tag">PRO</span>' : '';
+        ?>
 
 
-                        </p><a class="pdf-button" href="https://computy.ru/blog/docs/bonus-for-woo/shortkody/"
-                               target="_blank"><?php echo __('Full list of shortcodes', 'bonus-for-woo'); ?></a>
-                    </div>
-                    <div class="bfw_text">
-                        <h3><?php echo __('Add-ons', 'bonus-for-woo'); ?></h3>
+        <div class="bfw-admin-dashboard">
+            <!-- Header -->
+            <header class="bfw-dashboard-header">
+                <h1><img width="36" height="36" src="<?php echo plugins_url('bonus-for-woo/img/coin.svg'); ?>" >
+                    <?php _e('Bonus for Woo', 'bonus-for-woo'); ?>
+                    <?php echo '<small>V'. BONUS_COMPUTY_VERSION . '</small>'; ?>
+                    <?php echo $pro_tag; ?>
+                </h1>
 
-                        <div class="bfw_addons">
-                            <div class="bfw_addon">
-                                <div class="bfw_addon_title">Bonus for Woo addon API</div>
-                                <div class="bfw_addon_description"><?php echo __('API for Bonus for Woo for CRM systems',
-                                            'bonus-for-woo'); ?></div>
-                                <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bonus-for-woo-addon-api/"
-                                   target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
-                            </div>
-
-                            <div class="bfw_addon">
-                                <div class="bfw_addon_title">BFW addon for referral</div>
-                                <div class="bfw_addon_description"><?php echo __('Expands the Bonus for Woo referral system',
-                                            'bonus-for-woo'); ?></div>
-                                <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bfw-addon-for-referral/"
-                                   target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
-                            </div>
-
-                            <div class="bfw_addon">
-                                <div class="bfw_addon_title">BFW addon write off percentage</div>
-                                <div class="bfw_addon_description"><?php echo __('The percentage of points written off depending on the clients status.',
-                                            'bonus-for-woo'); ?></div>
-                                <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bfw-addon-write-off-percentage/"
-                                   target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
-                            </div>
-
-                            <div class="bfw_addon">
-                                <div class="bfw_addon_title">BFW addon transfer points for users</div>
-                                <div class="bfw_addon_description"><?php echo __('Transfers of bonus points between users.',
-                                            'bonus-for-woo'); ?></div>
-                                <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bfw-addon-transfer-points-for-users/"
-                                   target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
-                            </div>
-
-
-                        </div>
-
-                    </div>
+                <p><?php _e('Manage your customer loyalty program, cashback tiers, and referral rewards in one place.', 'bonus-for-woo'); ?></p>
+                <div class="bfw-header-links">
+                    <a href="https://computy.ru/blog/docs/bonus-for-woo/" target="_blank"><span class="dashicons dashicons-book-alt"></span> <?php _e('Documentation', 'bonus-for-woo'); ?></a>
+                    <a href="https://wordpress.org/plugins/bonus-for-woo/#reviews" target="_blank"><span class="dashicons dashicons-star-filled"></span>  <?php echo __('Thank you for rating', 'bonus-for-woo'); ?></a>
+                    <a href="https://computy.ru/blog/kakie-novye-funkczii-vam-nuzhny/" target="_blank"><span class="dashicons dashicons-heart"></span> <?php echo _e('Vote for new features!', 'bonus-for-woo'); ?></a>
                 </div>
+            </header>
+
+            <!-- Quick Info Cards -->
+            <div class="bfw-info-grid">
+                <div class="bfw-info-card">
+                    <h3><span class="dashicons dashicons-info-outline"></span> <?php echo __('Description', 'bonus-for-woo'); ?></h3>
+
+                    <p style="font-size: 13px; line-height: 1.6; color: var(--bfw-text-muted); margin: 0;"><?php echo __('This plugin is designed to create a bonus system with cashback.',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        <?php echo __('The cashback percentage is calculated based on the users status in the form of bonus points.',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        <?php echo __('Each user status has a corresponding cashback percentage.',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        <?php echo __('The users status depends on the total amount of the users orders.',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        <?php echo __('You can add points to your customers on the page  <a href="users.php" target="_blank">users</a>,by selecting the desired client.',
+                                'bonus-for-woo'); ?>
+                    </p>
+                </div>
+                <div class="bfw-info-card">
+                    <h3><span class="dashicons dashicons-shortcode"></span> <?php echo __('Shordcodes', 'bonus-for-woo'); ?></h3>
+                    <p>
+                        1. <?php echo __('You can place the client status anywhere in the site using a shortcode:  [bfw_status]',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        2. <?php echo __('To display the percentage of cachek, use a shortcode: [bfw_cashback]',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        3. <?php echo __('To display the number of points awarded, use the shortcode: [bfw_points]',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        4. <?php echo __('Withdrawal of the bonus page from the personal account: [bfw_account]',
+                                'bonus-for-woo'); ?>
+                        <br>
+                        5. <?php echo __('Withdrawal of a block of information of the referral system from the account: [bfw_account_referral]',
+                                'bonus-for-woo'); ?>
 
 
-                <div class="wrap">
-                    <?php
+                    </p><a class="bfw-btn bfw-btn-primary" href="https://computy.ru/blog/docs/bonus-for-woo/shortkody/"
+                           target="_blank"><?php echo __('Full list of shortcodes', 'bonus-for-woo'); ?></a>
 
-
-                    //Обработчик запроса добавления статуса
-                    if (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'bfw_computy_ajax') {
-                        $name_role = sanitize_text_field($_POST['name_role']);
-                        $percent_role = sanitize_text_field($_POST['percent_role']);
-                        $summa_start = (float)sanitize_text_field($_POST['summa_start']);
-                        BfwRoles::addRole($name_role, $percent_role, $summa_start);
-
-                    } //Обработчик запроса обновления статуса
-                    elseif (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'editrolehidden') {
-                        $percent_role = sanitize_text_field($_POST['percent_role']);
-                        $summa_start = (float)sanitize_text_field($_POST['summa_start']);
-                        $name_role = sanitize_text_field($_POST['name_role']);
-                        BfwRoles::updateStatus($name_role, $percent_role, $summa_start);
-                    }
-
-
-                    //Обработчик запроса удаления статуса
-                    if (isset($_POST['delete_role'])) {
-                        $delete_role_name = sanitize_text_field($_POST['delete_role_name']);
-                        BfwRoles::deleteStatus($_POST['delete_role'], $delete_role_name);
-                    }
-
-
-                    ?>
-
-
-                    <div class="tabs_bfw">
-                        <input type="radio" name="odin" checked="checked" id="vkl1"/><label for="vkl1"><i
-                                    class="statusicon"></i><?php echo __('Client status management',
-                                    'bonus-for-woo'); ?>
-                        </label>
-                        <input type="radio" name="odin" id="vkl2"/><label for="vkl2"><i
-                                    class="settingsicon"></i><?php echo __('Plugin settings', 'bonus-for-woo'); ?>
-                        </label>
-                        <?php
-                        if (BfwRoles::isPro()) { ?>
-                            <input type="radio" name="odin" id="vkl5"/><label class="nf0" for="vkl5"><i
-                                        class="proicon"></i><?php echo __('Pro', 'bonus-for-woo'); ?></label>
-                        <?php } ?>
-                        <input type="radio" name="odin" id="vkl3"/><label for="vkl3"><i
-                                    class="notifiicon"></i><?php echo __('Email notifications', 'bonus-for-woo'); ?>
-                        </label>
-                        <input type="radio" name="odin" id="vkl4"/><label for="vkl4"><i
-                                    class="transicon"></i><?php echo __('Translate', 'bonus-for-woo'); ?></label>
-
-                        <?php
-                        if (!BfwRoles::isPro()) { ?>
-                            <input type="radio" name="odin" id="vkl5"/><label class="nf0" for="vkl5"><i
-                                        class="proicon"></i><?php echo __('Pro', 'bonus-for-woo'); ?></label>
-                        <?php } ?>
-                        <div class="tab_bfw tab_bfw1">
-                            <h2><?php echo __('Client status management', 'bonus-for-woo'); ?></h2>
-                            <h3><b><?php echo __('Terms:', 'bonus-for-woo'); ?></b></h3>
-                            <p><?php echo __('<b>Status name</b> - the name that will be displayed in the client\'s account and his personal account.',
-                                        'bonus-for-woo'); ?></p>
-                            <p><?php echo __('<b> Slug </b> is a unique name for the system to work.',
-                                        'bonus-for-woo'); ?></p>
-                            <p><?php echo __('<b> Cashback percentage </b> - the percentage that will be credited to a client with the corresponding status.',
-                                        'bonus-for-woo'); ?></p>
-                            <p><?php echo __('<b> Amount of orders </b> - is a number corresponding to the amount of customer orders with which this role is applied to the user.
-              For example, if you enter 3000, this status will change only when the sum of all customer orders exceeds 3000. If you enter 0, the users status will change immediately, without purchases.',
-                                        'bonus-for-woo'); ?></p>
-                            <?php
-                            $table_bfw = BfwRoles::getRoles();
-                            if ($table_bfw) {
-                                echo "
-          <div class='table-content-bfw'> <table class='table-bfw' ><thead><tr>
-                  <th>" . __('Status name', 'bonus-for-woo') . "</th>
-                  <th>" . __('Role slug (automatic)', 'bonus-for-woo') . "</th>
-                  <th>" . __('Cashback percentage', 'bonus-for-woo') . "</th>
-                  <th>" . __('Amount of orders', 'bonus-for-woo') . "</th>
-                  <th>" . __('Action', 'bonus-for-woo') . "</th>
-              </tr> </thead><tbody>
-    ";
-
-                                foreach ($table_bfw as $bfw) {
-                                    echo '<tr><td  >' . $bfw->name . '</td><td>' . $bfw->slug . '</td><td>' . $bfw->percent . '%</td><td>' . $bfw->summa_start . ' ' . get_woocommerce_currency_symbol() . '</td>
-                  <td class="action_for_role"><input  class="pencil" type="button" value="' . $bfw->id . '">
-                  <form method="post" action="" class="list_role_computy">
-                  <input type="hidden" name="delete_role_summa_start" value="' . $bfw->summa_start . '" >
-                  <input type="hidden" name="delete_role_percent" value="' . $bfw->percent . '" >
-                  <input type="hidden" name="delete_role" value="' . $bfw->id . '" >
-                  <input type="hidden" name="delete_role_slag" value="' . $bfw->slug . '" >
-                  <input type="hidden" name="delete_role_name" value="' . $bfw->name . '" >
-                  <input type="submit" value="+" class="delete_role-bfw" title="' . __('Delete status',
-                                                    'bonus-for-woo') . '" onclick="return window.confirm(\' ' . __('Are you sure you want to delete the status?',
-                                                    'bonus-for-woo') . ' \');">
-                  </form></td></tr>';
-                                }
-                                echo '</tbody></table></div>';
-
-                            } else {
-                                echo '<h3>' . __('To get started with the bonus system with cashback, create a new status for customers.',
-                                                'bonus-for-woo') . '</h3>';
-                            }
-
-                            ?>
-                            <form method="post" action="" id="add_role_form">
-                                <input type="hidden" id="bfw_computy_ajax" name="bfw_computy_ajax"
-                                       value="bfw_computy_ajax">
-                                <table class="form-table">
-                                    <tbody>
-                                    <tr>
-                                        <td id="text_new_status"
-                                            style="width: 130px"><?php echo __('New status for clients',
-                                                    'bonus-for-woo'); ?></td>
-                                        <td class="table-bfw">
-                                            <input type="text" id="add_role_form_name_role" name="name_role" value=""
-                                                   placeholder="<?php echo __('Status name', 'bonus-for-woo'); ?>">
-                                            <input type="number" id="add_role_form_percent_role" name="percent_role"
-                                                   value="" min="0" max="100" step="any"
-                                                   placeholder="<?php echo __('Cashback percentage',
-                                                           'bonus-for-woo'); ?>">
-                                            <input type="number" id="add_role_form_summa_start" name="summa_start"
-                                                   value=""
-                                                   min="0"
-                                                   placeholder="<?php echo __('Amount of orders', 'bonus-for-woo'); ?>">
-                                        </td>
-                                    </tr>
-
-                                    </tbody>
-                                </table>
-
-                                <p class="submit"><input type="submit" name="submit" id="submitaddrole"
-                                                         class="bfw-admin-button"
-                                                         value="<?php echo __('Add satus', 'bonus-for-woo'); ?>"></p>
-                            </form>
-
-
-                            <script>
-                                function addrole() {
-                                    let parentElement = jQuery(this).parent();
-                                    let rolename = parentElement.find('input[name="delete_role_name"]').val();
-                                    let rolepercent = parentElement.find('input[name="delete_role_percent"]').val();
-                                    let rolesumma_start = parentElement.find('input[name="delete_role_summa_start"]').val();
-
-                                    jQuery("#add_role_form_name_role ").val(rolename).addClass('hidden')/*.prop('disabled', true)*/;
-                                    jQuery("#add_role_form_percent_role").val(rolepercent);
-                                    jQuery("#add_role_form_summa_start").val(rolesumma_start);
-
-                                    let statusText = "<?php echo __('Change status', 'bonus-for-woo');?> " + rolename;
-                                    jQuery("#text_new_status").text(statusText);
-
-                                    let editButtonText = "<?php echo __('Edit', 'bonus-for-woo');?>";
-                                    jQuery("#add_role_form #submitaddrole").val(editButtonText);
-
-                                    jQuery("#bfw_computy_ajax").val("editrolehidden");
-                                }
-
-                                jQuery(function () {
-                                    jQuery('.pencil').on('click', addrole);
-                                })
-                            </script>
-                        </div>
-                        <div class="tab_bfw tab_bfw2">
-                            <form action="options.php" method="POST">
-                                <?php
-
-                                settings_fields('option_group_bonus');
-                                do_settings_sections('primer_page_bonus');
-
-                                ?>
-                                <button class="bfw-admin-button bfw-save-button"
-                                        type="submit"><?php echo __('Save Changes', 'bonus-for-woo'); ?></button>
-                        </div>
-                        <?php
-                        if (BfwRoles::isPro()) { ?>
-                            <div class="tab_bfw tab_bfw5">
-                                <?php
-                                settings_fields('option_pro_group_bonus');
-                                do_settings_sections('pro_page_bonus');
-
-                                ?>
-                                <button class="bfw-admin-button bfw-save-button"
-                                        type="submit"><?php echo __('Save Changes', 'bonus-for-woo'); ?></button>
-                            </div>
-                        <?php } ?>
-                        <div class="tab_bfw tab_bfw3">
-
-                            <?php
-
-                            settings_fields('option_mail_group_bonus');
-                            do_settings_sections('mail_page_bonus');
-
-                            ?>
-                            <button class="bfw-admin-button bfw-save-button"
-                                    type="submit"><?php echo __('Save Changes', 'bonus-for-woo'); ?></button>
-                        </div>
-                        <div class="tab_bfw tab_bfw4">
-
-                            <?php
-                            settings_fields('option_trans_group_bonus');
-                            do_settings_sections('trans_page_bonus'); ?>
-                            <button class="bfw-admin-button bfw-save-button"
-                                    type="submit"><?php echo __('Save Changes', 'bonus-for-woo'); ?></button>
-                            </form>
+                </div>
+                <div class="bfw-info-card">
+                    <h3><span class="dashicons dashicons-admin-plugins"></span> <?php echo __('Add-ons', 'bonus-for-woo'); ?></h3>
+                    <div class="bfw_addons">
+                        <div class="bfw_addon">
+                            <div class="bfw_addon_title">Bonus for Woo addon API</div>
+                            <div class="bfw_addon_description"><?php echo __('API for Bonus for Woo for CRM systems',
+                                        'bonus-for-woo'); ?></div>
+                            <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bonus-for-woo-addon-api/"
+                               target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
                         </div>
 
+                        <div class="bfw_addon">
+                            <div class="bfw_addon_title">BFW addon for referral</div>
+                            <div class="bfw_addon_description"><?php echo __('Expands the Bonus for Woo referral system',
+                                        'bonus-for-woo'); ?></div>
+                            <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bfw-addon-for-referral/"
+                               target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
+                        </div>
 
-                        <?php
-                        if (!BfwRoles::isPro()) { ?>
-                            <div class="tab_bfw tab_bfw5">
-                                <h2><?php echo __('Bonus for woo Pro', 'bonus-for-woo'); ?></h2>
+                        <div class="bfw_addon">
+                            <div class="bfw_addon_title">BFW addon write off percentage</div>
+                            <div class="bfw_addon_description"><?php echo __('The percentage of points written off depending on the clients status.',
+                                        'bonus-for-woo'); ?></div>
+                            <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bfw-addon-write-off-percentage/"
+                               target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
+                        </div>
 
-                                <p><?php echo __('Activate the Pro version for your site now and forever. Hurry up to buy cheaper, because with the addition of new features the price will increase.',
-                                            'bonus-for-woo'); ?></p>
+                        <div class="bfw_addon">
+                            <div class="bfw_addon_title">BFW addon transfer points for users</div>
+                            <div class="bfw_addon_description"><?php echo __('Transfers of bonus points between users.',
+                                        'bonus-for-woo'); ?></div>
+                            <a href="https://computy.ru/blog/docs/bonus-for-woo/platnye-dopolneniya/bfw-addon-transfer-points-for-users/"
+                               target="_blank"><?php echo __('More details', 'bonus-for-woo'); ?> ↗</a>
+                        </div>
 
-                                <div class="countdown">
-                                    <p class="price-pro"><?php
-                                        if (determine_locale() === 'ru_RU') {
-                                            echo __('Цена версии Pro: <del>4500</del> <b>2990 рублей</b>',
-                                                    'bonus-for-woo');
-                                        } else {
-                                            echo 'Pro version price: <del>$60</del> <b>$46</b>';
-                                        }
-                                        ?></p>
-                                    <!--
-                                    <div>
-                                        <span id="days">00</span>
-                                        <span class="label"><?php echo __('Days', 'bonus-for-woo'); ?></span>
-                                    </div>
-                                    <div>
-                                        <span id="hours">00</span>
-                                        <span class="label"><?php echo __('Hours', 'bonus-for-woo'); ?></span>
-                                    </div>
-                                    <div>
-                                        <span id="minutes">00</span>
-                                        <span class="label"><?php echo __('Minutes', 'bonus-for-woo'); ?></span>
-                                    </div>
-                                    <div>
-                                        <span id="seconds">00</span>
-                                        <span class="label"><?php echo __('Seconds', 'bonus-for-woo'); ?></span>
-                                    </div>-->
-                                </div>
-
-
-                                <h3><?php echo __('What will the Pro version give?', 'bonus-for-woo'); ?></h3>
-                                <ul class="listpro">
-                                    <li><?php echo __('The ability to earn points on your birthday.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('The choice from which date to start counting the status of customers.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('The ability to set the percentage of the order amount that can be spent by the client with points.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Ability to exclude products and categories that cannot be purchased with points.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Possibility to earn daily points for logging in.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('The ability to credit cashback for excluded products and categories.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Cashback is not accrued for discounted items.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('The ability to specify a cashback percentage in the product editor that does not affect the client status.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Possibility to earn points for registration.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Set up a product with 100% cashback (required to purchase points).',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Ability to exclude roles from the bonus system.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Withdrawal of bonus points if the client has not made orders for a long time.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('The ability to set a minimum order amount at which you can write off points.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Referral system.', 'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Bonus points coupons', 'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Possibility to export bonus points history to pdf and excel.',
-                                                'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Points accrual delay.', 'bonus-for-woo'); ?></li>
-                                    <li><?php echo __('Accrual of points for previous orders.',
-                                                'bonus-for-woo'); ?></li>
-                                </ul>
-                                <hr>
-                                <p><?php echo __('To purchase Bonus for Woo Pro, click on the "Buy" button.',
-                                            'bonus-for-woo');
-                                    echo '<br>' . sprintf(__('The key will be sent to your email: %s.',
-                                                    'bonus-for-woo'), get_option('admin_email'));
-                                    ?><br> <span
-                                            style="color:#ff001d"><?php echo __('In case of problems, please contact info@computy.ru',
-                                                'bonus-for-woo'); ?></span>
-                                </p>
-
-                                <form action="https://computy.ru/buy_plugin.php" method="post">
-                                    <input type="hidden" name="successURL"
-                                           value="<?php echo get_site_url() . $_SERVER['REQUEST_URI']; ?>">
-                                    <input type="hidden" name="label"
-                                           value="<?php echo get_site_url(); ?>|bonus-for-woo|<?php echo BONUS_COMPUTY_VERSION; ?>|<?php echo get_option('admin_email'); ?>">
-                                    <input type="submit" value="<?php echo __('Buy', 'bonus-for-woo'); ?>"
-                                           class="buy_pro_button">
-                                </form>
-
-
-                                <p><?php echo __('Enter the activation key sent to your email.',
-                                            'bonus-for-woo'); ?></p>
-                                <form method="post" action="" style="margin-bottom: 20px">
-                                    <input style="width: 250px" type="text" name="bonus-for-woo-pro" value=""/>
-                                    <input type="submit" value="<?php echo __('Activate', 'bonus-for-woo'); ?>"
-                                           class="active-pro-button">
-                                    <!-- <br><label style="margin-top: 15px; display: block;"><?php echo __('Use an alternate server',
-                                            'bonus-for-woo'); ?>
-                                   <?php $checked_alternate = '';
-                                    if (!empty(get_option('bfw_alternate_server'))) {
-                                        $checked_alternate = 'checked';
-                                    } ?>
-                                    <input type="checkbox" name="alternate_server" value="1" <?php echo $checked_alternate; ?>></label>-->
-                                </form>
-
-
-                                <?php if (isset($_POST['bonus-for-woo-pro'])) {
-                                    $alernate_server = 0;
-                                    if (isset($_POST['alternate_server'])) {
-                                        $alernate_server = 1;
-                                    }
-                                    update_option('bfw_alternate_server', $alernate_server);
-                                    BfwFunctions::checkingKey($_POST['bonus-for-woo-pro'], $alernate_server);
-                                }
-                                ?>
-
-                            </div>
-                        <?php } ?>
 
                     </div>
-
-
                 </div>
             </div>
+
             <?php
-        }
+            // Security Checks & Logic
+            if (isset($_POST['bfw_role_nonce']) && wp_verify_nonce($_POST['bfw_role_nonce'], 'bfw_role_action')) {
+                if (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'bfw_computy_ajax') {
+                  echo  BfwRoles::addRole(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
+
+                } elseif (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'editrolehidden') {
+                  echo  BfwRoles::updateStatus(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
+
+                }
+                if (isset($_POST['delete_role'])) {
+                    BfwRoles::deleteStatus($_POST['delete_role']);
+                    echo '<div class="bfw-notice bfw-notice-warning"><span class="dashicons dashicons-trash"></span> '.__('Status', 'bonus-for-woo') . ' «' . sanitize_text_field($_POST['delete_role_name']) . '» ' . __('deleted', 'bonus-for-woo').'</div>';
+                }
+            }
+            ?>
+
+            <!-- Main Tabs UI -->
+            <div class="bfw-main-tabs-container">
+                <nav class="bfw-tabs-nav">
+                    <button class="bfw-tab-btn active" data-tab="status"><span class="dashicons dashicons-networking"></span> <?php _e('Client status management', 'bonus-for-woo'); ?></button>
+                    <button class="bfw-tab-btn" data-tab="settings"><span class="dashicons dashicons-admin-settings"></span> <?php _e('Plugin settings', 'bonus-for-woo'); ?></button>
+                    <button class="bfw-tab-btn" data-tab="emails"><span class="dashicons dashicons-email-alt"></span> <?php _e('Email notifications', 'bonus-for-woo'); ?></button>
+                    <button class="bfw-tab-btn" data-tab="translate"><span class="dashicons dashicons-translation"></span> <?php _e('Translate', 'bonus-for-woo'); ?></button>
+                    <?php if (!$is_pro): ?>
+                        <button class="bfw-tab-btn" data-tab="getpro" style="color: var(--bfw-warning);"><span class="dashicons dashicons-unlock"></span> <?php _e('Pro', 'bonus-for-woo'); ?></button>
+                    <?php else: ?>
+                        <button class="bfw-tab-btn" data-tab="pro"><span class="dashicons dashicons-star-filled"></span> <?php _e('Pro', 'bonus-for-woo'); ?></button>
+                    <?php endif; ?>
+                </nav>
+
+                <!-- Tab: Loyalty Statuses -->
+                <div id="tab-status" class="bfw-tab-content active">
+                    <div style=" margin-bottom: 25px;">
+                        <h3><b><?php echo __('Terms:', 'bonus-for-woo'); ?></b></h3>
+                        <p><?php echo __('<b>Status name</b> - the name that will be displayed in the client\'s account and his personal account.',
+                                    'bonus-for-woo'); ?></p>
+                        <p><?php echo __('<b> Slug </b> is a unique name for the system to work.',
+                                    'bonus-for-woo'); ?></p>
+                        <p><?php echo __('<b> Cashback percentage </b> - the percentage that will be credited to a client with the corresponding status.',
+                                    'bonus-for-woo'); ?></p>
+                        <p><?php echo __('<b> Amount of orders </b> - is a number corresponding to the amount of customer orders with which this role is applied to the user.
+              For example, if you enter 3000, this status will change only when the sum of all customer orders exceeds 3000. If you enter 0, the users status will change immediately, without purchases.',
+                                    'bonus-for-woo'); ?></p>
+                    </div>
+
+                    <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; margin-bottom: 40px;">
+                        <table class="bfw-status-table">
+                            <thead>
+                            <tr>
+                                <th><?php _e('Status Name', 'bonus-for-woo'); ?></th>
+                                <th><?php _e('Role slug (automatic)', 'bonus-for-woo'); ?></th>
+                                <th><?php _e('Cashback percentage', 'bonus-for-woo'); ?></th>
+                                <th><?php _e('Amount of orders', 'bonus-for-woo'); ?></th>
+                                <th style="text-align: right;"><?php _e('Action', 'bonus-for-woo'); ?></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php $roles = BfwRoles::getRoles(); ?>
+                            <?php if ($roles): foreach ($roles as $role): ?>
+                                <tr>
+                                    <td><strong><?php echo esc_html($role->name); ?></strong></td>
+                                    <td><span class="role-badge"><?php echo esc_html($role->slug); ?></span></td>
+                                    <td><?php echo esc_html($role->percent); ?>%</td>
+                                    <td><?php echo esc_html($role->summa_start); ?> <?php echo get_woocommerce_currency_symbol(); ?></td>
+                                    <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                                        <button class="bfw-btn bfw-btn-outline bfw-edit-btn"
+                                                style="padding: 6px 12px;"
+                                                data-id="<?php echo $role->id; ?>"
+                                                data-name="<?php echo esc_attr($role->name); ?>"
+                                                data-percent="<?php echo esc_attr($role->percent); ?>"
+                                                data-summa="<?php echo esc_attr($role->summa_start); ?>">
+                                            <span class="dashicons dashicons-edit"></span>
+                                        </button>
+                                        <form method="post" style="margin:0;">
+                                            <?php wp_nonce_field('bfw_role_action', 'bfw_role_nonce'); ?>
+                                            <input type="hidden" name="delete_role" value="<?php echo $role->id; ?>">
+                                            <input type="hidden" name="delete_role_name" value="<?php echo esc_attr($role->name); ?>">
+                                            <button type="submit" class="bfw-btn bfw-btn-danger" style="padding: 6px 12px;" onclick="return confirm('<?php _e('Are you sure you want to delete the status?', 'bonus-for-woo'); ?>')">
+                                                <span class="dashicons dashicons-trash"></span>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; else: ?>
+                                <tr><td colspan="5" style="text-align: center; padding: 50px; color: #999;"><?php _e('No loyalty levels configured yet.', 'bonus-for-woo'); ?></td></tr>
+                            <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
+                        <h3 id="role-form-title" style="margin-top:0; margin-bottom: 20px; font-size: 18px;"><?php _e('New status for clients', 'bonus-for-woo'); ?></h3>
+                        <form method="post" id="status-form">
+                            <?php wp_nonce_field('bfw_role_action', 'bfw_role_nonce'); ?>
+                            <input type="hidden" id="bfw_computy_ajax" name="bfw_computy_ajax" value="bfw_computy_ajax">
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                                <div>
+                                    <label for="r_name" style="display:block; margin-bottom: 8px; font-weight:700; font-size: 13px;"><?php echo __('Status name', 'bonus-for-woo'); ?></label>
+                                    <input type="text" id="r_name" name="name_role" class="bfw-input-custom" placeholder="<?php echo __('Status name', 'bonus-for-woo'); ?>" required>
+                                </div>
+                                <div>
+                                    <label for="r_percent" style="display:block; margin-bottom: 8px; font-weight:700; font-size: 13px;"><?php echo __('Cashback percentage', 'bonus-for-woo'); ?></label>
+                                    <input type="number" id="r_percent" name="percent_role" class="bfw-input-custom" min="0" max="100" step="any" required>
+                                </div>
+                                <div>
+                                    <label for="r_summa" style="display:block; margin-bottom: 8px; font-weight:700; font-size: 13px;"><?php echo __('Amount of orders', 'bonus-for-woo'); ?></label>
+                                    <input type="number" id="r_summa" name="summa_start" class="bfw-input-custom" min="0" required>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px;">
+                                <button type="submit" id="submit-role-btn" class="bfw-btn bfw-btn-primary">
+                                    <span class="dashicons dashicons-plus-alt"></span> <?php echo __('Create Status', 'bonus-for-woo'); ?>
+                                </button>
+                                <button type="button" id="cancel-edit" class="bfw-btn bfw-btn-outline" style="display:none;">
+                                    <?php echo __('Cancel Edit', 'bonus-for-woo'); ?>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Core Settings -->
+                <div id="tab-settings" class="bfw-tab-content">
+                    <form action="options.php" method="POST">
+                        <?php settings_fields('option_group_bonus'); ?>
+                        <div class="bfw-settings-grid">
+                            <?php do_settings_sections('primer_page_bonus'); ?>
+                        </div>
+                        <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #eee;">
+                            <button type="submit" class="bfw-btn bfw-btn-primary bfw-save-button">
+                                <?php _e('Save Changes', 'bonus-for-woo'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab: Emails -->
+                <div id="tab-emails" class="bfw-tab-content">
+                    <form action="options.php" method="POST">
+                        <?php settings_fields('option_mail_group_bonus'); ?>
+                        <?php do_settings_sections('mail_page_bonus'); ?>
+                        <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #eee;">
+                            <button type="submit" class="bfw-btn bfw-btn-primary bfw-save-button">
+                                <?php _e('Save Changes', 'bonus-for-woo'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab: Translate -->
+                <div id="tab-translate" class="bfw-tab-content">
+                    <form action="options.php" method="POST">
+                        <?php settings_fields('option_trans_group_bonus'); ?>
+                        <?php do_settings_sections('trans_page_bonus'); ?>
+                        <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #eee;">
+                            <button type="submit" class="bfw-btn bfw-btn-primary bfw-save-button">
+                                <?php _e('Save Changes', 'bonus-for-woo'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab: Pro Options (If Pro) -->
+                <?php if ($is_pro): ?>
+                    <div id="tab-pro" class="bfw-tab-content">
+                        <form action="options.php" method="POST">
+                            <?php settings_fields('option_pro_group_bonus'); ?>
+                            <?php do_settings_sections('pro_page_bonus'); ?>
+                            <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #eee;">
+                                <button type="submit" class="bfw-btn bfw-btn-primary bfw-save-button">
+                                    <span class="dashicons dashicons-saved"></span> <?php _e('Save Changes', 'bonus-for-woo'); ?>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Tab: Get PRO (If not Pro) -->
+                <?php if (!$is_pro): ?>
+                    <div id="tab-getpro" class="bfw-tab-content">
+                        <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+                            <h2 style="font-size: 28px; font-weight: 800; color: #2c3e50; margin-bottom: 10px;"><?php _e('Upgrade to PRO Forever', 'bonus-for-woo'); ?></h2>
+                            <p style="font-size: 16px; color: #64748b; margin-bottom: 40px;"><?php _e('Unlock the full power of WooCommerce loyalty with advanced automation and referrals.', 'bonus-for-woo'); ?></p>
+
+                            <div style="background: #fffbeb; border: 2px solid #fbbf24; border-radius: 20px; padding: 40px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.1);">
+                                <div style="font-size: 14px; font-weight: 800; text-transform: uppercase; color: #b45309; margin-bottom: 10px;"><?php _e('Special Offer', 'bonus-for-woo'); ?></div>
+                                <div style="font-size: 48px; font-weight: 900; color: #1e293b; margin-bottom: 25px;">
+                                    <?php if (get_locale() === 'ru_RU'): ?>
+                                        <span style="text-decoration: line-through; font-size: 24px; color: #94a3b8;">4500</span> 2990 ₽
+                                    <?php else: ?>
+                                        <span style="text-decoration: line-through; font-size: 24px; color: #94a3b8;">$60</span> $46
+                                    <?php endif; ?>
+                                </div>
+                                <form action="https://computy.ru/buy_plugin?bonus-for-woo=buy" method="post">
+                                    <input type="hidden" name="successURL" value="<?php echo get_site_url() . $_SERVER['REQUEST_URI']; ?>">
+                                    <input type="hidden" name="label" value="<?php echo get_site_url(); ?>|bonus-for-woo|<?php echo BONUS_COMPUTY_VERSION; ?>|<?php echo get_option('admin_email'); ?>">
+                                    <button type="submit" class="bfw-btn bfw-btn-primary" style="padding: 16px 50px; font-size: 18px; background: #e67e22; border-radius: 12px;">
+                                        <?php _e('Buy', 'bonus-for-woo'); ?>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div style="text-align: left; margin-bottom: 50px;">
+                                <h3 style="margin-bottom: 20px;"><?php _e('What will the Pro version give?', 'bonus-for-woo'); ?></h3>
+                                <ul class="bfw-pro-benefits">
+                                    <li><span class="dashicons dashicons-groups"></span> <?php _e('Referral System', 'bonus-for-woo'); ?></li>
+                                    <li><span class="dashicons dashicons-buddicons-community"></span> <?php _e('Birthday Rewards', 'bonus-for-woo'); ?></li>
+                                    <li><span class="dashicons dashicons-hourglass"></span> <?php _e('Point Expiration Logic', 'bonus-for-woo'); ?></li>
+                                    <li><span class="dashicons dashicons-tickets-alt"></span> <?php _e('Points Coupons', 'bonus-for-woo'); ?></li>
+                                    <li><span class="dashicons dashicons-welcome-add-page"></span> <?php _e('Registration Bonuses', 'bonus-for-woo'); ?></li>
+
+                                    <li><span class="dashicons dashicons-clock"></span> <?php _e('Accrual Delays', 'bonus-for-woo'); ?></li>
+                                    <li><span class="dashicons dashicons-admin-users"></span> <?php _e('Role Exclusions', 'bonus-for-woo'); ?></li>
+                                    <li><span class="dashicons dashicons-admin-generic"></span> <?php _e('Advanced settings', 'bonus-for-woo'); ?></li>
+
+                                </ul>
+                            </div>
+
+                            <div style="background: white; border: 1px solid var(--bfw-border); padding: 30px; border-radius: 15px; text-align: left;">
+                                <h4 style="margin-top: 0;"><?php _e('Activate License', 'bonus-for-woo'); ?></h4>
+                                <p style="color: #64748b; font-size: 13px;"><?php _e('Enter the activation key sent to your email.', 'bonus-for-woo'); ?></p>
+                                <form method="post" style="display: flex; gap: 10px; margin-top: 15px;">
+                                    <input style="flex: 1;" type="text" name="bonus-for-woo-pro" class="bfw-input-custom" placeholder="XXXX-XXXX-XXXX-XXXX">
+                                    <button type="submit" class="bfw-btn bfw-btn-primary"><?php _e('Activate', 'bonus-for-woo'); ?></button>
+                                </form>
+                                <span
+                                        style="color:#ff001d"><?php echo __('In case of problems, please contact info@computy.ru',
+                                            'bonus-for-woo'); ?></span>
+                                <?php if (isset($_POST['bonus-for-woo-pro'])) {
+                                    BfwFunctions::checkingKey(sanitize_text_field($_POST['bonus-for-woo-pro']), 0);
+                                } ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <script>
+            jQuery(function($) {
+                // Tab Navigation Logic
+                $('.bfw-tab-btn').on('click', function() {
+                    const tabId = $(this).data('tab');
+                    $('.bfw-tab-btn').removeClass('active');
+                    $(this).addClass('active');
+                    $('.bfw-tab-content').removeClass('active');
+                    $('#tab-' + tabId).addClass('active');
+                    localStorage.setItem('bfw_active_tab', tabId);
+                });
+
+                // Persistence: Restore tab on page reload
+                const savedTab = localStorage.getItem('bfw_active_tab');
+                if (savedTab && $('.bfw-tab-btn[data-tab="' + savedTab + '"]').length) {
+                    $('.bfw-tab-btn[data-tab="' + savedTab + '"]').trigger('click');
+                }
+
+                // Edit Status Level Logic
+                $('.bfw-edit-btn').on('click', function() {
+                    const data = $(this).data();
+                    $('#r_name').val(data.name);
+                    $('#r_percent').val(data.percent);
+                    $('#r_summa').val(data.summa);
+
+                    $('#role-form-title').html('<span class="dashicons dashicons-edit"></span> <?php _e('Editing Status:', 'bonus-for-woo'); ?> ' + data.name);
+                    $('#submit-role-btn').html('<span class="dashicons dashicons-saved"></span> <?php _e('Update status', 'bonus-for-woo'); ?>');
+                    $('#bfw_computy_ajax').val('editrolehidden');
+                    $('#cancel-edit').show();
+
+                    $('html, body').animate({
+                        scrollTop: $("#status-form").offset().top - 150
+                    }, 400);
+                });
+
+                $('#cancel-edit').on('click', function() {
+                    $('#status-form')[0].reset();
+                    $('#role-form-title').text('<?php _e('New status for clients', 'bonus-for-woo'); ?>');
+                    $('#submit-role-btn').html('<span class="dashicons dashicons-plus-alt"></span> <?php _e('Create Status', 'bonus-for-woo'); ?>');
+                    $('#bfw_computy_ajax').val('bfw_computy_ajax');
+                    $(this).hide();
+                });
+
+                // Fix for unchecked checkboxes in settings forms
+                $('form').on('submit', function() {
+                    const $form = $(this);
+                    $form.find('.bfw-hidden-fix').remove();
+                    $form.find('input[type="checkbox"]:not(:checked)').each(function() {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            $form.append('<input type="hidden" class="bfw-hidden-fix" name="' + name + '" value="0">');
+                        }
+                    });
+                });
+            });
+        </script>
+        <?php
     }
+
 
 }
