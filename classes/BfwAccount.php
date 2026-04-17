@@ -387,7 +387,7 @@ class BfwAccount
         foreach ($roles as $role) {
             $isComplete = $role->summa_start < $totalSum ? ' is-complete' : '';
             $isActive = $currentRole === $role->name ? ' is-active' : '';
-            $progressBar .= "<li class=\"{$isComplete}{$isActive}\"><span>{$role->name}</span></li>";
+            $progressBar .= "<li class=\"{$isComplete}{$isActive}\"><span>" . esc_html($role->name) . "</span></li>";
         }
 
         $progressBar .= '</ol>';

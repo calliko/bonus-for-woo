@@ -11,7 +11,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 $val = get_option('bonus_option_name');
-if ($val['clear-bfw-bd']) {
+if (!empty($val['clear-bfw-bd'])) {
     //drop tables
     global $wpdb;
 

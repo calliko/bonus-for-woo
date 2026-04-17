@@ -278,7 +278,7 @@ class BfwHistory
                     }
                     $edit_user_url = admin_url('user-edit.php?user_id=' . $bfw->user);
 
-                    echo '<td><a href="'.esc_url($edit_user_url).'" target="_blank">' . esc_html($nameuser) . '</a></td><td>' . $role['name'] . '</td>
+                    echo '<td><a href="'.esc_url($edit_user_url).'" target="_blank">' . esc_html($nameuser) . '</a></td><td>' .esc_html($role['name']) . '</td>
 <td><span style="color:' . $color . ' ">' . $bfw->symbol . BfwPoints::roundPoints($bfw->points) . '</span></td>
 <td>' . $getorderz . wp_kses_post($bfw->comment_admin) . '</td>';
                     if (current_user_can('manage_options')) {
