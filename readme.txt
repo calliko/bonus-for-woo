@@ -6,7 +6,7 @@ Requires at least:  5.6
 Tested up to:  6.9
 WC requires at least: 6.0
 WC tested up to: 10.7.0
-Stable tag: 8.0.0
+Stable tag: 8.0.1
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -118,6 +118,10 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.0.1 - 2026-04-21 =
+* Translations have been corrected.
+* Bonus point refunds have been corrected.
 
 = 8.0.0 - 2026-04-17 =
 * Fixed an issue with incorrect point accrual for the first order.

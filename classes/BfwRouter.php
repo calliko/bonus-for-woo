@@ -277,6 +277,17 @@ class BfwRouter
         // Обработка возвратов (полных и частичных) пропорционально
         add_action('woocommerce_order_refunded', array('BfwPoints', 'refundedPoints'), 10, 2);
 
+        // Ручное изменение статуса на "Возвращен" (или выбранный в настройках)
+        $refund_statuses = BfwSetting::get('refunded_points_order_status', array('refunded'));
+        if (is_array($refund_statuses)) {
+            foreach ($refund_statuses as $status) {
+                add_action('woocommerce_order_status_' . $status, array('BfwPoints', 'refundedPoints'), 10, 1);
+            }
+        } else {
+            // fallback если вдруг вернулась строка
+            add_action('woocommerce_order_status_' . $refund_statuses, array('BfwPoints', 'refundedPoints'), 10, 1);
+        }
+
         //Если отзыв о товаре одобрен добавляет баллы
         add_action('comment_unapproved_to_approved', array('BfwReview', 'bfwoo_approve_comment_callback'));
 

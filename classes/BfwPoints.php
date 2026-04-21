@@ -86,7 +86,7 @@ class BfwPoints
     public static function getPoints(int $userId): float
     {
         $points = get_user_meta($userId, 'computy_point', true) ?? 0;
-        return (float)$points;
+        return (float) $points;
     }
 
 
@@ -118,7 +118,7 @@ class BfwPoints
     public static function getFastPoints(int $userId): float
     {
         $points = get_user_meta($userId, 'computy_fast_point', true);
-        return (float)$points;
+        return (float) $points;
     }
 
 
@@ -185,7 +185,7 @@ class BfwPoints
 
         $cached_sum = get_user_meta($userId, 'total_purchases_sum', true);
         if ($cached_sum !== '') {
-            return (float)$cached_sum;
+            return (float) $cached_sum;
         }
 
         $order_staus = sanitize_text_field(BfwSetting::get('add_points_order_status', 'completed'));
@@ -224,7 +224,7 @@ class BfwPoints
 
         // Создаем плейсхолдеры для IN запроса
         $placeholders = implode(', ', array_fill(0, count($prefixed_statuses), '%s'));
-        
+
         // Массив аргументов (статусы + ID клиента)
         $args_base = array_merge($prefixed_statuses, [$userId]);
 
@@ -274,7 +274,8 @@ INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
 WHERE p.post_status IN ({$placeholders})  AND p.post_type LIKE 'shop_order'
 AND pm.meta_key LIKE '_order_total' AND pm2.meta_key LIKE '_customer_user'
 AND pm2.meta_value LIKE %d $data_start 
-", ...$args_base));
+", ...$args_base)
+            );
 
             // Получаем общую сумму возвратов
             $total_refunds = $wpdb->get_var($wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
@@ -308,7 +309,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
                         // Если стоимость доставки существует, добавляем её к общей сумме
                         if (!empty($shipping_cost)) {
-                            $total_shipping += (float)$shipping_cost;
+                            $total_shipping += (float) $shipping_cost;
                         }
                     }
                 }
@@ -419,7 +420,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
     {
         if (BfwRoles::isInvalve($user_id)) {
             $point_every_day = BfwSetting::get('every_days', 0);
-            if ((int)$point_every_day > 0) {
+            if ((int) $point_every_day > 0) {
                 //Проверяем получал ли сегодня клиент баллы
                 $last_day = get_user_meta($user_id, 'points_every_day', true);
                 if ($last_day !== gmdate('d')) {
@@ -434,15 +435,17 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                     static::updatePoints($user_id, $new_point);
 
 
-                    $cause = sprintf(__('Daily %s for the login.', 'bonus-for-woo'),
-                        strtolower(BfwSetting::get('bonus-points-on-cart')));
+                    $cause = sprintf(
+                        __('Daily %s for the login.', 'bonus-for-woo'),
+                        strtolower(BfwSetting::get('bonus-points-on-cart'))
+                    );
 
                     //Записываем в историю
                     BfwHistory::add_history($user_id, '+', $point_every_day, '0', $cause);
-                    
+
                     // Добавляем лог
                     BfwLogs::addLog('add_points', $user_id, $cause);
-                    
+
                     //отправляем письмо
 
                     if (BfwSetting::get('email-when-everyday-login')) {
@@ -450,8 +453,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
                         $text_email = BfwSetting::get('email-when-everyday-login-text', '');
 
-                        $title_email = BfwSetting::get('email-when-everyday-login-title',
-                            __('Bonus points have been added to you!', 'bonus-for-woo'));
+                        $title_email = BfwSetting::get(
+                            'email-when-everyday-login-title',
+                            __('Bonus points have been added to you!', 'bonus-for-woo')
+                        );
 
                         $user = get_userdata($user_id);
                         $text_email_array = array(
@@ -616,13 +621,15 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         $foot = ' <div class="text_total_points">' . $bonustext_in_cart5 . ': ' . $computy_point . ' ' . self::pointsLabel($computy_point) . '</div></div></div>';
 
-        $not_use_points_text = $head . ' <div class="text_how_many_points">' . __('You cannot use points on this order.',
-                'bonus-for-woo') . '</div>' . $foot;
+        $not_use_points_text = $head . ' <div class="text_how_many_points">' . __(
+                'You cannot use points on this order.',
+                'bonus-for-woo'
+            ) . '</div>' . $foot;
 
 
         $maxPossiblePoints = self::maxPossiblePointsInOrder(); //максимальное кол-во баллов, которое можно потратить в текущем заказе
 
-//return $maxPossiblePoints;
+        //return $maxPossiblePoints;
 
         if ($maxPossiblePoints == 0 || $computy_point == 0) {
             return apply_filters('bfw_not_use_points_text', $not_use_points_text);
@@ -642,13 +649,19 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 /*Если применяется купон*/
                 $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
 
-                if (!in_array($cart_discount, $woo->cart->get_applied_coupons()) or in_array($cart_discount,
-                        $woo->cart->get_applied_coupons()) && count($woo->cart->get_applied_coupons()) > 1) {
+                if (
+                    !in_array($cart_discount, $woo->cart->get_applied_coupons()) or in_array(
+                        $cart_discount,
+                        $woo->cart->get_applied_coupons()
+                    ) && count($woo->cart->get_applied_coupons()) > 1
+                ) {
                     self::updateFastPoints($user_id, 0);
                     $woo->cart->remove_coupon($cart_discount);
                     $woo->cart->calculate_totals();//Пересчет общей суммы заказа
-                    return $head . ' <div class="text_how_many_points">' . sprintf(__('To use %s, you must remove the coupon.',
-                            'bonus-for-woo'), self::pointsLabel(5)) . '</div>' . $foot;
+                    return $head . ' <div class="text_how_many_points">' . sprintf(__(
+                            'To use %s, you must remove the coupon.',
+                            'bonus-for-woo'
+                        ), self::pointsLabel(5)) . '</div>' . $foot;
                 }
 
             }
@@ -659,7 +672,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 // $carttotal = $woo->cart->total;
 
                 $user_fast_points = self::getFastPoints($user_id);
-                if ($carttotal < (int)BfwSetting::get('minimal-amount')) {
+                if ($carttotal < (int) BfwSetting::get('minimal-amount')) {
                     //сумма заказа должна быть больше чем 'minimal-amount'
                     foreach ($woo->cart->get_applied_coupons() as $code) {
                         if (strtolower($code) === mb_strtolower($cart_discount)) {
@@ -668,9 +681,13 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                     }
                     self::updateFastPoints($user_id, 0);
                     $woo->cart->calculate_totals();
-                    return $head . ' <div class="text_how_many_points">' . sprintf(__('To use %s, the order amount must be more than',
-                            'bonus-for-woo'),
-                            self::pointsLabel(5)) . ' ' . BfwSetting::get('minimal-amount') . ' ' . get_woocommerce_currency_symbol() . '</div>' . $foot;
+                    return $head . ' <div class="text_how_many_points">' . sprintf(
+                            __(
+                                'To use %s, the order amount must be more than',
+                                'bonus-for-woo'
+                            ),
+                            self::pointsLabel(5)
+                        ) . ' ' . BfwSetting::get('minimal-amount') . ' ' . get_woocommerce_currency_symbol() . '</div>' . $foot;
 
 
                 }
@@ -682,8 +699,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 $woo->cart->calculate_totals();
             }
 
-            $bonustext_in_cart = BfwSetting::get('bonustext-in-cart',
-                __('You can use [points] in this order.', 'bonus-for-woo'));
+            $bonustext_in_cart = BfwSetting::get(
+                'bonustext-in-cart',
+                __('You can use [points] in this order.', 'bonus-for-woo')
+            );
 
             $bonustext_in_cart_array = [
                 '[points]' => '<b>' . $vozmojniy_ball . ' ' . self::pointsLabel($vozmojniy_ball) . '</b>',
@@ -757,7 +776,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             return;
         }
 
-        $requestedPoints = self::roundPoints((float)($_POST['computy_input_points'] ?? 0));
+        $requestedPoints = self::roundPoints((float) ($_POST['computy_input_points'] ?? 0));
         $redirect = esc_url_raw($_POST['redirect'] ?? '');
 
         if ($requestedPoints <= 0) {
@@ -771,8 +790,12 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 /*Если применяется купон*/
                 $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
                 //если система с помощью купонов
-                if (!in_array($cart_discount, $woocommerce->cart->get_applied_coupons()) or in_array($cart_discount,
-                        $woocommerce->cart->get_applied_coupons()) && count($woocommerce->cart->get_applied_coupons()) > 1) {
+                if (
+                    !in_array($cart_discount, $woocommerce->cart->get_applied_coupons()) or in_array(
+                        $cart_discount,
+                        $woocommerce->cart->get_applied_coupons()
+                    ) && count($woocommerce->cart->get_applied_coupons()) > 1
+                ) {
                     $requestedPoints = 0;
                 }
             }
@@ -798,7 +821,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             wc_load_cart(); // Принудительная загрузка, если эндпоинт вызван слишком рано
         }
         $params = $request->get_json_params();
-        $requestedPoints = isset($params['points']) ? self::roundPoints((float)$params['points']) : 0;
+        $requestedPoints = isset($params['points']) ? self::roundPoints((float) $params['points']) : 0;
         $redirect = isset($params['redirect']) ? esc_url($params['redirect']) : wc_get_cart_url();
 
         $user_id = get_current_user_id();
@@ -858,7 +881,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         $exclude_onsale = BfwSetting::get('spisanie-onsale');
         $excluded_cats = $is_pro ? BfwSetting::get('exclude-category-cashback', 'not') : 'not';
         $exclude_products_raw = $is_pro ? BfwSetting::get('exclude-tovar-cashback', '') : '';
-        
+
         $excluded_products = array_filter(explode(',', $exclude_products_raw));
         $excluded_products = apply_filters('bfw-excluded-products-filter', $excluded_products, $exclude_products_raw);
 
@@ -1022,7 +1045,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         }
 
         return new WP_REST_Response([
-            'cod' => (string)$status_code,
+            'cod' => (string) $status_code,
             'message' => esc_html($message),
             'redirect' => $redirect_url
         ], 200);
@@ -1049,7 +1072,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             return;
         }
 
-        $order_id = (int)$_POST['order_id'];
+        $order_id = (int) $_POST['order_id'];
         $order = wc_get_order($order_id);
 
         if (!$order) {
@@ -1058,7 +1081,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         }
 
         $user_id = $order->get_user_id();
-        $points = (float)$_POST['points'];
+        $points = (float) $_POST['points'];
 
         if ($points <= 0) {
             wp_send_json_error('Invalid points amount');
@@ -1069,7 +1092,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         if ($balluser < $_POST['points']) {
             wp_send_json_error(__('The user does not have enough points. Balance', 'bonus-for-woo') . $balluser);
         }
-        $points = (float)$_POST['points'];
+        $points = (float) $_POST['points'];
         BfwPoints::updateFastPoints($user_id, $points);
         $order = wc_get_order($order_id);
 
@@ -1118,8 +1141,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             // Добавляем лог
             BfwLogs::addLog('remove_points', $user_id, $prichina);
 
-            wp_send_json_success(__('The coupon has been successfully created and applied to your order.',
-                'bonus-for-woo'));
+            wp_send_json_success(__(
+                'The coupon has been successfully created and applied to your order.',
+                'bonus-for-woo'
+            ));
         } else {
             wp_send_json_error(__('Failed to apply coupon to order.', 'bonus-for-woo'));
         }
@@ -1140,7 +1165,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
             return;
         }
-        $order_id = isset($_POST['order_id']) ? (int)$_POST['order_id'] : 0;
+        $order_id = isset($_POST['order_id']) ? (int) $_POST['order_id'] : 0;
         $coupon_code = isset($_POST['coupon_code']) ? sanitize_text_field($_POST['coupon_code']) : '';
 
         if ($order_id && $coupon_code) {
@@ -1167,14 +1192,19 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
     }
 
 
-    public static function bfwoo_add_fee($cart) {
+    public static function bfwoo_add_fee($cart)
+    {
         static $is_calculating = false;
-        if ($is_calculating) return;
-        if (is_admin() && !wp_doing_ajax()) return;
+        if ($is_calculating)
+            return;
+        if (is_admin() && !wp_doing_ajax())
+            return;
         $couponCodeSetting = BfwSetting::get('bonus-points-on-cart');
-        if (!$cart || $cart->is_empty() || !$couponCodeSetting) return;
+        if (!$cart || $cart->is_empty() || !$couponCodeSetting)
+            return;
         $userId = get_current_user_id();
-        if (!$userId || BfwPoints::getFastPoints($userId) <= 0) return;
+        if (!$userId || BfwPoints::getFastPoints($userId) <= 0)
+            return;
         $couponCode = mb_strtolower($couponCodeSetting);
         // ПУНКТ 1: Если купона нет в списке, ПРИНУДИТЕЛЬНО применяем его
         if (!$cart->has_discount($couponCode)) {
@@ -1477,7 +1507,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
     {
         check_ajax_referer('bfw_export_bonuses_nonce', 'nonce');
 
-        $offset = (int)($_POST['offset'] ?? 0);
+        $offset = (int) ($_POST['offset'] ?? 0);
         $limit = 100;
         $search_by = $_POST['search_by'] ?? 'by_id';
 
@@ -1534,13 +1564,13 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                     continue;
                 }
             } else {
-                $id = (int)$currRow[0];
+                $id = (int) $currRow[0];
             }
 
             // Обновление баллов
-            $point = (float)$currRow[4];
-            $comment = (string)($currRow[5] ?? '');
-            $user_point = (float)get_user_meta($id, 'computy_point', true);
+            $point = (float) $currRow[4];
+            $comment = (string) ($currRow[5] ?? '');
+            $user_point = (float) get_user_meta($id, 'computy_point', true);
 
             $issetUser = get_userdata($id);
             if ($issetUser && $user_point !== $point) {
@@ -1602,12 +1632,18 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             $count_point = $computy_point_old - $computy_point_fast;
             self::updatePoints($customer_user, $count_point);
 
+            // Mark the order as having deducted points to ensure correct return on refund
+            $order->update_meta_data('_bfw_points_deducted', $computy_point_fast);
+            $order->save();
+
             $prichina = sprintf(__('Use of %s', 'bonus-for-woo'), self::pointsLabel(5));
             BfwHistory::add_history($customer_user, '-', $computy_point_fast, $order_id, $prichina);
 
 
-            $title_email = BfwSetting::get('email-when-order-confirm-title',
-                __('Writing off bonus points', 'bonus-for-woo'));
+            $title_email = BfwSetting::get(
+                'email-when-order-confirm-title',
+                __('Writing off bonus points', 'bonus-for-woo')
+            );
             $text_email = BfwSetting::get('email-when-order-confirm-text', '');
 
             $user = get_userdata($customer_user);
@@ -1655,12 +1691,16 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         // обновляем роль пользователя
         $bfwRoles::updateRole($user_id);
 
-        $order_total = (float)$order->get_total();
+        $order_total = (float) $order->get_total();
         $payment_method = $order->get_payment_method();
 
         // Проверка исключенных методов оплаты
-        if (BfwSetting::get('exclude-payment-method') && in_array($payment_method,
-                BfwSetting::get('exclude-payment-method'))) {
+        if (
+            BfwSetting::get('exclude-payment-method') && in_array(
+                $payment_method,
+                BfwSetting::get('exclude-payment-method')
+            )
+        ) {
             return 0.0;
         }
 
@@ -1684,13 +1724,13 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
             // Безопасное получение данных о кешбэке
             $cashback_data = $bfwSingleProduct->cashbackFromOneProduct($product_id, $user_id, $variation_id, $total);
-            $cashback_amount = isset($cashback_data['amount']) ? (float)$cashback_data['amount'] : 0;
+            $cashback_amount = isset($cashback_data['amount']) ? (float) $cashback_data['amount'] : 0;
             $cashback_internal += $cashback_amount;
         }
 
-        $shipping_total = (float)$order->get_shipping_total();
+        $shipping_total = (float) $order->get_shipping_total();
         $percent_data = $bfwRoles::getRole($user_id);
-        $percent = isset($percent_data['percent']) ? (float)$percent_data['percent'] : 0;
+        $percent = isset($percent_data['percent']) ? (float) $percent_data['percent'] : 0;
 
         // Добавляем кешбэк за доставку, если не отключено
         if (!BfwSetting::get('cashback-for-shipping')) {
@@ -1700,7 +1740,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         $cashback_internal = apply_filters('bfw-completed-points-internal', $cashback_internal, $order_id, $order);
 
         // Если internal ноль — ничего не начисляем
-        if ((float)$cashback_internal <= 0) {
+        if ((float) $cashback_internal <= 0) {
             return 0.0;
         }
 
@@ -1723,14 +1763,18 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         // Применяем фильтры/корректировки
         $percent = apply_filters('bfw-filter-percent-in-cart', $percent, $order_total);
         $cashback_for_user = apply_filters('bfw-cashback-this-order', $cashback_for_user, $order_total, $percent);
-        $cashback_internal = apply_filters('bfw-cashback-this-order-internal', $cashback_internal, $order_total,
-            $percent);
+        $cashback_internal = apply_filters(
+            'bfw-cashback-this-order-internal',
+            $cashback_internal,
+            $order_total,
+            $percent
+        );
 
         if ($cashback_for_user > 0 && $bfwRoles::isInvalve($user_id)) {
             if ($bfwRoles::isPro()) {
                 // Проверка минимальной суммы (Pro)
                 if (BfwSetting::get('minimal-amount')) {
-                    $minimal_amount = (float)BfwSetting::get('minimal-amount');
+                    $minimal_amount = (float) BfwSetting::get('minimal-amount');
                     if ($order_total < $minimal_amount && BfwSetting::get('minimal-amount-cashback')) {
                         $cashback_for_user = 0;
                     }
@@ -1824,17 +1868,17 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         if (BfwSetting::get('referal-system')) {
             $get_referral_invite = get_user_meta($user_id, 'bfw_points_referral_invite', true);
-            $get_referral_invite = (int)$get_referral_invite;
+            $get_referral_invite = (int) $get_referral_invite;
 
             if ($get_referral_invite > 0) {
-                $sumordersforreferral = (float)BfwSetting::get('sum-orders-for-referral', 0.0);
+                $sumordersforreferral = (float) BfwSetting::get('sum-orders-for-referral', 0.0);
                 $totalref = self::getSumUserOrders($get_referral_invite);
 
                 if ($totalref >= $sumordersforreferral) {
                     // процент рефералки из настроек
-                    $percent_for_referal = (float)BfwSetting::get('referal-cashback', 0.0);
+                    $percent_for_referal = (float) BfwSetting::get('referal-cashback', 0.0);
                     // База для рефералки: Сумма всего чека минус налоги и доставка (чистая сумма за товары)
-                    $paid_amount = (float)$order->get_total() - (float)$order->get_shipping_total() - (float)$order->get_total_tax();
+                    $paid_amount = (float) $order->get_total() - (float) $order->get_shipping_total() - (float) $order->get_total_tax();
                     if ($paid_amount < 0) {
                         $paid_amount = 0;
                     }
@@ -1850,25 +1894,32 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
                 // второй уровень
                 if (BfwSetting::get('level-two-referral')) {
-                    $get_referral_invite_two_level = get_user_meta($get_referral_invite, 'bfw_points_referral_invite',
-                        true);
-                    $get_referral_invite_two_level = (int)$get_referral_invite_two_level;
+                    $get_referral_invite_two_level = get_user_meta(
+                        $get_referral_invite,
+                        'bfw_points_referral_invite',
+                        true
+                    );
+                    $get_referral_invite_two_level = (int) $get_referral_invite_two_level;
 
                     if ($get_referral_invite_two_level !== 0) {
-                        $sumordersforreferral2 = (float)BfwSetting::get('sum-orders-for-referral', 0.0);
+                        $sumordersforreferral2 = (float) BfwSetting::get('sum-orders-for-referral', 0.0);
 
                         $totalref2 = self::getSumUserOrders($get_referral_invite_two_level);
 
                         if ($totalref2 >= $sumordersforreferral2) {
                             $percent_for_referal_two_level = floatval(BfwSetting::get('referal-cashback-two-level', 0));
 
-                            $paid_amount = (float)$order->get_total();
+                            $paid_amount = (float) $order->get_total();
                             $pointsForRef2 = $paid_amount * ($percent_for_referal_two_level / 100);
                             $pointsForRef2 = self::roundPoints($pointsForRef2);
 
                             if ($pointsForRef2 > 0 && $percent_for_referal_two_level > 0) {
-                                BfwReferral::addReferralPoints($user_id, $pointsForRef2, $get_referral_invite_two_level,
-                                    $order_id);
+                                BfwReferral::addReferralPoints(
+                                    $user_id,
+                                    $pointsForRef2,
+                                    $get_referral_invite_two_level,
+                                    $order_id
+                                );
                             }
                         }
                     }
@@ -1915,8 +1966,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             }
             if (BfwSetting::get('daily_cashback_check')) {
                 //добавляем задержку начисления баллов
-                $order->update_meta_data('_bonus_cashback_pending',
-                    ['process_after' => time() + (int)BfwSetting::get('daily_cashback_check') * DAY_IN_SECONDS]);
+                $order->update_meta_data(
+                    '_bonus_cashback_pending',
+                    ['process_after' => time() + (int) BfwSetting::get('daily_cashback_check') * DAY_IN_SECONDS]
+                );
                 $order->save();
                 return true;
             }
@@ -2001,7 +2054,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             return;
         }
 
-        $customer_id = (int)$order->get_customer_id();
+        $customer_id = (int) $order->get_customer_id();
         if ($customer_id <= 0 || !BfwRoles::isInvalve($customer_id)) {
             return;
         }
@@ -2013,14 +2066,14 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         // Получаем процент кешбэка для этого клиента
         $role = BfwRoles::getRole($customer_id);
-        $percent = (float)($role['percent'] ?? 0);
+        $percent = (float) ($role['percent'] ?? 0);
 
         if ($percent <= 0) {
             return;
         }
 
         // Считаем сумму для начисления (без доставки если настройка не включена)
-        $order_total = (float)$order->get_subtotal();
+        $order_total = (float) $order->get_subtotal();
 
         // Проверяем исключения (скидки, купоны)
         $no_cashback_with_coupon = BfwSetting::get('yous_coupon_no_cashback');
@@ -2032,7 +2085,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         if ($pending_points > 0) {
             // Суммируем pending со всех текущих ожидающих заказов
-            $current_pending = (float)get_user_meta($customer_id, 'computy_point_pending', true);
+            $current_pending = (float) get_user_meta($customer_id, 'computy_point_pending', true);
             update_user_meta($customer_id, 'computy_point_pending', $current_pending + $pending_points);
 
             // Привязываем к заказу, чтобы точно знать сколько снять при очистке
@@ -2055,17 +2108,17 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             return;
         }
 
-        $customer_id = (int)$order->get_customer_id();
+        $customer_id = (int) $order->get_customer_id();
         if ($customer_id <= 0) {
             return;
         }
 
-        $order_pending = (float)$order->get_meta('_bfw_pending_points');
+        $order_pending = (float) $order->get_meta('_bfw_pending_points');
         if ($order_pending <= 0) {
             return;
         }
 
-        $current_pending = (float)get_user_meta($customer_id, 'computy_point_pending', true);
+        $current_pending = (float) get_user_meta($customer_id, 'computy_point_pending', true);
         $new_pending = max(0, $current_pending - $order_pending);
 
         if ($new_pending > 0) {
@@ -2079,109 +2132,179 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         $order->save();
     }
 
+
     /**
      * Action when points refund is issued
      * Действие когда оформлен возврат баллов
      *
-     * @param $order_id int
-     *
+     * @param int $order_id
+     * @param int|null $refund_id
      * @return void
-     * @version 6.3.5
+     * @version 8.0.1
      */
-    public static function refundedPoints(int $order_id, $refund_id = null): void
+    public static function refundedPoints(int $order_id, int $refund_id = null): void
     {
-        global $wpdb;
+        // Prevent double processing in the same request due to multiple hooks
+        static $processing_order = [];
+
+        if (isset($processing_order[$order_id])) {
+            return;
+        }
+        $processing_order[$order_id] = true;
 
         $order = wc_get_order($order_id);
         if (!$order) {
+            unset($processing_order[$order_id]);
             return;
         }
 
         $customer_user = $order->get_customer_id();
+        if (!$customer_user) {
+            unset($processing_order[$order_id]);
+            return;
+        }
 
-        // 1. Calculate Refund Ratio
-        // We calculate original total (total + total_refunded) to get the base for our ratio
-        $refund_total_amount = $order->get_total_refunded();
-        $current_total = $order->get_total();
-        $original_total = $current_total + $refund_total_amount;
-
+        // 1. Calculate Refund Amount and Ratio
+        $original_total = (float) $order->get_total();
         if ($original_total <= 0) {
+            unset($processing_order[$order_id]);
             return;
         }
 
         $current_refund_amount = 0;
+        $refund_statuses = (array) BfwSetting::get('refunded_points_order_status', array('refunded'));
+        $is_full_refund = false;
+
+        // Определяем сумму возврата ТОЛЬКО одним способом
         if ($refund_id) {
             $refund = wc_get_order($refund_id);
             if ($refund) {
                 $current_refund_amount = abs($refund->get_amount());
+                $is_full_refund = ($current_refund_amount >= $original_total);
             }
-        } else {
-            // Fallback: if no specific refund ID, assume full refund if status is 'refunded'
-            if ($order->get_status() === 'refunded') {
-                $current_refund_amount = $original_total;
-            } else {
-                // For manual calls without ID or status change, we might not know the amount.
-                // But usually WC hooks pass the ID.
-                return;
-            }
+        } elseif (in_array($order->get_status(), $refund_statuses)) {
+            $current_refund_amount = $original_total;
+            $is_full_refund = true;
         }
 
         if ($current_refund_amount <= 0) {
+            unset($processing_order[$order_id]);
             return;
         }
 
-        $ratio = $current_refund_amount / $original_total;
+        $ratio = min(1, $current_refund_amount / $original_total);
 
-        // 2. Proportional Revocation of Earned Points (Cashback)
-        // We use 'cashback_amount' meta as the source of truth for total points earned
-        $total_earned = (float)$order->get_meta('cashback_amount');
-        $points_to_revoke = self::roundPoints($total_earned * $ratio);
+        // 2. Get current state from order meta
+        $total_earned = (float) $order->get_meta('cashback_amount');
+        $revoked_so_far = (float) $order->get_meta('_bfw_revoked_points');
+        $total_spent = (float) $order->get_meta('_bfw_points_deducted');
+        $returned_so_far = (float) $order->get_meta('_bfw_returned_points');
 
-        // 3. Proportional Return of Spent Points
-        // spent_total (points converted to currency discount)
-        $total_spent = (float)BfwFunctions::feeOrCoupon($order);
-        $points_to_return = self::roundPoints($total_spent * $ratio);
+        // Fallback для старых заказов без метаданных
+        if ($total_spent <= 0 && $order->get_meta('cashback_receipt') !== 'received') {
+            $total_spent = (float) BfwFunctions::feeOrCoupon($order);
+            // Если заказ отменен и баллы не были списаны
+            if ($order->get_status() === 'cancelled' && !$order->get_meta('_bfw_points_deducted')) {
+                $total_spent = 0;
+            }
+        }
 
-        $computy_point_old = self::getPoints($customer_user);
-        $count_point = $computy_point_old + $points_to_return - $points_to_revoke;
+        // 3. Calculate points to revoke (earned cashback)
+        $points_to_revoke = 0;
+        if ($order->get_meta('cashback_receipt') === 'received' && $total_earned > 0) {
+            if ($is_full_refund) {
+                $points_to_revoke = max(0, $total_earned - $revoked_so_far);
+            } else {
+                $points_to_revoke = min(
+                    self::roundPoints($total_earned * $ratio),
+                    max(0, $total_earned - $revoked_so_far)
+                );
+            }
+        }
+
+        // 4. Calculate points to return (spent points)
+        $points_to_return = 0;
+        if ($total_spent > 0) {
+            if ($is_full_refund) {
+                $points_to_return = max(0, $total_spent - $returned_so_far);
+            } else {
+                $points_to_return = min(
+                    self::roundPoints($total_spent * $ratio),
+                    max(0, $total_spent - $returned_so_far)
+                );
+            }
+        }
+
+        if ($points_to_revoke <= 0 && $points_to_return <= 0) {
+            unset($processing_order[$order_id]);
+            return;
+        }
+
+        // 5. Update user points
+        $current_points = self::getPoints($customer_user);
+        $new_points = $current_points + $points_to_return - $points_to_revoke;
 
         $cause = __('Refund of bonus points', 'bonus-for-woo');
         $info_email = '';
+        $needs_save = false;
 
         if ($points_to_revoke > 0) {
             BfwHistory::add_history($customer_user, '-', $points_to_revoke, $order_id, $cause);
-            $info_email .= sprintf(__('The %1$s bonus points you earned for order no. %2$s have been canceled.',
-                'bonus-for-woo'), $points_to_revoke, $order_id);
-            BfwLogs::addLog('remove_points', $customer_user, sprintf(__('Cancellation of %s points for order #%d due to refund.', 'bonus-for-woo'), $points_to_revoke, $order_id));
+            $info_email .= sprintf(
+                __('The %1$s bonus points you earned for order no. %2$s have been canceled.', 'bonus-for-woo'),
+                $points_to_revoke,
+                $order_id
+            );
+            BfwLogs::addLog('remove_points', $customer_user,
+                sprintf(__('Cancellation of %s points for order #%d due to refund.', 'bonus-for-woo'),
+                    $points_to_revoke, $order_id));
+
+            $new_revoked = $revoked_so_far + $points_to_revoke;
+            $order->update_meta_data('_bfw_revoked_points', $new_revoked);
+            $needs_save = true;
         }
 
         if ($points_to_return > 0) {
             BfwHistory::add_history($customer_user, '+', $points_to_return, $order_id, $cause);
-            $info_email .= sprintf(__('You have returned %1$s bonus points for order number %2$s.', 'bonus-for-woo'),
-                $points_to_return, $order_id);
-            BfwLogs::addLog('add_points', $customer_user, sprintf(__('Refund of %s spent points for order #%d.', 'bonus-for-woo'), $points_to_return, $order_id));
+            $info_email .= sprintf(
+                __('You have returned %1$s bonus points for order number %2$s.', 'bonus-for-woo'),
+                $points_to_return,
+                $order_id
+            );
+            BfwLogs::addLog('add_points', $customer_user,
+                sprintf(__('Refund of %s spent points for order #%d.', 'bonus-for-woo'),
+                    $points_to_return, $order_id));
+
+            $new_returned = $returned_so_far + $points_to_return;
+            $order->update_meta_data('_bfw_returned_points', $new_returned);
+            $needs_save = true;
         }
 
-        self::updatePoints($customer_user, $count_point);
+        // 6. Apply changes
+        if ($needs_save) {
+            $order->save();
+        }
+
+        self::updatePoints($customer_user, $new_points);
         BfwRoles::updateRole($customer_user);
 
-        // If it was a full refund, clear metadata
-        if ($order->get_status() == 'refunded' || $order->get_total() <= 0) {
-            if ($order->get_meta('cashback_receipt') == 'received') {
-                $order->delete_meta_data('cashback_amount');
-                $order->delete_meta_data('cashback_receipt');
+        // 7. Update order status if fully processed
+        if ($is_full_refund || ($revoked_so_far + $points_to_revoke >= $total_earned && $total_earned > 0)) {
+            if ($order->get_meta('cashback_receipt') === 'received') {
+                $order->update_meta_data('cashback_receipt', 'refunded');
                 $order->save();
             }
         }
 
-        /*email*/
-        $title_email = BfwSetting::get('email-when-order-change-title-vozvrat', __('Refund of bonus points', 'bonus-for-woo'));
+        // 8. Send email notification
+        $title_email = BfwSetting::get('email-when-order-change-title-vozvrat',
+            __('Refund of bonus points', 'bonus-for-woo'));
         $text_email = BfwSetting::get('email-when-order-change-text-vozvrat', '');
         $user = get_userdata($customer_user);
 
         if ($user && !empty($info_email) && BfwSetting::get('email-when-order-change')) {
-             $get_referral = get_user_meta($customer_user, 'bfw_points_referral', true);
-             $text_email_array = array(
+            $get_referral = get_user_meta($customer_user, 'bfw_points_referral', true);
+            $text_email_array = array(
                 '[user]' => $user->display_name,
                 '[order]' => $order_id,
                 '[points_info]' => $info_email,
@@ -2191,6 +2314,8 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             $message_email = $bfwEmail::template($text_email ?: $info_email, $text_email_array);
             $bfwEmail->getMail($customer_user, '', $title_email, $message_email);
         }
+
+        unset($processing_order[$order_id]);
     }
 
 
@@ -2203,7 +2328,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
      */
     public static function deleteBallsOldClients(): void
     {
-        $day_day = (int)BfwSetting::get('day-inactive', 0);
+        $day_day = (int) BfwSetting::get('day-inactive', 0);
         $exclude_role = BfwSetting::get('exclude-role', array());
         $exclude_role = apply_filters('bfw-exclude-role-for-cron', $exclude_role);
         $args = array(
@@ -2218,8 +2343,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         foreach ($users as $user) {
             $last_actions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bfw_history_computy WHERE user = {$user->ID} ORDER BY date DESC LIMIT 1");
-            $last_action = $last_actions ? strtotime(gmdate("d.m.Y",
-                strtotime($last_actions[0]->date))) : strtotime(gmdate("d.m.Y", strtotime($user->user_registered)));
+            $last_action = $last_actions ? strtotime(gmdate(
+                "d.m.Y",
+                strtotime($last_actions[0]->date)
+            )) : strtotime(gmdate("d.m.Y", strtotime($user->user_registered)));
             $seconds = abs($today - $last_action);
             $days = floor($seconds / 86400);
 
@@ -2228,8 +2355,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 if ($day_notice_remove_points !== '' && $day_notice_remove_points > 0) {
                     $notice = get_user_meta($user->ID, 'mail_remove_points', true) ?? '';
                     if ($notice !== 'yes' && $days > $day_day - $day_notice_remove_points) {
-                        $title_email = BfwSetting::get('email-when-inactive-notice-title',
-                            __('Your points will be deleted soon.', 'bonus-for-woo'));
+                        $title_email = BfwSetting::get(
+                            'email-when-inactive-notice-title',
+                            __('Your points will be deleted soon.', 'bonus-for-woo')
+                        );
 
                         $text_email = BfwSetting::get('email-when-inactive-notice-text', '');
                         $ball_user = self::getPoints($user->ID);
@@ -2249,8 +2378,13 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
             if ($days > $day_day && $day_day > 1) {
                 $computy_point_old = self::getPoints($user->ID);
-                $bfwHistory::add_history($user->ID, '-', $computy_point_old, '0',
-                    sprintf(__('Inactivity %d days', 'bonus-for-woo'), $day_day));
+                $bfwHistory::add_history(
+                    $user->ID,
+                    '-',
+                    $computy_point_old,
+                    '0',
+                    sprintf(__('Inactivity %d days', 'bonus-for-woo'), $day_day)
+                );
                 update_user_meta($user->ID, 'mail_remove_points', 'no');
                 self::updatePoints($user->ID, 0);
 
@@ -2307,8 +2441,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         );
         $users = get_users($args);
 
-        $title_email = $bonus_option_name['email-whens-birthday-title'] ?? __('Bonus points on your birthday',
-            'bonus-for-woo');
+        $title_email = $bonus_option_name['email-whens-birthday-title'] ?? __(
+            'Bonus points on your birthday',
+            'bonus-for-woo'
+        );
         $text_email = $bonus_option_name['email-when-birthday-text'] ?? '';
 
 
@@ -2367,15 +2503,15 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         global $wpdb;
         $batch_size = 50;
-        $offset = isset($_POST['offset']) ? (int)$_POST['offset'] : 0;
+        $offset = isset($_POST['offset']) ? (int) $_POST['offset'] : 0;
 
         // Get total users
-        $total_users = (int)$wpdb->get_var("SELECT COUNT(ID) FROM {$wpdb->prefix}users");
+        $total_users = (int) $wpdb->get_var("SELECT COUNT(ID) FROM {$wpdb->prefix}users");
 
         $users = $wpdb->get_results($wpdb->prepare(
-                "SELECT ID FROM {$wpdb->prefix}users LIMIT %d OFFSET %d",
-                $batch_size,
-                $offset
+            "SELECT ID FROM {$wpdb->prefix}users LIMIT %d OFFSET %d",
+            $batch_size,
+            $offset
         ));
 
         if (empty($users)) {
@@ -2384,14 +2520,14 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         }
 
         foreach ($users as $user) {
-            $user_id = (int)$user->ID;
+            $user_id = (int) $user->ID;
 
             // Sum points from history table
-            $history_sum = (float)$wpdb->get_var($wpdb->prepare(
-                    "SELECT SUM(CASE WHEN symbol = '+' THEN points WHEN symbol = '-' THEN -points ELSE 0 END) 
+            $history_sum = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT SUM(CASE WHEN symbol = '+' THEN points WHEN symbol = '-' THEN -points ELSE 0 END) 
                  FROM {$wpdb->prefix}bfw_history_computy 
                  WHERE user = %d",
-                    $user_id
+                $user_id
             ));
 
             // Ensure we don't have negative points unless allowed (defaulting to 0)

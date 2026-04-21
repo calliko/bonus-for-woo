@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 if (determine_locale() === 'ru_RU') {
     $language = ' language: {

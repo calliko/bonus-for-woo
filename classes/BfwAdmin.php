@@ -113,14 +113,22 @@ class BfwAdmin
     {
         $cashback_status = $order->get_meta('cashback_receipt');
         $cashback_amount = $order->get_meta('cashback_amount');
+        $returned_points = $order->get_meta('_bfw_returned_points');
 
-        if ($cashback_status || $cashback_amount) {
+        if ($cashback_status || $cashback_amount || $returned_points) {
             echo '<div class="order-cashback-info">';
             echo '<h3>Bonus for woo</h3>';
 
-            if ($cashback_amount) {
+            if ($cashback_status === 'received' && $cashback_amount) {
                 echo '<p><strong>' . __('Cashback received:',
                                 'bonus-for-woo') . '</strong> ' . $cashback_amount . ' ' . BfwPoints::pointsLabel($cashback_amount) . '</p>';
+            } elseif ($cashback_status === 'refunded') {
+                echo '<p><strong style="color: #a00;">' . __('Refund of bonus points', 'bonus-for-woo') . '</strong></p>';
+            }
+
+            if ($returned_points) {
+                echo '<p><strong>' . __('Returned spent points:',
+                                'bonus-for-woo') . '</strong> ' . $returned_points . ' ' . BfwPoints::pointsLabel($returned_points) . '</p>';
             }
 
             echo '</div>';
@@ -160,10 +168,10 @@ class BfwAdmin
         // Добавляем текстовое поле
         woocommerce_wp_text_input(array(
                 'id' => '_constant_cashback_percentage',
-                'label' => __('Cashback percentage', 'woocommerce'),
-                'placeholder' => __('Enter cashback percentage', 'woocommerce'),
+                'label' => __('Cashback percentage', 'bonus-for-woo'),
+                'placeholder' => __('Enter cashback percentage', 'bonus-for-woo'),
                 'desc_tip' => 'true',
-                'description' => __('This cashback status does not affect.', 'woocommerce'),
+                'description' => __('This cashback status does not affect.', 'bonus-for-woo'),
         ));
     }
 
@@ -193,10 +201,10 @@ class BfwAdmin
         // Добавляем текстовое поле
         woocommerce_wp_text_input(array(
                 'id' => '_constant_cashback_percentage_variation[' . $variation->ID . ']',
-                'label' => __('Cashback percentage', 'woocommerce'),
-                'placeholder' => __('Enter cashback percentage', 'woocommerce'),
+                'label' => __('Cashback percentage', 'bonus-for-woo'),
+                'placeholder' => __('Enter cashback percentage', 'bonus-for-woo'),
                 'desc_tip' => 'true',
-                'description' => __('This cashback status does not affect.', 'woocommerce'),
+                'description' => __('This cashback status does not affect.', 'bonus-for-woo'),
                 'value' => get_post_meta($variation->ID, '_constant_cashback_percentage_variation', true),
         ));
     }
@@ -648,7 +656,7 @@ class BfwAdmin
             wp_enqueue_script('custom-admin-script', BONUS_COMPUTY_PLUGIN_URL . '_inc/write-points-in-order-admin.js',
                     array('jquery'), BONUS_COMPUTY_VERSION, true);
             wp_localize_script('custom-admin-script', 'bfw_order_points', [
-                'nonce' => wp_create_nonce('bfw_order_points_nonce')
+                    'nonce' => wp_create_nonce('bfw_order_points_nonce')
             ]);
         }
     }
@@ -2778,7 +2786,7 @@ class BfwAdmin
         if (!is_array($existing)) {
             $existing = [];
         }
-        
+
         if (is_array($options)) {
             $options = array_merge($existing, $options);
         } else {
@@ -2978,10 +2986,10 @@ class BfwAdmin
             // Security Checks & Logic
             if (isset($_POST['bfw_role_nonce']) && wp_verify_nonce($_POST['bfw_role_nonce'], 'bfw_role_action')) {
                 if (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'bfw_computy_ajax') {
-                  echo  BfwRoles::addRole(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
+                    echo  BfwRoles::addRole(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
 
                 } elseif (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'editrolehidden') {
-                  echo  BfwRoles::updateStatus(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
+                    echo  BfwRoles::updateStatus(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
 
                 }
                 if (isset($_POST['delete_role'])) {

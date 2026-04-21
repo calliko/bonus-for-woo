@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the Plugins - Bonus for Woo - Stable (latest release) package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2025-12-16 00:54:36+0000\n"
+"PO-Revision-Date: 2026-04-17 18:13:56+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -11,559 +11,969 @@ msgstr ""
 "Language: ru\n"
 "Project-Id-Version: Plugins - Bonus for Woo - Stable (latest release)\n"
 
-#: classes/BfwCoupons.php:573
+#: pages/tools.php:507
+msgid "Import Complete!"
+msgstr "Импорт завершен!"
+
+#: pages/tools.php:504
+msgid "Importing:"
+msgstr "Импорт:"
+
+#: pages/tools.php:500
+msgid "Import error"
+msgstr "Ошибка импорта"
+
+#: pages/tools.php:478
+msgid "Initialization error"
+msgstr "Ошибка инициализации"
+
+#: pages/tools.php:461
+msgid "Uploading..."
+msgstr "Загрузка..."
+
+#: pages/tools.php:452
+msgid "Select CSV file"
+msgstr "Выберите CSV-файл"
+
+#: pages/tools.php:443
+msgid "Initiating..."
+msgstr "Инициирование..."
+
+#: pages/tools.php:440
+msgid "Add points to ALL users?"
+msgstr "Добавить баллы ВСЕМ пользователям?"
+
+#: pages/tools.php:431
+msgid "Processing page:"
+msgstr "Страница обработки:"
+
+#: pages/tools.php:426
+msgid "Completed Successfully!"
+msgstr "Завершено успешно!"
+
+#: pages/tools.php:378
+msgid "Updated %d users."
+msgstr "Обновлено %d пользователей."
+
+#: pages/tools.php:357
+msgid "Force update all loyalty statuses based on current user balance."
+msgstr "Принудительное обновление всех статусов лояльности на основе текущего баланса пользователя."
+
+#: pages/tools.php:318
+msgid "Download CSV"
+msgstr "Скачать CSV"
+
+#: pages/tools.php:315
+msgid "Refresh CSV"
+msgstr "Обновить CSV"
+
+#: pages/tools.php:283
+msgid "e.g. Holiday Gift"
+msgstr "например, подарок на праздник"
+
+#: pages/statistic.php:529
+msgid "Clear stats cache?"
+msgstr "Очистить кэш статистики?"
+
+#: pages/statistic.php:518
+msgid "Analysis Complete! Reloading..."
+msgstr "Анализ завершен! Перезагрузка..."
+
+#: pages/statistic.php:494
+msgid "Finalizing..."
+msgstr "Завершение..."
+
+#: pages/statistic.php:492
+msgid "Rendering dynamic timeline..."
+msgstr "Визуализация динамической временной шкалы..."
+
+#: pages/statistic.php:491
+msgid "Correlating Retention and LTV metrics..."
+msgstr "Сопоставление показателей удержания клиентов и пожизненной ценности клиента..."
+
+#: pages/statistic.php:490
+msgid "Auditing Referral network and Revenue..."
+msgstr "Аудит партнерской сети и доходов..."
+
+#: pages/statistic.php:489
+msgid "Calculating Point Redemption Rate..."
+msgstr "Расчет коэффициента погашения баллов..."
+
+#: pages/statistic.php:488
+msgid "Analyzing user statuses..."
+msgstr "Анализ статусов пользователей..."
+
+#: pages/statistic.php:470
+msgid "Processing..."
+msgstr "Обработка..."
+
+#: pages/statistic.php:466
+msgid "Deep Data Analysis"
+msgstr "Глубокий анализ данных"
+
+#: pages/statistic.php:461
+msgid "Start Initial Calculation"
+msgstr "Начало первоначального расчета"
+
+#: pages/statistic.php:460
+msgid "Calculate your first report to unlock insights about LTV, Retention and Referral ROI."
+msgstr "Составьте свой первый отчет, чтобы получить ценные сведения о пожизненной ценности клиента (LTV), удержании клиентов и рентабельности инвестиций в реферальные программы."
+
+#: pages/statistic.php:459
+msgid "Analytics is ready to work"
+msgstr "Аналитика готова к работе."
+
+#: pages/statistic.php:434
+msgid "Spent Points (-)"
+msgstr "Потраченные баллы (-)"
+
+#: pages/statistic.php:425
+msgid "Issued Points (+)"
+msgstr "Начисленные баллы (+)"
+
+#: pages/statistic.php:375
+msgid "Orders"
+msgstr "Заказы"
+
+#: pages/statistic.php:374
+msgid "Revenue"
+msgstr "Доход"
+
+#: pages/statistic.php:369
+msgid "Top 5 VIP Customers"
+msgstr "Топ-5 VIP-клиентов"
+
+#: pages/statistic.php:362
+msgid "Referral system is currently disabled."
+msgstr "Система реферальных ссылок в данный момент отключена."
+
+#: pages/statistic.php:358
+msgid "Referral system has generated %s in sales."
+msgstr "Реферальная система принесла %s прибыли от продаж."
+
+#: pages/statistic.php:353
+msgid "Friends Invited"
+msgstr "Приглашены друзья"
+
+#: pages/statistic.php:349
+msgid "Ambassadors"
+msgstr "Послы"
+
+#: pages/statistic.php:345
+msgid "Viral Growth (Referrals)"
+msgstr "Вирусный рост (рефералы)"
+
+#: pages/statistic.php:338
+msgid "Orders with bonuses are on average %s more expensive."
+msgstr "Заказы с бонусами в среднем на %s дороже."
+
+#: pages/statistic.php:329
+msgid "AOV Increase"
+msgstr "Увеличение AOV"
+
+#: pages/statistic.php:322
+msgid "From orders with bonus discount"
+msgstr "Из заказов с бонусной скидкой"
+
+#: pages/statistic.php:318
+msgid "Total Store Revenue"
+msgstr "Общая выручка магазина"
+
+#: pages/statistic.php:315
+msgid "Revenue Breakdown"
+msgstr "Структура доходов"
+
+#: pages/statistic.php:307
+msgid "Points Flow Dynamics"
+msgstr "Динамика движения баллов"
+
+#: pages/statistic.php:295
+msgid "Level"
+msgstr "Уровень"
+
+#: pages/statistic.php:287
+msgid "Customer Segmentation"
+msgstr "Сегментация клиентов"
+
+#: pages/statistic.php:279
+msgid "Total Spent"
+msgstr "Общая сумма потраченных средств"
+
+#: pages/statistic.php:275
+msgid "Total Issued"
+msgstr "Итого выдано"
+
+#: pages/statistic.php:269
+msgid "This shows how actively users spend their points. 20-40% is healthy for most stores."
+msgstr "Это показывает, насколько активно пользователи тратят свои баллы. 20-40% — это хороший показатель для большинства магазинов."
+
+#: pages/statistic.php:264
+msgid "Redemption Rate"
+msgstr "Процент погашения бонусов"
+
+#: pages/statistic.php:261
+msgid "Ecosystem Health"
+msgstr "Здоровье экосистемы"
+
+#: pages/statistic.php:253
+msgid "Share of all active customers using the bonus system."
+msgstr "Доля всех активных клиентов, использующих бонусную систему."
+
+#: pages/statistic.php:248
+msgid "Program Penetration"
+msgstr "Проникновение программы"
+
+#: pages/statistic.php:242
+msgid "Share of issued points that users actually spend. 20–40% is healthy."
+msgstr "Доля фактически потраченных пользователями баллов составляет 20–40%."
+
+#: pages/statistic.php:236
+msgid "Burn Rate"
+msgstr "Скорость сгорания"
+
+#: pages/statistic.php:230
+msgid "Points awaiting accrual — orders currently in Processing status."
+msgstr "Баллы ожидают начисления — заказы в настоящее время находятся в статусе «Обработка»."
+
+#: pages/statistic.php:225
+msgid "Pending Points"
+msgstr "Ожидающие баллы"
+
+#: pages/statistic.php:219
+msgid "Current financial \"debt\" in points sitting on user balances."
+msgstr "Текущая финансовая «задолженность» в виде баллов, находящихся на балансе пользователей."
+
+#: pages/statistic.php:214
+msgid "Point Liability"
+msgstr "Балльная задолженность"
+
+#: pages/statistic.php:208
+msgid "Percentage of loyal customers who make repeat purchases."
+msgstr "Процент лояльных клиентов, совершающих повторные покупки."
+
+#: pages/statistic.php:203
+msgid "Customer Retention"
+msgstr "Удержание клиентов"
+
+#: pages/statistic.php:197
+msgid "Total money brought by invited friends."
+msgstr "Общая сумма денег, принесенная приглашенными друзьями."
+
+#: pages/statistic.php:192
+msgid "Referral Revenue"
+msgstr "Доход от реферальных программ"
+
+#: pages/statistic.php:186
+msgid "Average total revenue from each participant of the bonus system."
+msgstr "Средний общий доход каждого участника бонусной системы."
+
+#: pages/statistic.php:181
+msgid "Lifetime Value (LTV)"
+msgstr "Пожизненная ценность клиента (LTV)"
+
+#: pages/statistic.php:173
+msgid "Refresh Analytics"
+msgstr "Обновить аналитику"
+
+#: pages/statistic.php:164
+msgid "Range:"
+msgstr "Диапазон:"
+
+#: pages/statistic.php:155
+msgid "Advanced Business Analytics"
+msgstr "Расширенная бизнес-аналитика"
+
+#: pages/logs.php:144
+msgid "Review system activities, errors, and automated processes tracking."
+msgstr "Проанализируйте системные действия, ошибки и отслеживание автоматизированных процессов."
+
+#: pages/list_history.php:184 pages/statistic.php:172
+msgid "Reset"
+msgstr "Перезагрузить"
+
+#: pages/list_history.php:15
+msgid "Record deleted successfully."
+msgstr "Запись успешно удалена."
+
+#: pages/generator.php:133
+msgid "Copied!"
+msgstr "Скопировано!"
+
+#: pages/generator.php:132
+msgid "Copy Text to Clipboard"
+msgstr "Скопировать текст в буфер обмена"
+
+#: pages/generator.php:128
+msgid "Automatically generated text based on your current plugin settings."
+msgstr "Текст генерируется автоматически на основе текущих настроек вашего плагина."
+
+#: pages/generator.php:122
+msgid "Back to Tools"
+msgstr "Назад к инструментам"
+
+#: pages/coupons.php:323
+msgid "Import failed."
+msgstr "Импорт не удался."
+
+#: pages/coupons.php:320
+msgid "Import successful! Reloading..."
+msgstr "Импорт пройден успешно! Перезагрузка..."
+
+#: pages/coupons.php:296
+msgid "Only CSV format allowed!"
+msgstr "Разрешается использовать только формат CSV!"
+
+#: pages/coupons.php:285
+msgid "Search Coupons"
+msgstr "Поиск купонов"
+
+#: pages/coupons.php:248
+msgid "Import"
+msgstr "Импорт"
+
+#: pages/coupons.php:187
+msgid "Create, import and manage loyalty bonus coupons for your customers."
+msgstr "Создавайте, импортируйте и управляйте купонами на бонусы лояльности для ваших клиентов."
+
+#: pages/coupons.php:24
+msgid "Coupon <b>%s</b> is already being used."
+msgstr "Купон <b>%s</b> уже используется."
+
+#: classes/Bfw_Export.php:89
+msgid "Order ID"
+msgstr "Идентификатор заказа"
+
+#: classes/Bfw_Export.php:85
+msgid "Operation"
+msgstr "Операция"
+
+#: classes/Bfw_Export.php:58 classes/Bfw_Export.php:84
+msgid "User ID"
+msgstr "ID пользователя"
+
+#: classes/Bfw_Export.php:23
+msgid "Security check failed"
+msgstr "Проверка безопасности не пройдена."
+
+#: classes/Bfw_Coupons_List_Table.php:94 classes/Bfw_History_List_Table.php:101
+msgid "Print"
+msgstr "Печать"
+
+#: classes/BfwRoles.php:247
+msgid "Status changed to: %s"
+msgstr "Статус изменен на: %s"
+
+#: classes/BfwReferral.php:227
+msgid "Referral"
+msgstr "Реферал"
+
+#: classes/BfwPoints.php:2407
+msgid "Processed %d of %d users (%d%%)..."
+msgstr "Обработано %d из %d пользователей (%d%%)..."
+
+#: classes/BfwPoints.php:2279
+msgid "Manual points accrual from order editor."
+msgstr "Начисление баллов вручную через редактор заказов."
+
+#: classes/BfwPoints.php:2162
+msgid "Refund of %s spent points for order #%d."
+msgstr "Возврат %s баллов, потраченных на заказ № %d."
+
+#: classes/BfwPoints.php:2155
+msgid "Cancellation of %s points for order #%d due to refund."
+msgstr "Отмена %s баллов по заказу № %d в связи с возвратом средств."
+
+#: classes/BfwCoupons.php:447
+msgid "Invalid file path."
+msgstr "Неверный путь к файлу."
+
+#: classes/BfwCoupons.php:438
+msgid "Security check failed."
+msgstr "Проверка безопасности не пройдена."
+
+#: classes/BfwCashback.php:374 classes/BfwCashback.php:421
+#: classes/BfwCoupons.php:433 classes/BfwPoints.php:1043
+#: classes/BfwPoints.php:1140 classes/BfwPoints.php:2269
+#: classes/BfwPoints.php:2364
+msgid "Access denied."
+msgstr "Доступ запрещен."
+
+#: classes/BfwAdmin.php:3244
+msgid "Update status"
+msgstr "Обновить статус"
+
+#: classes/BfwAdmin.php:3243
+msgid "Editing Status:"
+msgstr "Редактирование статуса:"
+
+#: classes/BfwAdmin.php:3199
+msgid "Activate License"
+msgstr "Активировать лицензию"
+
+#: classes/BfwAdmin.php:3193
+msgid "Advanced settings"
+msgstr "Расширенные настройки"
+
+#: classes/BfwAdmin.php:3192
+msgid "Role Exclusions"
+msgstr "Исключения ролей"
+
+#: classes/BfwAdmin.php:3191
+msgid "Accrual Delays"
+msgstr "Задержка начисления"
+
+#: classes/BfwAdmin.php:3189
+msgid "Registration Bonuses"
+msgstr "Бонусы за регистрацию"
+
+#: classes/BfwAdmin.php:3188
+msgid "Points Coupons"
+msgstr "Бонусные купоны"
+
+#: classes/BfwAdmin.php:3187
+msgid "Point Expiration Logic"
+msgstr "Логика истечения срока действия баллов"
+
+#: classes/BfwAdmin.php:3186
+msgid "Birthday Rewards"
+msgstr "Баллы на день рождения"
+
+#: classes/BfwAdmin.php:3165
+msgid "Special Offer"
+msgstr "Специальное предложение"
+
+#: classes/BfwAdmin.php:3162
+msgid "Unlock the full power of WooCommerce loyalty with advanced automation and referrals."
+msgstr "Раскройте весь потенциал программы лояльности WooCommerce с помощью расширенной автоматизации и реферальных программ."
+
+#: classes/BfwAdmin.php:3161
+msgid "Upgrade to PRO Forever"
+msgstr "Переход на PRO навсегда"
+
+#: classes/BfwAdmin.php:3094
+msgid "Cancel Edit"
+msgstr "Отменить редактирование"
+
+#: classes/BfwAdmin.php:3091 classes/BfwAdmin.php:3256
+msgid "Create Status"
+msgstr "Создать статус"
+
+#: classes/BfwAdmin.php:3062
+msgid "No loyalty levels configured yet."
+msgstr "Уровни лояльности пока не настроены."
+
+#: classes/BfwAdmin.php:3027
+msgid "Status Name"
+msgstr "Название статуса"
+
+#: classes/BfwAdmin.php:2885
+msgid "Manage your customer loyalty program, cashback tiers, and referral rewards in one place."
+msgstr "Управляйте программой лояльности клиентов, уровнями кешбэка и реферальными вознаграждениями в одном месте."
+
+#: classes/BfwAdmin.php:735
+msgid "The text before the referral link block in the user account."
+msgstr "Текст перед блоком реферальной ссылки в учетной записи пользователя."
+
+#: classes/BfwAccount.php:1101
+msgid "Manual adjustment"
+msgstr "Ручная регулировка"
+
+#: classes/BfwAccount.php:112
+msgid "Awaiting accrual"
+msgstr "Ожидается начисление"
+
+#: classes/BfwAdmin.php:2465
+msgid "No more than 2 statuses can be selected."
+msgstr "Можно выбрать не более 2 статусов."
+
+#: classes/BfwAdmin.php:2456
+msgid "Select order statuses"
+msgstr "Выберите статусы заказа"
+
+#: pages/tools.php:290
+msgid "Start adding points"
+msgstr "Начать добавление баллов"
+
+#: pages/tools.php:282
+msgid "Text in history"
+msgstr "Текст в историю"
+
+#: pages/tools.php:278
+msgid "How many points should I add?"
+msgstr "Сколько добавить баллов?"
+
+#: pages/tools.php:273
+msgid "Works without creating a notification. It won't be sent to your email."
+msgstr "Работает без создания уведомления. Оно не будет отправлено на электронную почту."
+
+#: pages/tools.php:271
+msgid "Bulk adding points"
+msgstr "Массовое добавление баллов"
+
+#: classes/BfwPoints.php:1004
+msgid "Please enter a coupon code."
+msgstr "Пожалуйста, введите код купона."
+
+#: classes/BfwAccount.php:688
+msgid "Referral QR Code"
+msgstr "Реферальный QR-код"
+
+#. Description of the plugin
+#: index.php
+msgid "A comprehensive cashback bonus system for WooCommerce with user status management."
+msgstr "Комплексная система кешбэк-бонусов для WooCommerce с управлением статуса пользователя."
+
+#: classes/BfwCoupons.php:610
 msgid "The form for receiving bonus points is located in your personal account."
 msgstr "Форма для получения бонусных баллов находится в вашем личном кабинете."
 
-#: pages/tools.php:20
+#: pages/tools.php:262 pages/tools.php:297
 msgid "Available in PRO version."
 msgstr "Доступно в PRO-версии."
 
-#: pages/tools.php:16
+#: pages/tools.php:257
 msgid "Recalculation"
 msgstr "Перерасчет"
 
-#: pages/tools.php:13
+#: pages/tools.php:249
 msgid "Attention! The action is irreversible!"
 msgstr "Внимание! Действие необратимо!"
 
-#: pages/tools.php:11
+#: pages/tools.php:243
 msgid "We will award points to users for previous orders, before installing the bonus system plugin."
 msgstr "Мы начислим пользователям баллы за предыдущие заказы, до установки плагина бонусной системы."
 
-#: classes/BfwRouter.php:311
+#: classes/BfwRouter.php:376
 msgid "removed"
 msgstr "удалены"
 
-#: classes/BfwAdmin.php:2788 pages/tools.php:10
+#: pages/tools.php:240
 msgid "Accrual of points for previous orders."
 msgstr "Начисление баллов за предыдущие заказы."
 
-#: classes/BfwAdmin.php:2787
-msgid "Points accrual delay."
-msgstr "Задержка начисления баллов."
-
-#: classes/BfwAdmin.php:2063
+#: classes/BfwAdmin.php:2430
 msgid "through"
 msgstr "через"
 
-#: classes/BfwAdmin.php:557
+#: classes/BfwAdmin.php:643
 msgid "Done! Orders processed:"
 msgstr "Готово! Обработано заказов:"
 
-#: classes/BfwAdmin.php:109
+#: classes/BfwAdmin.php:142
 msgid "Send now"
 msgstr "Отправить сейчас"
 
-#: classes/BfwAdmin.php:106
+#: classes/BfwAdmin.php:139
 msgid "Planned accrual time:"
 msgstr "Планируемое время начисления:"
 
-#: classes/BfwAdmin.php:100
+#: classes/BfwAdmin.php:132
 msgid "Estimated cashback:"
 msgstr "Планируемый кешбэк:"
 
 #. translators: "applied" in the plural.
-#: classes/BfwRouter.php:293
+#: classes/BfwRouter.php:358
 msgid "applied"
 msgstr "применены"
 
-#: classes/BfwCoupons.php:550
+#: classes/BfwCoupons.php:586
 msgid "Coupons imported successfully"
 msgstr "Купоны успешно импортированы"
 
-#: classes/BfwCoupons.php:483
+#: classes/BfwCoupons.php:519
 msgid "Error reading file"
 msgstr "Ошибка чтения файла"
 
-#: classes/BfwCoupons.php:476
+#: classes/BfwCoupons.php:512
 msgid "Error accessing file"
 msgstr "Ошибка доступа к файлу"
 
-#: classes/BfwCoupons.php:460
+#: classes/BfwCoupons.php:496
 msgid "Invalid data"
 msgstr "Неверные данные"
 
-#: classes/BfwAdmin.php:26 classes/BfwAdmin.php:326
+#: classes/BfwAdmin.php:26 classes/BfwAdmin.php:383
+#: classes/Bfw_History_List_Table.php:143
 msgid "Deleted user #%d"
 msgstr "Удален пользователь #%d"
 
-#: classes/BfwAdmin.php:24 classes/BfwAdmin.php:318
+#: classes/BfwAdmin.php:24 classes/BfwAdmin.php:375
 msgid "User #%d"
 msgstr "Пользователь: %d"
 
-#: classes/BfwFunctions.php:122
+#: classes/BfwFunctions.php:152
 msgid "About the bonus for woo plugin."
 msgstr "О плагине bonus for woo."
 
-#: classes/BfwFunctions.php:120
+#: classes/BfwFunctions.php:150
 msgid "Works on"
 msgstr "Работает на"
 
-#: classes/BfwAdmin.php:743
+#: classes/BfwAdmin.php:922
 msgid "Text of the number of points."
 msgstr "Текст количества баллов."
 
-#: classes/BfwAdmin.php:2529
+#: classes/BfwAdmin.php:2966
 msgid "Transfers of bonus points between users."
 msgstr "Перевод бонусных баллов между пользователями."
 
-#: pages/statisticNEW.php:86
+#: pages/statisticNEW.php:88
 msgid "Orders with bonuses:"
 msgstr "Заказы с бонусами:"
 
-#: pages/statisticNEW.php:85
+#: pages/statisticNEW.php:87
 msgid "Total orders:"
 msgstr "Всего заказов:"
 
-#: pages/statisticNEW.php:47
+#: pages/statisticNEW.php:48
 msgid "Start Calculation"
 msgstr "Начать расчет"
 
-#: pages/statistic.php:289
-msgid "Statistics reset"
-msgstr "Сброс статистики"
-
-#: pages/statistic.php:282
-msgid "Are you sure you want to clear statistics?"
-msgstr "Вы уверены, что хотите очистить статистику?"
-
-#: pages/statistic.php:267 pages/statistic.php:293
-msgid "Error."
-msgstr "Ошибка."
-
-#: pages/statistic.php:262
-msgid "Statistics updated."
-msgstr "Статистика обновлена."
-
-#: pages/statistic.php:239
-msgid "Please wait until the page reloads!"
-msgstr "Пожалуйста, подождите перезагрузку страницы!"
-
-#: pages/statistic.php:237
-msgid "Progress"
-msgstr "Прогресс"
-
-#: pages/statistic.php:213
-msgid "Start of calculations"
-msgstr "Начало расчетов"
-
-#: pages/statistic.php:208
-msgid "Recalculate statistics"
-msgstr "Пересчитать статистику"
-
-#: pages/statistic.php:37
-msgid "Clear statistics"
-msgstr "Очистить статистику"
-
-#: pages/statistic.php:34
-msgid "Last statistics update:"
-msgstr "Последнее обновление статистики:"
-
-#: classes/BfwAdmin.php:91
+#: classes/BfwAdmin.php:122
 msgid "Cashback received:"
 msgstr "Получено кешбэка:"
 
-#: classes/BfwAdmin.php:344
+#: classes/BfwAdmin.php:404
 msgid "Total amount of referral orders:"
 msgstr "Общая сумма реферальных заказов:"
 
-#: pages/coupons.php:193
+#: pages/coupons.php:269
 msgid "If the \"Reusable\" box is checked, then all users can use it."
 msgstr "Если установлен флажок «Многоразовый», то его могут использовать все пользователи."
 
-#: pages/coupons.php:164
-msgid "Only the administrator can see it."
-msgstr "Его может видеть только администратор."
-
-#: classes/BfwCoupons.php:145
+#: classes/BfwCoupons.php:158 classes/Bfw_Coupons_List_Table.php:161
 msgid "Coupon usage:"
 msgstr "Использование купона:"
 
-#: classes/BfwCoupons.php:136 pages/coupons.php:180
+#: classes/BfwCoupons.php:147 classes/Bfw_Coupons_List_Table.php:127
+#: classes/Bfw_Export.php:60 pages/coupons.php:224
 msgid "Reusable"
 msgstr "Многоразовый"
 
-#: pages/tools.php:92
+#: pages/tools.php:338
 msgid "by phone"
 msgstr "по телефону"
 
-#: pages/tools.php:91
+#: pages/tools.php:337
 msgid "by email"
 msgstr "по email"
 
-#: pages/tools.php:90
+#: pages/tools.php:336
 msgid "by ID"
 msgstr "по ID"
 
-#: pages/tools.php:88
-msgid "Search user:"
-msgstr "Поиск пользователя:"
-
-#: classes/BfwAdmin.php:2778
-msgid "The ability to specify a cashback percentage in the product editor that does not affect the client status."
-msgstr "Возможность указать процент кешбэка в редакторе товара, не влияющий на статус клиента."
-
-#: classes/BfwAdmin.php:129 classes/BfwAdmin.php:158
+#: classes/BfwAdmin.php:166 classes/BfwAdmin.php:199
 msgid "This cashback status does not affect."
 msgstr "Этот кешбэк на статус не влияет."
 
-#: classes/BfwAdmin.php:127 classes/BfwAdmin.php:156
+#: classes/BfwAdmin.php:164 classes/BfwAdmin.php:197
 msgid "Enter cashback percentage"
 msgstr "Введите процент кешбэка"
 
-#: classes/BfwPoints.php:964
+#: classes/BfwPoints.php:1165
 msgid "Error: Data not transferred."
 msgstr "Ошибка: данные не переданы."
 
-#: classes/BfwPoints.php:960
+#: classes/BfwPoints.php:1161
 msgid "Points were not returned to the user."
 msgstr "Баллы не были возвращены пользователю."
 
-#: classes/BfwPoints.php:957
+#: classes/BfwPoints.php:1158
 msgid "The user points have been returned."
 msgstr "Баллы пользователя были возвращены."
 
-#: classes/BfwPoints.php:930
+#: classes/BfwPoints.php:1124
 msgid "Failed to apply coupon to order."
 msgstr "Не удалось применить купон к заказу."
 
-#: classes/BfwPoints.php:928
+#: classes/BfwPoints.php:1121
 msgid "The coupon has been successfully created and applied to your order."
 msgstr "Купон успешно создан и применен к вашему заказу."
 
-#: classes/BfwPoints.php:903
+#: classes/BfwPoints.php:1094
 msgid "Error creating coupon."
 msgstr "Ошибка создания купона."
 
-#: classes/BfwPoints.php:886
+#: classes/BfwPoints.php:1077
 msgid "Order not found."
 msgstr "Заказ не найден."
 
-#: classes/BfwPoints.php:879
+#: classes/BfwPoints.php:1070
 msgid "The user does not have enough points. Balance"
 msgstr "У пользователя недостаточно баллов. Баланс"
 
-#: classes/BfwPoints.php:870
+#: classes/BfwPoints.php:1048 pages/statistic.php:389
 msgid "Not enough data."
 msgstr "Недостаточно данных."
 
-#: classes/BfwPoints.php:699
+#: classes/BfwPoints.php:789
 msgid "An error occurred while processing your request."
 msgstr "При обработке вашего запроса произошла ошибка."
 
-#: classes/BfwPoints.php:670
+#: classes/BfwPoints.php:756
 msgid "Error getting user ID."
 msgstr "Ошибка получения идентификатора пользователя."
 
-#: classes/BfwPoints.php:664
+#: classes/BfwPoints.php:750
 msgid "The required data is missing from the request."
 msgstr "В запросе отсутствуют требуемые данные."
 
-#: classes/BfwAdmin.php:2522
+#: classes/BfwAdmin.php:2958
 msgid "The percentage of points written off depending on the clients status."
 msgstr "Процент списываемых баллов в зависимости от статуса клиента."
 
-#: classes/BfwAdmin.php:635
+#: classes/BfwAdmin.php:748
 msgid "Cashback for the first order"
 msgstr "Кешбэк за первый заказ"
 
-#: classes/BfwAdmin.php:1555
+#: classes/BfwAdmin.php:1926
 msgid "Accrue for"
 msgstr "Начислятся за"
 
-#: classes/BfwAccount.php:783
+#: classes/BfwAccount.php:863
 msgid "Required to earn bonus points."
 msgstr "Требуется для получения бонусных баллов."
 
-#: classes/BfwHistory.php:202
+#: classes/BfwHistory.php:242
 msgid "Email client"
 msgstr "Email клиента"
 
-#: classes/BfwHistory.php:200
+#: classes/BfwHistory.php:240
 msgid "ID client"
 msgstr "ID клиента"
 
-#: pages/tools.php:75
+#: pages/tools.php:320
 msgid "Delete export file"
 msgstr "Удалить файл экспорта"
 
-#: classes/BfwFunctions.php:170
+#: classes/BfwFunctions.php:203
 msgid "Error connecting to key verification server."
 msgstr "Ошибка подключения к серверу проверки ключей."
 
-#: classes/BfwAdmin.php:2812
-msgid "Use an alternate server"
-msgstr "Используйте альтернативный сервер"
-
-#: classes/BfwAdmin.php:600
+#: classes/BfwAdmin.php:699
 msgid "When a customer uses a coupon, cashback is not accrued."
 msgstr "При использовании купона кешбэк не начисляется."
 
-#: classes/BfwPoints.php:544
+#: classes/BfwPoints.php:619
 msgid "You cannot use points on this order."
 msgstr "Вы не можете использовать баллы в этом заказе."
 
-#: classes/BfwAdmin.php:2311 classes/BfwAdmin.php:2314
-#: classes/BfwPoints.php:535
+#: classes/BfwAdmin.php:2695 classes/BfwAdmin.php:2698
+#: classes/BfwPoints.php:610
 msgid "Total"
 msgstr "Всего"
 
-#: classes/BfwAdmin.php:2301 classes/BfwAdmin.php:2306
-#: classes/BfwPoints.php:534
+#: classes/BfwAdmin.php:2684 classes/BfwAdmin.php:2690
+#: classes/BfwPoints.php:609
 msgid "Apply"
 msgstr "Применить"
 
-#: classes/BfwAdmin.php:2300 classes/BfwAdmin.php:2304
-#: classes/BfwPoints.php:611
+#: classes/BfwAdmin.php:2683 classes/BfwAdmin.php:2688
+#: classes/BfwPoints.php:686
 msgid "You can use [points] in this order."
 msgstr "Вы можете использовать [points] в этом заказе."
 
-#: classes/BfwAdmin.php:747
+#: classes/BfwAdmin.php:928
 msgid "The text \"Delete points\" on the button in the points write-off form."
 msgstr "Текст «Удалить баллы» на кнопке в форме списания баллов."
 
-#: classes/BfwAdmin.php:745
+#: classes/BfwAdmin.php:924
 msgid "The text \"Use points\" when opening the points write-off form."
 msgstr "Текст «Использовать баллы» при открытии формы списания баллов."
 
-#: classes/BfwAdmin.php:742
+#: classes/BfwAdmin.php:919
 msgid "Text in the form of writing off points."
 msgstr "Текст в форме списания баллов."
 
-#: classes/BfwAdmin.php:2744
-msgid "Цена версии Pro: <del>4500</del> <b>2990 рублей</b>"
-msgstr "Цена версии Pro: <del>4500</del> <b>2990 рублей</b>"
-
-#: classes/BfwAdmin.php:611
+#: classes/BfwAdmin.php:717
 msgid "Do not include shipping when calculating the order amount."
 msgstr "Не включать стоимость доставки при расчете суммы заказов."
 
-#: classes/BfwRoles.php:90
+#: classes/BfwRoles.php:133
 msgid "updated"
 msgstr "обновлен"
 
-#: classes/BfwRoles.php:54
+#: classes/BfwRoles.php:91
 msgid "This amount of orders is in the <b>%s</b> status, change it to another amount."
 msgstr "Данная сумма заказов находится в статусе <b>%s</b>, измените на другую сумму."
 
-#: classes/BfwFunctions.php:163
+#: classes/BfwFunctions.php:194
 msgid "The key is not correct."
 msgstr "Ключ неверный."
 
-#: classes/BfwAdmin.php:586
+#: classes/BfwAdmin.php:681
 msgid "Should cashback be displayed on category pages?"
 msgstr "Должен ли кешбэк отображаться на страницах категорий?"
 
-#: classes/BfwAdmin.php:585
+#: classes/BfwAdmin.php:680
 msgid "Should cashback be shown on the product page?"
 msgstr "Должен ли кешбэк отображаться на странице товара?"
 
-#: pages/tools.php:56
-msgid "Updated all user statuses."
-msgstr "Обновлены все статусы пользователей."
-
-#: pages/tools.php:55
-msgid "Updated statuses:"
-msgstr "Обновленные статусы:"
-
-#: pages/tools.php:35
+#: pages/tools.php:360
 msgid "Update all users statuses. Requires a lot of resources!"
 msgstr "Обновление статусов всех пользователей. Требует много ресурсов!"
 
-#: pages/tools.php:28
+#: pages/tools.php:397
 msgid "This generator will create text for you based on the plugin settings."
 msgstr "Этот генератор создаст для вас текст на основе настроек плагина."
 
-#: pages/statistic.php:157 pages/statisticNEW.php:87 pages/statisticOLD.php:263
+#: pages/statisticNEW.php:90 pages/statisticOLD.php:264
 msgid "Total spent by users: "
 msgstr "Всего потрачено пользователями: "
 
-#: pages/statistic.php:151 pages/statisticOLD.php:188
+#: pages/statisticOLD.php:190
 msgid "Total amount of points in users accounts:"
 msgstr "Общая сумма баллов на счетах пользователей:"
 
-#: pages/statistic.php:111 pages/statisticOLD.php:150
+#: pages/statisticOLD.php:152
 msgid "No users found in the bonus system."
 msgstr "В бонусной системе пользователей не найдено."
 
-#: classes/BfwLogs.php:105
+#: classes/BfwLogs.php:116
 msgid "Logs not found."
 msgstr "Логи не найдены."
 
-#: classes/BfwLogs.php:70
+#: classes/BfwLogs.php:80 pages/statistic.php:373
 msgid "User"
 msgstr "Пользователь"
 
-#: classes/BfwHistory.php:252
+#: classes/BfwHistory.php:300
 msgid "No points accrual history found."
 msgstr "История начисления баллов не найдена."
 
-#: classes/BfwAdmin.php:2786
-msgid "Possibility to export bonus points history to pdf and excel."
-msgstr "Возможность экспорта истории бонусных баллов в PDF и Excel."
-
-#: classes/BfwAdmin.php:2764
-msgid "Seconds"
-msgstr "Секунд"
-
-#: classes/BfwAdmin.php:2760
-msgid "Minutes"
-msgstr "Минут"
-
-#: classes/BfwAdmin.php:2756
-msgid "Hours"
-msgstr "Часов"
-
-#: classes/BfwAdmin.php:2752
-msgid "Days"
-msgstr "Дней"
-
-#: classes/BfwAdmin.php:528 pages/generator.php:11 pages/tools.php:7
+#: classes/BfwAdmin.php:601 pages/tools.php:230
 msgid "Tools"
 msgstr "Инструменты"
 
-#: classes/BfwAccount.php:74
+#: classes/BfwAccount.php:73
 msgid "You do not participate in the bonus system."
 msgstr "Вы не участвуете в бонусной системе."
 
-#: classes/BfwSingleProduct.php:227
+#: classes/BfwSingleProduct.php:234
 msgid "Use shortcode [bfw_cashback_in_product] only on product page!"
 msgstr "Используйте шорткод [bfw_cashback_in_product] только на странице товара!"
 
-#: classes/BfwAdmin.php:2777
-msgid "Cashback is not accrued for discounted items."
-msgstr "Кешбэк не начисляется за товары со скидкой."
-
-#: classes/BfwAdmin.php:2461
+#: classes/BfwAdmin.php:2889
 msgid "Vote for new features!"
 msgstr "Голосуйте за новые функции!"
 
-#: classes/BfwAdmin.php:587
+#: classes/BfwAdmin.php:683
 msgid "The prefix \"Do\" is displayed only for unregistered users and in variable products."
 msgstr "Префикс «До» отображается только для незарегистрированных пользователей и в вариативных продуктах."
 
-#: classes/BfwAdmin.php:598
+#: classes/BfwAdmin.php:697
 msgid "Do not accrue cashback on sale products?"
 msgstr "Не начислять кешбэк за товары со скидкой?"
 
-#: pages/statistic.php:193 pages/statisticOLD.php:324
+#: pages/statisticOLD.php:325
 msgid "Total invitees:"
 msgstr "Всего приглашенных:"
 
-#: pages/statistic.php:190 pages/statisticOLD.php:320
+#: pages/statisticOLD.php:321
 msgid "Referral system members:"
 msgstr "Участники реферальной системы:"
 
-#: pages/statistic.php:188 pages/statisticOLD.php:300
+#: pages/statisticOLD.php:301
 msgid "Referral statistics"
 msgstr "Реферальная статистика"
 
-#: pages/statistic.php:162 pages/statisticOLD.php:270
+#: pages/statisticOLD.php:271
 msgid "Out of %1$d of orders in %2$d points applied"
 msgstr "Из %1$d заказов  в %2$d используются баллы."
 
-#: pages/statistic.php:156 pages/statisticNEW.php:46 pages/statisticOLD.php:194
+#: pages/statisticNEW.php:47 pages/statisticOLD.php:196
 msgid "Order statistics"
 msgstr "Статистика заказов"
 
-#: pages/statistic.php:71 pages/statisticOLD.php:103
+#: pages/statisticOLD.php:105
 msgid "Total in the bonus system: %s of users"
 msgstr "Всего в бонусной системе: %s пользователей"
 
-#: pages/tools.php:34 pages/tools.php:38
+#: pages/tools.php:353 pages/tools.php:367
 msgid "Update user statuses"
 msgstr "Обновить статусы пользователей"
 
-#: pages/statistic.php:26 pages/statisticNEW.php:39 pages/statisticOLD.php:39
+#: pages/statisticNEW.php:40 pages/statisticOLD.php:41
 msgid "Statistics will be updated. For suggestions on statistics, please email info@computy.ru."
 msgstr "Статистика будет обновляться. По предложениям по статистике просьба обращаться по адресу info@computy.ru."
 
-#: pages/statistic.php:21 pages/statisticNEW.php:34 pages/statisticOLD.php:34
+#: pages/statisticNEW.php:35 pages/statisticOLD.php:36
 msgid " At the moment, the statistics are in testing mode."
 msgstr " На данный момент статистика находится в режиме тестирования."
 
-#: pages/list_history.php:72 pages/logs.php:54
+#: pages/logs.php:179
 msgid "The last 500 entries are displayed."
 msgstr "Отображаются последние 500 записей."
 
-#: pages/list_history.php:52 pages/logs.php:35
+#: pages/logs.php:172
 msgid "Clear"
 msgstr "Очистить"
 
-#: pages/list_history.php:48 pages/logs.php:32
+#: pages/list_history.php:181 pages/logs.php:168
 msgid "Search"
 msgstr "Поиск"
 
-#: pages/list_history.php:40 pages/logs.php:24
+#: pages/list_history.php:171 pages/logs.php:160
 msgid "to"
 msgstr "по"
 
-#: pages/list_history.php:33 pages/logs.php:18
+#: pages/list_history.php:163 pages/logs.php:152
 msgid "From"
 msgstr "От"
 
-#: pages/list_history.php:21
+#: pages/list_history.php:153
 msgid "History of %s for all customers"
 msgstr "История изменения %s для всех клиентов"
 
-#: pages/coupons.php:293
+#: pages/coupons.php:277
 msgid "Coupons list"
 msgstr "Список купонов"
 
-#: pages/coupons.php:266
-msgid "Import completed successfully!"
-msgstr "Импорт успешно завершен!"
-
-#: pages/coupons.php:215
+#: pages/coupons.php:256
 msgid "Example of CSV file"
 msgstr "Пример CSV-файла"
 
-#: pages/coupons.php:208
-msgid "Possible statuses"
-msgstr "Возможные статусы"
-
-#: pages/coupons.php:203
+#: pages/coupons.php:238
 msgid "To create multiple coupons, create a csv file and import it using the form below."
 msgstr "Чтобы создать несколько купонов, создайте CSV-файл и импортируйте его, используя форму ниже."
 
-#: pages/coupons.php:201
+#: pages/coupons.php:236
 msgid "Import coupons"
 msgstr "Импорт купонов"
 
-#: pages/coupons.php:192
+#: pages/coupons.php:268
 msgid "Once a coupon has been used, it cannot be activated. Only delete."
 msgstr "После того, как купон был использован, он не может быть активирован. Только удалять."
 
-#: pages/coupons.php:191
+#: pages/coupons.php:267
 msgid "Coupon can only be used once."
 msgstr "Купон можно использовать только один раз."
 
-#: pages/coupons.php:190
+#: pages/coupons.php:266
 msgid "The customer can only use active coupons."
 msgstr "Клиент может использовать только активные купоны."
 
-#: pages/coupons.php:189
+#: pages/coupons.php:265
 msgid "Create a coupon in the form and it will appear in the list of coupons."
 msgstr "Создайте купон в форме и он появится в списке купонов."
 
-#: pages/coupons.php:172
+#: pages/coupons.php:229
 msgid "Add coupon"
 msgstr "Добавить купон"
 
-#: pages/coupons.php:146
+#: pages/coupons.php:199
 msgid "Сode coupon"
 msgstr "Код купона"
 
-#: pages/coupons.php:136
+#: pages/coupons.php:193
 msgid "Add a new coupon"
 msgstr "Добавить новый купон"
 
-#: pages/coupons.php:128
+#: pages/coupons.php:185
 msgid "Coupons for %s "
 msgstr "Купоны для %s"
 
-#: pages/coupons.php:68
+#: pages/coupons.php:46
 msgid "Coupon status changed"
 msgstr "Статус купона изменен"
 
@@ -571,127 +981,122 @@ msgstr "Статус купона изменен"
 msgid "Coupon"
 msgstr "Купон"
 
-#: pages/coupons.php:21
-msgid "Coupon <b>%s</b> is already being used. Enter another code or change the existing one."
-msgstr "Купон <b>%s</b> уже используется. Введите другой код или измените существующий."
-
-#: index.php:72
+#: classes/BfwAdmin.php:46
 msgid "Settings"
 msgstr "Настройки"
 
-#: classes/BfwSingleProduct.php:68
+#: classes/BfwSingleProduct.php:74
 msgid "%1$s %2$s %3$s"
 msgstr "%1$s %2$s %3$s"
 
-#: classes/BfwRoles.php:156
+#: classes/BfwRoles.php:192
 msgid "No status"
 msgstr "Нет статуса"
 
-#: classes/BfwRoles.php:144
+#: classes/BfwRoles.php:181
 msgid "User deleted"
 msgstr "Пользователь удален"
 
-#: classes/BfwReview.php:149
+#: classes/BfwReview.php:166
 msgid "Leave a review and receive"
 msgstr "Оставьте отзыв и получите"
 
-#: classes/BfwReview.php:122
+#: classes/BfwReview.php:138
 msgid "The sum of your %s is now"
 msgstr "Сумма ваших %s теперь"
 
-#: classes/BfwReview.php:119
+#: classes/BfwReview.php:134
 msgid "Your product review has been rejected. %1$s %2$s are canceled."
 msgstr "Ваш отзыв о продукте был отклонен. %1$s %2$s аннулируются."
 
-#: classes/BfwReview.php:118
+#: classes/BfwReview.php:133
 msgid "Return of %s"
 msgstr "Возврат %s"
 
-#: classes/BfwReview.php:113
+#: classes/BfwReview.php:128
 msgid "Return of %s for Product Review"
 msgstr "Возврат %s за обзор продукта"
 
-#: classes/BfwReview.php:63
+#: classes/BfwReview.php:68
 msgid "For review"
 msgstr "За отзыв"
 
-#: classes/BfwReferral.php:183 classes/BfwReferral.php:233
+#: classes/BfwReferral.php:197
 msgid "Points for referral"
 msgstr "Баллы за реферала"
 
-#: classes/BfwPoints.php:1905
+#: classes/BfwPoints.php:2315
 msgid "Birthday"
 msgstr "День рождения"
 
-#: classes/BfwPoints.php:1861
+#: classes/BfwPoints.php:2253 classes/BfwPoints.php:2258
 msgid "Inactivity %d days"
 msgstr "Бездействие %d дней"
 
-#: classes/BfwPoints.php:1845
+#: classes/BfwPoints.php:2232
 msgid "Your points will be deleted soon."
 msgstr "Ваши баллы скоро будут удалены."
 
-#: classes/BfwPoints.php:1781
-msgid "You have returned %1$d bonus points for order number %2$d."
-msgstr "Вы вернули %1$d бонусных баллов в заказе № %2$d."
-
-#: classes/BfwPoints.php:920 classes/BfwPoints.php:1375
+#: classes/BfwPoints.php:1111 classes/BfwPoints.php:1605
 msgid "Use of %s"
 msgstr "Использование %s"
 
-#: classes/BfwPoints.php:850
+#: classes/BfwPoints.php:1021
 msgid "Coupon activated."
 msgstr "Купон активирован."
 
-#: classes/BfwPoints.php:848
+#: classes/BfwPoints.php:1019
 msgid "Sorry, no such coupon found."
 msgstr "К сожалению, такой купон не найден."
 
-#: classes/BfwPoints.php:845
+#: classes/BfwPoints.php:1016
 msgid "Sorry. The coupon usage limit has been reached."
 msgstr "Извините. Достигнут лимит использования купона."
 
-#: classes/BfwPoints.php:597
+#: classes/BfwPoints.php:671
 msgid "To use %s, the order amount must be more than"
 msgstr "Для использования %s, сумма заказа должна быть больше чем"
 
-#: classes/BfwPoints.php:573
+#: classes/BfwPoints.php:650
 msgid "To use %s, you must remove the coupon."
 msgstr "Для использования %s, вы должны удалить купон."
 
-#: classes/BfwPoints.php:417
+#: classes/BfwPoints.php:437
 msgid "Daily %s for the login."
 msgstr "Ежедневные %s при входе."
 
-#: classes/BfwPoints.php:377
+#: classes/BfwPoints.php:397
 msgid "Order created by administrator: "
 msgstr "Заказ создан администратором: "
 
-#: classes/BfwPoints.php:351
+#: classes/BfwPoints.php:370
 msgid "Technical product for accrual of bonus points"
 msgstr "Технический продукт для начисления бонусных баллов"
 
-#: classes/BfwLogs.php:72
+#: classes/BfwLogs.php:82
 msgid "Message"
 msgstr "Сообщение"
 
-#: classes/BfwHistory.php:154 classes/BfwHistory.php:242
+#: classes/BfwHistory.php:180 classes/BfwHistory.php:289
+#: classes/Bfw_History_List_Table.php:204
 msgid "Are you sure you want to remove this entry from your reward points history?"
 msgstr "Вы действительно хотите удалить эту запись из истории бонусных баллов?"
 
-#: classes/BfwHistory.php:100 classes/BfwHistory.php:210 classes/BfwLogs.php:66
+#: classes/BfwHistory.php:122 classes/BfwHistory.php:250 classes/BfwLogs.php:76
+#: classes/Bfw_History_List_Table.php:85
 msgid "Event"
 msgstr "Событие"
 
-#: classes/BfwHistory.php:98 classes/BfwHistory.php:198 classes/BfwLogs.php:68
+#: classes/BfwHistory.php:120 classes/BfwHistory.php:238 classes/BfwLogs.php:78
+#: classes/Bfw_Export.php:88 classes/Bfw_History_List_Table.php:82
 msgid "Date"
 msgstr "Дата"
 
-#: classes/BfwHistory.php:85
+#: classes/BfwHistory.php:106
 msgid "Are you sure you want to clear this customer bonus points history?"
 msgstr "Вы уверены, что хотите очистить эту историю бонусных баллов клиента?"
 
-#: classes/BfwHistory.php:80
+#: classes/BfwHistory.php:101
 msgid "Clear the history"
 msgstr "Очистить историю"
 
@@ -699,1306 +1104,1219 @@ msgstr "Очистить историю"
 msgid "Reward %s notification"
 msgstr "Уведомление о изменениях %s"
 
-#: classes/BfwCoupons.php:421
+#: classes/BfwCoupons.php:455
 msgid "Error opening"
 msgstr "Ошибка открытия"
 
-#: classes/BfwCoupons.php:377
+#: classes/BfwCoupons.php:395
 msgid "Coupon usage"
 msgstr "Использование купона"
 
-#: classes/BfwCoupons.php:222
+#: classes/BfwCoupons.php:239 classes/Bfw_Coupons_List_Table.php:242
 msgid "Are you sure you want to delete this coupon?"
 msgstr "Вы уверены, что хотите удалить этот купон?"
 
-#: classes/BfwCoupons.php:220 classes/BfwHistory.php:153
-#: classes/BfwHistory.php:242
+#: classes/BfwCoupons.php:237 classes/BfwHistory.php:179
+#: classes/BfwHistory.php:288 classes/Bfw_Coupons_List_Table.php:245
+#: classes/Bfw_History_List_Table.php:207
 msgid "Delete"
 msgstr "Удалить"
 
-#: classes/BfwCoupons.php:190 classes/BfwCoupons.php:193
+#: classes/BfwCoupons.php:205 classes/BfwCoupons.php:208
+#: classes/Bfw_Coupons_List_Table.php:215
 msgid "Deactivate"
 msgstr "Деактивировать"
 
-#: classes/BfwCoupons.php:169
+#: classes/BfwCoupons.php:183 classes/Bfw_Coupons_List_Table.php:183
 msgid "Used"
 msgstr "Использован"
 
-#: classes/BfwCoupons.php:166 pages/coupons.php:176
+#: classes/BfwCoupons.php:180 classes/Bfw_Coupons_List_Table.php:182
+#: pages/coupons.php:212
 msgid "Not active"
 msgstr "Не активный"
 
-#: classes/BfwCoupons.php:163 pages/coupons.php:177
+#: classes/BfwCoupons.php:177 classes/Bfw_Coupons_List_Table.php:181
+#: pages/coupons.php:211
 msgid "Active"
 msgstr "Активный"
 
-#: classes/BfwCoupons.php:118
+#: classes/BfwCoupons.php:128 classes/Bfw_Export.php:59
 msgid "Date of use"
 msgstr "Дата использования"
 
-#: classes/BfwCoupons.php:116 classes/BfwHistory.php:204
-#: classes/BfwRoles.php:161
+#: classes/BfwCoupons.php:126 classes/BfwHistory.php:244
+#: classes/BfwRoles.php:206 classes/Bfw_Coupons_List_Table.php:77
+#: classes/Bfw_History_List_Table.php:83
 msgid "Client"
 msgstr "Клиент"
 
-#: classes/BfwCoupons.php:114 pages/coupons.php:157
+#: classes/BfwCoupons.php:124 classes/Bfw_Coupons_List_Table.php:76
+#: classes/Bfw_Export.php:56 pages/coupons.php:218
 msgid "Comment admin"
 msgstr "Комментарий администратора"
 
-#: classes/BfwCoupons.php:112
+#: classes/BfwCoupons.php:122 classes/Bfw_Coupons_List_Table.php:75
+#: classes/Bfw_Export.php:55
 msgid "Create date"
 msgstr "Дата создания"
 
-#: classes/BfwCoupons.php:110
+#: classes/BfwCoupons.php:120 classes/Bfw_Coupons_List_Table.php:74
+#: classes/Bfw_Export.php:54
 msgid "Sum"
 msgstr "Сумма"
 
-#: classes/BfwCashback.php:176
+#: classes/BfwCashback.php:171
 msgid "Cashback %s"
 msgstr "Кешбэк %s"
 
-#: classes/BfwCashback.php:163 classes/BfwSingleProduct.php:117
-#: classes/BfwSingleProduct.php:133 classes/BfwSingleProduct.php:138
+#: classes/BfwCashback.php:159 classes/BfwSingleProduct.php:123
+#: classes/BfwSingleProduct.php:139 classes/BfwSingleProduct.php:144
 msgid "up to"
 msgstr "до"
 
-#: classes/BfwFunctions.php:167
+#: classes/BfwFunctions.php:199
 msgid "Error while receiving data."
 msgstr "Ошибка при получении данных."
 
-#: classes/BfwFunctions.php:165
+#: classes/BfwFunctions.php:196
 msgid "Error code:"
 msgstr "Код ошибки:"
 
-#: classes/BfwFunctions.php:158
+#: classes/BfwFunctions.php:188
 msgid "The key is not correct! Contact info@computy.ru"
 msgstr "Ключ не правильный! Контакты info@computy.ru"
 
-#: classes/BfwAdmin.php:2810 classes/BfwCoupons.php:206
-#: classes/BfwCoupons.php:209
+#: classes/BfwAdmin.php:3203 classes/BfwCoupons.php:222
+#: classes/BfwCoupons.php:225 classes/Bfw_Coupons_List_Table.php:229
 msgid "Activate"
 msgstr "Активировать"
 
-#: classes/BfwAdmin.php:2807
+#: classes/BfwAdmin.php:3200
 msgid "Enter the activation key sent to your email."
 msgstr "Введите ключ активации, отправленный на вашу электронную почту."
 
-#: classes/BfwAdmin.php:2802
+#: classes/BfwAdmin.php:3177
 msgid "Buy"
 msgstr "Купить"
 
-#: classes/BfwAdmin.php:2794
+#: classes/BfwAdmin.php:3206
 msgid "In case of problems, please contact info@computy.ru"
 msgstr "В случае возникновения проблем обращайтесь по адресу info@computy.ru"
 
-#: classes/BfwAdmin.php:2792
-msgid "The key will be sent to your email: %s."
-msgstr "Ключ будет отправлен на вашу электронную почту: %s."
+#: classes/BfwAdmin.php:3185
+msgid "Referral System"
+msgstr "Реферальная система"
 
-#: classes/BfwAdmin.php:2791
-msgid "To purchase Bonus for Woo Pro, click on the \"Buy\" button."
-msgstr "Чтобы приобрести Bonus for Woo Pro, нажмите на кнопку \"Купить\"."
-
-#: classes/BfwAdmin.php:2784
-msgid "Referral system."
-msgstr "Реферальная система."
-
-#: classes/BfwAdmin.php:2783
-msgid "The ability to set a minimum order amount at which you can write off points."
-msgstr "Возможность установить минимальную сумму заказа, при которой можно списать баллы."
-
-#: classes/BfwAdmin.php:2782
-msgid "Withdrawal of bonus points if the client has not made orders for a long time."
-msgstr "Снятие бонусных баллов, если клиент давно не делал заказы."
-
-#: classes/BfwAdmin.php:2781
-msgid "Ability to exclude roles from the bonus system."
-msgstr "Возможность исключить роли из бонусной системы."
-
-#: classes/BfwAdmin.php:2780
-msgid "Set up a product with 100% cashback (required to purchase points)."
-msgstr "Настройте продукт со 100% кешбэком (требуется для покупки баллов)."
-
-#: classes/BfwAdmin.php:2779
-msgid "Possibility to earn points for registration."
-msgstr "Возможность заработать баллы за регистрацию."
-
-#: classes/BfwAdmin.php:2776
-msgid "The ability to credit cashback for excluded products and categories."
-msgstr "Возможность начисления кешбэка за исключенные товары и категории."
-
-#: classes/BfwAdmin.php:2775
-msgid "Possibility to earn daily points for logging in."
-msgstr "Возможность зарабатывать ежедневные баллы за вход в систему."
-
-#: classes/BfwAdmin.php:2774
-msgid "Ability to exclude products and categories that cannot be purchased with points."
-msgstr "Возможность исключать товары и категории, которые нельзя купить за баллы."
-
-#: classes/BfwAdmin.php:2773
-msgid "The ability to set the percentage of the order amount that can be spent by the client with points."
-msgstr "Возможность установить процент от суммы заказа, который клиент может потратить баллами."
-
-#: classes/BfwAdmin.php:2772
-msgid "The choice from which date to start counting the status of customers."
-msgstr "Выбор, с какой даты начать подсчет статуса клиентов."
-
-#: classes/BfwAdmin.php:2771
-msgid "The ability to earn points on your birthday."
-msgstr "Возможность начислять баллы в день рождения."
-
-#: classes/BfwAdmin.php:2769
+#: classes/BfwAdmin.php:3183
 msgid "What will the Pro version give?"
 msgstr "Что даст Pro версия?"
 
-#: classes/BfwAdmin.php:2739
-msgid "Activate the Pro version for your site now and forever. Hurry up to buy cheaper, because with the addition of new features the price will increase."
-msgstr "Активируйте версию Pro для своего сайта сейчас и навсегда. Спешите купить дешевле, ведь с добавлением новых функций цена будет увеличиваться."
-
-#: classes/BfwAdmin.php:2737
-msgid "Bonus for woo Pro"
-msgstr "Бонусы для Woo Pro"
-
-#: pages/coupons.php:238
-msgid "You can only use csv file format!"
-msgstr "Вы можете использовать только формат csv для файла !"
-
-#: pages/coupons.php:227 pages/tools.php:94
+#: pages/tools.php:341
 msgid "import"
 msgstr "импорт"
 
-#: pages/coupons.php:220 pages/tools.php:86
+#: pages/tools.php:331
 msgid "Upload CSV file"
 msgstr "Загрузить файл CSV"
 
-#: pages/tools.php:79
+#: pages/tools.php:325
 msgid "Сreate CSV export file"
 msgstr "Создать файл экспорта CSV"
 
-#: pages/tools.php:74
-msgid "download CSV file"
-msgstr "скачать CSV файл"
-
-#: pages/tools.php:72
-msgid "Recreate CSV export file"
-msgstr "Пересоздать файл экспорта CSV"
-
-#: pages/tools.php:69
+#: pages/tools.php:308
 msgid "When you click the \"Create CSV export file\" button, a link to download the file will appear next to it. You can download the file and edit it and then import it in the form below. After that, the bonus points data will be updated."
 msgstr "При нажатии кнопки «Создать файл экспорта CSV» рядом с ней появится ссылка для скачивания файла. Вы можете скачать файл и отредактировать его, а затем импортировать в форму ниже. После этого данные о бонусных баллах будут обновлены."
 
-#: classes/BfwAdmin.php:2698 classes/BfwAdmin.php:2709
-#: classes/BfwAdmin.php:2721 classes/BfwAdmin.php:2729
+#: classes/BfwAdmin.php:3110 classes/BfwAdmin.php:3123
+#: classes/BfwAdmin.php:3136 classes/BfwAdmin.php:3150
 msgid "Save Changes"
 msgstr "Сохранить изменения"
 
-#: classes/BfwAdmin.php:2678
-msgid "Edit"
-msgstr "Редактировать"
-
-#: classes/BfwAdmin.php:2675
-msgid "Change status"
-msgstr "Изменить статус"
-
-#: classes/BfwAdmin.php:2660
-msgid "Add satus"
-msgstr "Добавить статус"
-
-#: classes/BfwAdmin.php:2641
+#: classes/BfwAdmin.php:3069 classes/BfwAdmin.php:3255
 msgid "New status for clients"
 msgstr "Новый статус для клиентов"
 
-#: classes/BfwAdmin.php:2630
-msgid "To get started with the bonus system with cashback, create a new status for customers."
-msgstr "Чтобы начать работу с бонусной системой с кешбэком, создайте новый статус для клиентов."
-
-#: classes/BfwAdmin.php:2624
+#: classes/BfwAdmin.php:3055
 msgid "Are you sure you want to delete the status?"
 msgstr "Вы уверены, что хотите удалить статус?"
 
-#: classes/BfwAdmin.php:2624
-msgid "Delete status"
-msgstr "Удалить статус"
-
-#: classes/BfwAdmin.php:2611 classes/BfwCoupons.php:122
-#: classes/BfwHistory.php:102 classes/BfwHistory.php:212
+#: classes/BfwAdmin.php:3031 classes/BfwCoupons.php:132
+#: classes/BfwHistory.php:124 classes/BfwHistory.php:252
+#: classes/Bfw_Coupons_List_Table.php:79 classes/Bfw_History_List_Table.php:86
 msgid "Action"
 msgstr "Действие"
 
-#: classes/BfwAdmin.php:2610 classes/BfwAdmin.php:2651
+#: classes/BfwAdmin.php:3030 classes/BfwAdmin.php:3084
 msgid "Amount of orders"
 msgstr "Сумма заказов"
 
-#: classes/BfwAdmin.php:2608
+#: classes/BfwAdmin.php:3028
 msgid "Role slug (automatic)"
 msgstr "Слаг роли (автоматически)"
 
-#: classes/BfwAdmin.php:2607 classes/BfwAdmin.php:2644
+#: classes/BfwAdmin.php:3076 classes/BfwAdmin.php:3077
 msgid "Status name"
 msgstr "Имя статуса"
 
-#: classes/BfwAdmin.php:2600
+#: classes/BfwAdmin.php:3018
 msgid ""
 "<b> Amount of orders </b> - is a number corresponding to the amount of customer orders with which this role is applied to the user.\n"
 "              For example, if you enter 3000, this status will change only when the sum of all customer orders exceeds 3000. If you enter 0, the users status will change immediately, without purchases."
 msgstr "<b> Сумма заказов </b> - число, соответствующее сумме заказов клиентов, с которыми эта роль применяется к пользователю. Например, если вы введете 3000, этот статус изменится только тогда, когда сумма всех заказов клиентов превысит 3000. Если вы введете 0, статус пользователей изменится немедленно, без покупок."
 
-#: classes/BfwAdmin.php:2599
+#: classes/BfwAdmin.php:3016
 msgid "<b> Cashback percentage </b> - the percentage that will be credited to a client with the corresponding status."
 msgstr "<b> Процент кешбэка </b> - процент, который будет зачислен клиенту с соответствующим статусом."
 
-#: classes/BfwAdmin.php:2598
+#: classes/BfwAdmin.php:3014
 msgid "<b> Slug </b> is a unique name for the system to work."
 msgstr "<b> Слаг </b> - это уникальное имя для работы системы."
 
-#: classes/BfwAdmin.php:2597
+#: classes/BfwAdmin.php:3012
 msgid "<b>Status name</b> - the name that will be displayed in the client's account and his personal account."
-msgstr "Термины: <b> Имя статуса </b> - имя, которое будет отображаться в аккаунте клиента и его личном кабинете."
+msgstr "<b> Имя статуса </b> - имя, которое будет отображаться в аккаунте клиента и его личном кабинете."
 
-#: classes/BfwAdmin.php:2596
+#: classes/BfwAdmin.php:3011
 msgid "Terms:"
 msgstr "Термины:"
 
-#: pages/tools.php:64
+#: pages/tools.php:306
 msgid "Export/Import"
 msgstr "Экспорт/Импорт"
 
-#: classes/BfwAdmin.php:2584
+#: classes/BfwAdmin.php:2999
 msgid "Email notifications"
 msgstr "Уведомления по Email"
 
-#: classes/BfwAdmin.php:2581 classes/BfwAdmin.php:2592
+#: classes/BfwAdmin.php:3002 classes/BfwAdmin.php:3004
 msgid "Pro"
 msgstr "Pro"
 
-#: classes/BfwAdmin.php:2573 classes/BfwAdmin.php:2595
+#: classes/BfwAdmin.php:2997
 msgid "Client status management"
 msgstr "Управление статусом клиента"
 
-#: classes/BfwRoles.php:88
+#: classes/BfwRoles.php:128
 msgid "Error updating status. Please try again."
 msgstr "Ошибка обновления статуса. Попробуйте еще раз."
 
-#: classes/BfwRoles.php:62
+#: classes/BfwRoles.php:99
 msgid "Error adding status. Please try again."
 msgstr "Ошибка добавления статуса. Попробуйте еще раз."
 
-#: classes/BfwRoles.php:59 pages/coupons.php:27
+#: classes/BfwRoles.php:102 pages/coupons.php:27
 msgid "added"
 msgstr "добавлен"
 
-#: classes/BfwRoles.php:52
+#: classes/BfwRoles.php:89
 msgid "The status name cannot be empty."
 msgstr "Название статуса не может быть пустым."
 
-#: classes/BfwRoles.php:50
+#: classes/BfwRoles.php:87
 msgid "The accumulated amount cannot be less than 0"
 msgstr "Накопленная сумма не может быть меньше 0"
 
-#: classes/BfwRoles.php:48
+#: classes/BfwRoles.php:84
 msgid "is already in use. Please enter another status name."
 msgstr "уже используется. Введите другое название статуса."
 
-#: classes/BfwAdmin.php:2515
+#: classes/BfwAdmin.php:2950
 msgid "Expands the Bonus for Woo referral system"
 msgstr "Расширяет реферальную систему Bonus for Woo"
 
-#: classes/BfwAdmin.php:2510 classes/BfwAdmin.php:2517
-#: classes/BfwAdmin.php:2524 classes/BfwAdmin.php:2531 pages/tools.php:12
+#: classes/BfwAdmin.php:2945 classes/BfwAdmin.php:2953
+#: classes/BfwAdmin.php:2961 classes/BfwAdmin.php:2969 pages/tools.php:244
 msgid "More details"
 msgstr "Подробнее"
 
-#: classes/BfwAdmin.php:2508
+#: classes/BfwAdmin.php:2942
 msgid "API for Bonus for Woo for CRM systems"
 msgstr "API Бонуса для Woo для CRM-систем"
 
-#: classes/BfwAdmin.php:2503
+#: classes/BfwAdmin.php:2938
 msgid "Add-ons"
 msgstr "Дополнения"
 
-#: classes/BfwAdmin.php:2500
+#: classes/BfwAdmin.php:2934
 msgid "Full list of shortcodes"
 msgstr "Весь список шорткодов"
 
-#: classes/BfwAdmin.php:2496
+#: classes/BfwAdmin.php:2929
 msgid "Withdrawal of a block of information of the referral system from the account: [bfw_account_referral]"
 msgstr "Отображение блока информации реферальной системы как в аккаунте: [bfw_account_referral]"
 
-#: classes/BfwAdmin.php:2494
+#: classes/BfwAdmin.php:2926
 msgid "Withdrawal of the bonus page from the personal account: [bfw_account]"
 msgstr "Вывод бонусной страницы из личного кабинета: [bfw_account]"
 
-#: classes/BfwAdmin.php:2492
+#: classes/BfwAdmin.php:2923
 msgid "To display the number of points awarded, use the shortcode: [bfw_points]"
 msgstr "Чтобы отобразить количество начисленных баллов, используйте шорткод: [bfw_points]"
 
-#: classes/BfwAdmin.php:2490
+#: classes/BfwAdmin.php:2920
 msgid "To display the percentage of cachek, use a shortcode: [bfw_cashback]"
 msgstr "Чтобы показать процент кешбэка, используйте шорткод: [bfw_cashback]"
 
-#: classes/BfwAdmin.php:2488
+#: classes/BfwAdmin.php:2917
 msgid "You can place the client status anywhere in the site using a shortcode:  [bfw_status]"
 msgstr "Вы можете разместить статус клиента в любом месте сайта, используя шорткод: [bfw_status]"
 
-#: classes/BfwAdmin.php:2486
+#: classes/BfwAdmin.php:2915
 msgid "Shordcodes"
 msgstr "Шорткоды"
 
-#: classes/BfwAdmin.php:2482
+#: classes/BfwAdmin.php:2887
 msgid "Documentation"
 msgstr "Документация"
 
-#: classes/BfwAdmin.php:2480
-msgid "About plugin"
-msgstr "О плагине"
-
-#: classes/BfwAdmin.php:2477
+#: classes/BfwAdmin.php:2910
 msgid "You can add points to your customers on the page  <a href=\"users.php\" target=\"_blank\">users</a>,by selecting the desired client."
 msgstr "Вы можете добавлять баллы своим клиентам на странице <a href=\"users.php\" target=\"_blank\"> Клиенты</a>, выбрав нужного клиента."
 
-#: classes/BfwAdmin.php:2475
+#: classes/BfwAdmin.php:2907
 msgid "The users status depends on the total amount of the users orders."
 msgstr "Статус пользователя зависит от общей суммы заказов пользователя."
 
-#: classes/BfwAdmin.php:2473
+#: classes/BfwAdmin.php:2904
 msgid "Each user status has a corresponding cashback percentage."
 msgstr "Каждому статусу пользователя соответствует процент кешбэка."
 
-#: classes/BfwAdmin.php:2471
+#: classes/BfwAdmin.php:2901
 msgid "The cashback percentage is calculated based on the users status in the form of bonus points."
 msgstr "Процент кешбэка рассчитывается исходя из статуса пользователя в виде бонусных баллов."
 
-#: classes/BfwAdmin.php:2469
+#: classes/BfwAdmin.php:2898
 msgid "This plugin is designed to create a bonus system with cashback."
 msgstr "Этот плагин предназначен для создания бонусной системы с кешбэком."
 
-#: classes/BfwAdmin.php:2468 pages/coupons.php:187
+#: classes/BfwAdmin.php:2896 pages/coupons.php:263
 msgid "Description"
 msgstr "Описание"
 
-#: classes/BfwAdmin.php:2463
-msgid "Our other plugins"
-msgstr "Другие наши плагины"
-
-#: classes/BfwAdmin.php:2457
+#: classes/BfwAdmin.php:2888
 msgid "Thank you for rating"
 msgstr "Спасибо за отзыв"
 
-#: classes/BfwAdmin.php:2453
-msgid "With the support of"
-msgstr "При поддержке"
-
-#: classes/BfwAdmin.php:2374 classes/BfwAdmin.php:2377
-#: classes/BfwSingleProduct.php:61
+#: classes/BfwAdmin.php:2761 classes/BfwAdmin.php:2764
+#: classes/BfwSingleProduct.php:67
 msgid "Cashback:"
 msgstr "Кешбэк:"
 
-#: classes/BfwAdmin.php:2360 classes/BfwAdmin.php:2363
-#: classes/BfwPoints.php:349
+#: classes/BfwAdmin.php:2746 classes/BfwAdmin.php:2750
+#: classes/BfwPoints.php:364
 msgid "Offline product"
 msgstr "Офлайн-продукт"
 
-#: classes/BfwAdmin.php:2346 classes/BfwAdmin.php:2349
-#: classes/BfwPoints.php:635 classes/BfwPoints.php:1050
-#: classes/BfwPoints.php:1137
+#: classes/BfwAdmin.php:2731 classes/BfwAdmin.php:2735
+#: classes/BfwPoints.php:715 classes/BfwPoints.php:1254
+#: classes/BfwPoints.php:1360
 msgid "Remove points"
 msgstr "Удалить баллы"
 
-#: classes/BfwAdmin.php:2323 classes/BfwAdmin.php:2326
-#: classes/BfwPoints.php:533
+#: classes/BfwAdmin.php:2707 classes/BfwAdmin.php:2710
+#: classes/BfwPoints.php:608
 msgid "Use points"
 msgstr "Использовать баллы"
 
-#: classes/BfwAdmin.php:2101 classes/BfwAdmin.php:2102 classes/BfwPoints.php:30
+#: classes/BfwAdmin.php:2479 classes/BfwAdmin.php:2480 classes/BfwPoints.php:30
 #: classes/BfwPoints.php:31 classes/BfwPoints.php:49 classes/BfwPoints.php:51
+#: classes/Bfw_Export.php:86
 msgid "Points"
 msgstr "Баллы"
 
-#: classes/BfwAdmin.php:2100 classes/BfwPoints.php:29
+#: classes/BfwAdmin.php:2478 classes/BfwPoints.php:29
 msgid "Point"
 msgstr "Балл"
 
-#: classes/BfwAdmin.php:2027
+#: classes/BfwAdmin.php:2393
 msgid "At the time of order confirmation"
 msgstr "В момент подтверждения заказа"
 
-#: classes/BfwAdmin.php:2010
+#: classes/BfwAdmin.php:2376
 msgid "If selected, points will not be rounded."
 msgstr "Если выбрано, баллы не будут округляться."
 
-#: classes/BfwAdmin.php:1988
+#: classes/BfwAdmin.php:2354
 msgid "Terms & Conditions"
 msgstr "Правила и условия"
 
-#: classes/BfwAdmin.php:1954
+#: classes/BfwAdmin.php:2320
 msgid "Valid for cashback"
 msgstr "Действует и на кешбэк"
 
-#: classes/BfwAdmin.php:1855
+#: classes/BfwAdmin.php:2233
 msgid "When the referral system is activated, additional settings will appear."
 msgstr "При активации реферальной системы появятся дополнительные настройки."
 
-#: classes/BfwAdmin.php:1806
+#: classes/BfwAdmin.php:2182
 msgid "days without accrual or debit of points"
 msgstr "дней без начисления и списания баллов"
 
-#: classes/BfwAdmin.php:1759
+#: classes/BfwAdmin.php:2135
 msgid "Yes, accrue"
 msgstr "Да, начислять"
 
-#: classes/BfwAdmin.php:1713
+#: classes/BfwAdmin.php:2089
 msgid "Add points only to the referral."
 msgstr "Добавлять баллы только рефералу."
 
-#: classes/BfwAdmin.php:1691
+#: classes/BfwAdmin.php:2067
 msgid "Only for logged in clients."
 msgstr "Только для зарегистрированных клиентов."
 
-#: classes/BfwAdmin.php:1641
+#: classes/BfwAdmin.php:2016
 msgid "Select a Payment Method"
 msgstr "Выберите метод оплаты "
 
-#: classes/BfwAdmin.php:1601
+#: classes/BfwAdmin.php:1973
 msgid "%"
 msgstr "%"
 
-#: classes/BfwAdmin.php:1420
+#: classes/BfwAdmin.php:1787
 msgid "You get %s points for logging into your account.  "
 msgstr "Вы получаете %s баллов за вход в свою учетную запись.  "
 
-#: classes/BfwAdmin.php:1380
+#: classes/BfwAdmin.php:1743
 msgid "Your points will be deleted after %s days."
 msgstr "Ваши баллы будут удалены через %s дней."
 
-#: classes/BfwAdmin.php:1377 classes/BfwAdmin.php:1383
+#: classes/BfwAdmin.php:1740 classes/BfwAdmin.php:1746
 msgid "Your points will be deleted soon"
 msgstr "Ваши баллы скоро будут удалены"
 
-#: classes/BfwAdmin.php:1341
+#: classes/BfwAdmin.php:1703
 msgid "Happy birthday and give you bonus points:"
 msgstr "Поздравляем с днем рождения и дарим вам бонусные баллы:"
 
-#: classes/BfwAdmin.php:1337 classes/BfwAdmin.php:1344
-#: classes/BfwPoints.php:1901
+#: classes/BfwAdmin.php:1699 classes/BfwAdmin.php:1706
+#: classes/BfwPoints.php:2310
 msgid "Bonus points on your birthday"
 msgstr "Баллы в день рождения"
 
-#: classes/BfwAdmin.php:1301
+#: classes/BfwAdmin.php:1660
 msgid "Now the percentage of cashback:"
 msgstr "Теперь процент кешбэка:"
 
-#: classes/BfwAdmin.php:1300
+#: classes/BfwAdmin.php:1659
 msgid "Now your status is \"%s\"."
 msgstr "Теперь ваш статус \"%s\"."
 
-#: classes/BfwAdmin.php:1297 classes/BfwAdmin.php:1304 classes/BfwRoles.php:199
+#: classes/BfwAdmin.php:1656 classes/BfwAdmin.php:1663 classes/BfwRoles.php:252
 msgid "Changing your status"
 msgstr "Изменение вашего статуса"
 
-#: classes/BfwAdmin.php:1258
+#: classes/BfwAdmin.php:1616
 msgid "You have received %s bonus points for a product review."
 msgstr "Вы получили %s бонусных баллов за обзор продукта."
 
-#: classes/BfwAdmin.php:1219
+#: classes/BfwAdmin.php:1572 classes/BfwPoints.php:2160
 msgid "You have returned %1$s bonus points for order number %2$s."
 msgstr "Вы вернули %1$s бонусных баллов за заказ №%2$s."
 
-#: classes/BfwAdmin.php:1218 classes/BfwPoints.php:1775
+#: classes/BfwAdmin.php:1570 classes/BfwPoints.php:2153
 msgid "The %1$s bonus points you earned for order no. %2$s have been canceled."
 msgstr "%1$s бонусных баллов, заработанные вами за заказ №%2$s были отменены."
 
-#: classes/BfwAdmin.php:1215 classes/BfwPoints.php:952
-#: classes/BfwPoints.php:1758 classes/BfwPoints.php:1795
+#: classes/BfwAdmin.php:1567 classes/BfwPoints.php:1153
+#: classes/BfwPoints.php:2148 classes/BfwPoints.php:2178
 msgid "Refund of bonus points"
 msgstr "Возврат бонусных баллов"
 
-#: classes/BfwAdmin.php:1192
+#: classes/BfwAdmin.php:1539
 msgid "You have been credited with %s bonus points."
 msgstr "Вам было начислено %s бонусных баллов."
 
-#: classes/BfwAdmin.php:1166
+#: classes/BfwAdmin.php:1508
 msgid "You have accrued %s bonus points from order number %s."
 msgstr "Вам начислено %s бонусных баллов за заказ № %s."
 
-#: classes/BfwAdmin.php:1163 classes/BfwAdmin.php:1189
-#: classes/BfwAdmin.php:1197 classes/BfwAdmin.php:1255
-#: classes/BfwAdmin.php:2248 classes/BfwAdmin.php:2251
-#: classes/BfwHistory.php:62 classes/BfwPoints.php:1552
-#: classes/BfwPoints.php:1558 classes/BfwReferral.php:185
-#: classes/BfwReferral.php:235 classes/BfwReview.php:72
+#: classes/BfwAdmin.php:1505 classes/BfwAdmin.php:1536
+#: classes/BfwAdmin.php:1545 classes/BfwAdmin.php:1613
+#: classes/BfwAdmin.php:2626 classes/BfwAdmin.php:2630
+#: classes/BfwHistory.php:82 classes/BfwPoints.php:1792
+#: classes/BfwPoints.php:1801 classes/BfwReferral.php:200
+#: classes/BfwReview.php:78
 msgid "Points accrual"
 msgstr "Начисление баллов"
 
-#: classes/BfwAdmin.php:1124
+#: classes/BfwAdmin.php:1461
 msgid "You used %s bonus points to pay for order number %s."
 msgstr "Вы использовали %s бонусных баллов для оплаты заказа № %s."
 
-#: classes/BfwAdmin.php:1040
+#: classes/BfwAdmin.php:1371
 msgid "%s bonus points were deducted from you."
 msgstr "С вас снято %s  бонусных баллов."
 
-#: classes/BfwAdmin.php:1037 classes/BfwAdmin.php:1045
-#: classes/BfwAdmin.php:1121 classes/BfwPoints.php:1379
+#: classes/BfwAdmin.php:1368 classes/BfwAdmin.php:1377
+#: classes/BfwAdmin.php:1458 classes/BfwPoints.php:1610
 msgid "Writing off bonus points"
 msgstr "Списание бонусных баллов"
 
-#: classes/BfwAdmin.php:1020 classes/BfwAdmin.php:1048
-#: classes/BfwAdmin.php:1090 classes/BfwAdmin.php:1132
-#: classes/BfwAdmin.php:1173 classes/BfwAdmin.php:1199
-#: classes/BfwAdmin.php:1226 classes/BfwAdmin.php:1266
-#: classes/BfwAdmin.php:1306 classes/BfwAdmin.php:1346
-#: classes/BfwAdmin.php:1386 classes/BfwAdmin.php:1428
+#: classes/BfwAdmin.php:1351 classes/BfwAdmin.php:1380
+#: classes/BfwAdmin.php:1427 classes/BfwAdmin.php:1471
+#: classes/BfwAdmin.php:1517 classes/BfwAdmin.php:1547
+#: classes/BfwAdmin.php:1581 classes/BfwAdmin.php:1625
+#: classes/BfwAdmin.php:1665 classes/BfwAdmin.php:1708
+#: classes/BfwAdmin.php:1749 classes/BfwAdmin.php:1796
 msgid "Letter template"
 msgstr "Шаблон письма"
 
-#: classes/BfwAdmin.php:1016 classes/BfwAdmin.php:1044
-#: classes/BfwAdmin.php:1086 classes/BfwAdmin.php:1128
-#: classes/BfwAdmin.php:1169 classes/BfwAdmin.php:1196
-#: classes/BfwAdmin.php:1222 classes/BfwAdmin.php:1262
-#: classes/BfwAdmin.php:1303 classes/BfwAdmin.php:1343
-#: classes/BfwAdmin.php:1382 classes/BfwAdmin.php:1423
+#: classes/BfwAdmin.php:1347 classes/BfwAdmin.php:1376
+#: classes/BfwAdmin.php:1423 classes/BfwAdmin.php:1467
+#: classes/BfwAdmin.php:1513 classes/BfwAdmin.php:1544
+#: classes/BfwAdmin.php:1577 classes/BfwAdmin.php:1621
+#: classes/BfwAdmin.php:1662 classes/BfwAdmin.php:1705
+#: classes/BfwAdmin.php:1745 classes/BfwAdmin.php:1791
 msgid "Email header"
 msgstr "Заголовок письма"
 
-#: classes/BfwAdmin.php:1011 classes/BfwAdmin.php:1039
-#: classes/BfwAdmin.php:1081 classes/BfwAdmin.php:1123
-#: classes/BfwAdmin.php:1165 classes/BfwAdmin.php:1191
-#: classes/BfwAdmin.php:1217 classes/BfwAdmin.php:1257
-#: classes/BfwAdmin.php:1299 classes/BfwAdmin.php:1339
-#: classes/BfwAdmin.php:1379 classes/BfwAdmin.php:1419
+#: classes/BfwAdmin.php:1341 classes/BfwAdmin.php:1370
+#: classes/BfwAdmin.php:1417 classes/BfwAdmin.php:1460
+#: classes/BfwAdmin.php:1507 classes/BfwAdmin.php:1538
+#: classes/BfwAdmin.php:1569 classes/BfwAdmin.php:1615
+#: classes/BfwAdmin.php:1658 classes/BfwAdmin.php:1701
+#: classes/BfwAdmin.php:1742 classes/BfwAdmin.php:1786
 msgid "Hello"
 msgstr "Здравствуйте"
 
-#: classes/BfwAdmin.php:984
+#: classes/BfwAdmin.php:1313
 msgid "Use your own heading templates."
 msgstr "Используйте свои собственные шаблоны заголовков."
 
-#: classes/BfwAdmin.php:982
+#: classes/BfwAdmin.php:1310
 msgid "In the <a href=\"/wp-admin/admin.php?page=wc-settings&tab=email\" target=\"_blank\">settings woocommerce</a>, it is indicated from whom the letter will be sent. If not specified, the general settings <a href=\"/wp-admin/options-general.php\" target=\"_blank\">from the page</a> will be used. All email design in settings Woocommerce. The notification text is generated automatically."
 msgstr "В <a href=\"/wp-admin/admin.php?page=wc-settings&tab=email\" target=\"_blank\"> настройках woocommerce</a> указано, от кого будет отправлено письмо. Если не указано, то будут использоваться общие настройки <a href=\"/wp-admin/options-general.php\" target=\"_blank\">со страницы</a>. Весь дизайн писем в настройках Woocommerce. Текст уведомлений генерируется автоматически."
 
-#: classes/BfwAdmin.php:865
+#: classes/BfwAdmin.php:1162
 msgid "The Pro version of the Bonus for Woo plugin has not been confirmed. Reactivate the Pro version. If you have any difficulties, write to us at info@computy.ru"
 msgstr "Версия Pro плагина Bonus for Woo не подтверждена. Повторно активируйте версию Pro. Если возникнут трудности, напишите нам на info@computy.ru"
 
-#: classes/BfwAdmin.php:832
+#: classes/BfwAdmin.php:1119
 msgid "Letter template for about earning points for signing in."
 msgstr "Шаблон письма о начислении баллов за вход."
 
-#: classes/BfwAdmin.php:827 classes/BfwAdmin.php:1823
+#: classes/BfwAdmin.php:1111 classes/BfwAdmin.php:2200
 msgid "Days before deducting points"
 msgstr "Дней до списания баллов"
 
-#: classes/BfwAdmin.php:827
+#: classes/BfwAdmin.php:1108
 msgid "Letter template for deducting points soon"
 msgstr "Шаблон письма для списания баллов в ближайшее время"
 
-#: classes/BfwAdmin.php:822
+#: classes/BfwAdmin.php:1096
 msgid "Letter template when points are awarded on a birthday"
 msgstr "Образец письма при начислении баллов в день рождения"
 
-#: classes/BfwAdmin.php:126 classes/BfwAdmin.php:155 classes/BfwAdmin.php:816
-#: classes/BfwAdmin.php:2609 classes/BfwAdmin.php:2647
+#: classes/BfwAdmin.php:163 classes/BfwAdmin.php:196 classes/BfwAdmin.php:1086
+#: classes/BfwAdmin.php:3029 classes/BfwAdmin.php:3080
 msgid "Cashback percentage"
 msgstr "Процент кешбэка"
 
-#: classes/BfwAdmin.php:816
+#: classes/BfwAdmin.php:1082
 msgid "Template for a letter when a client status changes"
 msgstr "Шаблон письма при изменении статуса клиента"
 
-#: classes/BfwAdmin.php:812
+#: classes/BfwAdmin.php:1075
 msgid "Сause"
 msgstr "Причина"
 
-#: classes/BfwAdmin.php:812
+#: classes/BfwAdmin.php:1071
 msgid "Email template when leaving a product review"
 msgstr "Шаблон письма при оставлении отзыва о продукте"
 
-#: classes/BfwAdmin.php:809
+#: classes/BfwAdmin.php:1062
 msgid "Cashback amount"
 msgstr "Количество кешбэка"
 
-#: classes/BfwAdmin.php:809
+#: classes/BfwAdmin.php:1059
 msgid "Email template, when order status is returned"
 msgstr "Шаблон письма, когда заказ возвращен"
 
-#: classes/BfwAdmin.php:807
+#: classes/BfwAdmin.php:1049
 msgid "Email template when order status is complete from referral."
 msgstr "Шаблон сообщения электронной почты, когда статус заказа завершен от реферала."
 
-#: classes/BfwAdmin.php:805 classes/BfwAdmin.php:807
+#: classes/BfwAdmin.php:1043 classes/BfwAdmin.php:1053
 msgid "Points amount"
 msgstr "Количество баллов"
 
-#: classes/BfwAdmin.php:805
+#: classes/BfwAdmin.php:1040
 msgid "Email template, when order status is complete"
 msgstr "Шаблон письма, когда статус заказа завершен"
 
-#: classes/BfwAdmin.php:802 classes/BfwAdmin.php:805 classes/BfwAdmin.php:809
-#: classes/BfwHistory.php:114 classes/BfwHistory.php:222
+#: classes/BfwAdmin.php:1029 classes/BfwAdmin.php:1044
+#: classes/BfwAdmin.php:1064 classes/BfwHistory.php:136
+#: classes/BfwHistory.php:263 classes/BfwPoints.php:1796
+#: classes/Bfw_History_List_Table.php:182
 msgid "Order"
 msgstr "Заказ"
 
-#: classes/BfwAdmin.php:802
+#: classes/BfwAdmin.php:1027
 msgid "Template of the letter when the customer confirmed the order"
 msgstr "Шаблон письма при подтверждении заказа покупателем"
 
-#: classes/BfwAdmin.php:799
+#: classes/BfwAdmin.php:1017
 msgid "New user registration email template"
 msgstr "Шаблон письма при регистрации нового пользователя"
 
-#: classes/BfwAdmin.php:794
+#: classes/BfwAdmin.php:1004
 msgid "Email template when writing off points by admin"
 msgstr "Шаблон письма при списании баллов администратором"
 
-#: classes/BfwAdmin.php:792 classes/BfwAdmin.php:794 classes/BfwAdmin.php:799
-#: classes/BfwAdmin.php:802 classes/BfwAdmin.php:805 classes/BfwAdmin.php:807
-#: classes/BfwAdmin.php:809 classes/BfwAdmin.php:812 classes/BfwAdmin.php:832
+#: classes/BfwAdmin.php:997 classes/BfwAdmin.php:1006 classes/BfwAdmin.php:1019
+#: classes/BfwAdmin.php:1031 classes/BfwAdmin.php:1042
+#: classes/BfwAdmin.php:1052 classes/BfwAdmin.php:1061
+#: classes/BfwAdmin.php:1073 classes/BfwAdmin.php:1123
 msgid "Total points for the client"
 msgstr "Всего баллов у клиента"
 
-#: classes/BfwAdmin.php:792 classes/BfwAdmin.php:794 classes/BfwAdmin.php:799
-#: classes/BfwAdmin.php:802 classes/BfwAdmin.php:805 classes/BfwAdmin.php:807
-#: classes/BfwAdmin.php:809 classes/BfwAdmin.php:812 classes/BfwAdmin.php:816
-#: classes/BfwAdmin.php:822 classes/BfwAdmin.php:827 classes/BfwAdmin.php:832
+#: classes/BfwAdmin.php:996 classes/BfwAdmin.php:1005 classes/BfwAdmin.php:1018
+#: classes/BfwAdmin.php:1030 classes/BfwAdmin.php:1041
+#: classes/BfwAdmin.php:1051 classes/BfwAdmin.php:1060
+#: classes/BfwAdmin.php:1072 classes/BfwAdmin.php:1084
+#: classes/BfwAdmin.php:1098 classes/BfwAdmin.php:1109
+#: classes/BfwAdmin.php:1121
 msgid "Client name"
 msgstr "Имя клиента"
 
-#: classes/BfwAdmin.php:792
+#: classes/BfwAdmin.php:995
 msgid "Email template when points are added by admin"
 msgstr "Шаблон письма при добавлении баллов администратором"
 
-#: classes/BfwAdmin.php:784
+#: classes/BfwAdmin.php:983
 msgid "About earning points for signing in."
 msgstr "О начислении баллов за вход."
 
-#: classes/BfwAdmin.php:783
+#: classes/BfwAdmin.php:982
 msgid "About the imminent deletion of points."
 msgstr "О скором удалении баллов."
 
-#: classes/BfwAdmin.php:782
+#: classes/BfwAdmin.php:981
 msgid "When are points earned on your birthday"
 msgstr "Когда начисляются баллы в день рождения"
 
-#: classes/BfwAdmin.php:781
+#: classes/BfwAdmin.php:980
 msgid "When the status changes"
 msgstr "Когда статус меняется"
 
-#: classes/BfwAdmin.php:780
+#: classes/BfwAdmin.php:979
 msgid "Product Review Notice(approval, rejection)"
 msgstr "Уведомление об обзоре продукта (утверждение, отклонение)"
 
-#: classes/BfwAdmin.php:779
+#: classes/BfwAdmin.php:978
 msgid "When processing an order by an administrator(paid, returned)"
 msgstr "При изменении заказа администратором (оплачено, возвращено)"
 
-#: classes/BfwAdmin.php:778
+#: classes/BfwAdmin.php:977
 msgid "When the order is confirmed"
 msgstr "Когда заказ подтвержден"
 
-#: classes/BfwAdmin.php:777
+#: classes/BfwAdmin.php:976
 msgid "When registering"
 msgstr "При регистрации"
 
-#: classes/BfwAdmin.php:776
+#: classes/BfwAdmin.php:975
 msgid "Changes to points by the administrator"
 msgstr "Изменения баллов администратором"
 
-#: classes/BfwAdmin.php:775
+#: classes/BfwAdmin.php:974
 msgid "Headings and styling:"
 msgstr "Заголовки и стили:"
 
-#: classes/BfwAdmin.php:774
+#: classes/BfwAdmin.php:972
 msgid "Notifications will no longer be sent to customers by email. Check out the setup in the manual."
 msgstr "Уведомления больше не будут отправляться клиентам по электронной почте.  Смотри настройку в мануале."
 
-#: classes/BfwAdmin.php:774
+#: classes/BfwAdmin.php:971
 msgid "Use your send method"
 msgstr "Используйте свой метод отправки"
 
-#: classes/BfwAdmin.php:773
+#: classes/BfwAdmin.php:970
 msgid "Email settings"
 msgstr "Настройки Email"
 
-#: classes/BfwAdmin.php:753 classes/BfwAdmin.php:2587
+#: classes/BfwAdmin.php:938 classes/BfwAdmin.php:3000
 msgid "Translate"
 msgstr "Перевод"
 
-#: classes/BfwAdmin.php:751
+#: classes/BfwAdmin.php:936
 msgid "The word \"Cashback\" in the product card."
 msgstr "Слово «Кешбэк» в карточке товара."
 
-#: classes/BfwAdmin.php:749
+#: classes/BfwAdmin.php:934
 msgid "Remaining amount"
 msgstr "Оставшаяся сумма"
 
-#: classes/BfwAdmin.php:749
+#: classes/BfwAdmin.php:933
 msgid "Next status"
 msgstr "Следующий статус"
 
-#: classes/BfwAdmin.php:749
+#: classes/BfwAdmin.php:932
 msgid "Next percentage"
 msgstr "Следующий процент"
 
-#: classes/BfwAdmin.php:749
+#: classes/BfwAdmin.php:930
 msgid "Information about the remaining amount for the transition to another status."
 msgstr "Информация об оставшейся сумме для перехода в другой статус."
 
-#: classes/BfwAdmin.php:748
+#: classes/BfwAdmin.php:929
 msgid "Name of the offline product in the buyer's order"
 msgstr "Название офлайн-продукта в заказе покупателя"
 
-#: classes/BfwAdmin.php:746
+#: classes/BfwAdmin.php:926
 msgid "Main title. Used throughout the bonus system."
 msgstr "Основное название. Используется во всей бонусной системе."
 
-#: classes/BfwAdmin.php:746
+#: classes/BfwAdmin.php:925
 msgid "\"Bonus points\" name."
 msgstr "Название «Бонусные баллы»."
 
-#: classes/BfwAdmin.php:742
+#: classes/BfwAdmin.php:921
 msgid "amount received"
 msgstr "полученная сумма"
 
-#: classes/BfwAdmin.php:742 classes/BfwAdmin.php:792 classes/BfwAdmin.php:794
-#: classes/BfwAdmin.php:799 classes/BfwAdmin.php:802 classes/BfwAdmin.php:809
-#: classes/BfwAdmin.php:812 classes/BfwAdmin.php:827 classes/BfwAdmin.php:832
-#: pages/coupons.php:150
+#: classes/BfwAdmin.php:920 classes/BfwAdmin.php:998 classes/BfwAdmin.php:1007
+#: classes/BfwAdmin.php:1020 classes/BfwAdmin.php:1032
+#: classes/BfwAdmin.php:1063 classes/BfwAdmin.php:1074
+#: classes/BfwAdmin.php:1110 classes/BfwAdmin.php:1122 pages/coupons.php:205
 msgid "Number of points"
 msgstr "Количество баллов"
 
-#: classes/BfwAdmin.php:742 classes/BfwAdmin.php:749 classes/BfwAdmin.php:792
-#: classes/BfwAdmin.php:794 classes/BfwAdmin.php:799 classes/BfwAdmin.php:802
-#: classes/BfwAdmin.php:805 classes/BfwAdmin.php:807 classes/BfwAdmin.php:809
-#: classes/BfwAdmin.php:812 classes/BfwAdmin.php:816 classes/BfwAdmin.php:822
-#: classes/BfwAdmin.php:827 classes/BfwAdmin.php:832
+#: classes/BfwAdmin.php:919 classes/BfwAdmin.php:931 classes/BfwAdmin.php:995
+#: classes/BfwAdmin.php:1004 classes/BfwAdmin.php:1017
+#: classes/BfwAdmin.php:1028 classes/BfwAdmin.php:1040
+#: classes/BfwAdmin.php:1050 classes/BfwAdmin.php:1059
+#: classes/BfwAdmin.php:1071 classes/BfwAdmin.php:1083
+#: classes/BfwAdmin.php:1097 classes/BfwAdmin.php:1108
+#: classes/BfwAdmin.php:1120
 msgid "Use shortcodes:"
 msgstr "Используйте шорткоды:"
 
-#: classes/BfwAdmin.php:740
+#: classes/BfwAdmin.php:917
 msgid "\"My cashback percentage\" in the customer account."
 msgstr "«Мой процент кешбэка» в личном кабинете."
 
-#: classes/BfwAdmin.php:739
+#: classes/BfwAdmin.php:916
 msgid "\"My status\" in the customer account."
 msgstr "«Мой статус» в личном кабинете."
 
-#: classes/BfwAdmin.php:738
+#: classes/BfwAdmin.php:915
 msgid "Bonus point history heading."
 msgstr "Заголовок истории бонусных баллов."
 
-#: classes/BfwAdmin.php:737
+#: classes/BfwAdmin.php:914
 msgid "The title in the customers account."
 msgstr "Заголовок в учетной записи клиента."
 
-#: classes/BfwAdmin.php:729
+#: classes/BfwAdmin.php:904
 msgid "Maximum number of coupons per day for one client."
 msgstr "Максимальное количество купонов в день для одного клиента."
 
-#: classes/BfwAdmin.php:679
+#: classes/BfwAdmin.php:822
 msgid "Pro settings"
 msgstr "Настройки Pro"
 
-#: classes/BfwAdmin.php:646
+#: classes/BfwAdmin.php:765
 msgid "First field singular, second plural."
 msgstr "Первое поле единственного числа, второе множественное число в родительном падеже."
 
-#: classes/BfwAdmin.php:646 classes/BfwAdmin.php:648
+#: classes/BfwAdmin.php:764 classes/BfwAdmin.php:769
 msgid "Points Label"
 msgstr "Обозначение баллов"
 
-#: classes/BfwAdmin.php:641
+#: classes/BfwAdmin.php:757
 msgid "Do not show in your account how many days of points burning are left."
 msgstr "Не показывать в личном кабинете, сколько дней осталось до сгорания баллов."
 
-#: classes/BfwAdmin.php:640
+#: classes/BfwAdmin.php:755
 msgid "How many days in advance do I have to give notice to deduct points?"
 msgstr "За сколько дней предупредить о списании баллов?"
 
-#: classes/BfwAdmin.php:639
+#: classes/BfwAdmin.php:754
 msgid "Removing bonus points for inactivity"
 msgstr "Снятие бонусных баллов за бездействие"
 
-#: classes/BfwAdmin.php:638
+#: classes/BfwAdmin.php:753
 msgid "The order of the \"My bonuses\" menu item in the client account."
 msgstr "Порядок пункта меню «Мои бонусы» в личном кабинете."
 
-#: classes/BfwAdmin.php:637
+#: classes/BfwAdmin.php:751
 msgid "Attention! This will remove all settings and all user bonus points."
 msgstr "Внимание! Это приведет к удалению всех настроек и всех пользовательских бонусных баллов."
 
-#: classes/BfwAdmin.php:637
+#: classes/BfwAdmin.php:750
 msgid "Remove plugin traces upon activation."
 msgstr "Удалите следы плагина при удалении плагина."
 
-#: classes/BfwAdmin.php:636
+#: classes/BfwAdmin.php:749
 msgid "Show social media links on product page?"
 msgstr "Показывать ссылки на социальные сети на странице товара?"
 
-#: classes/BfwAdmin.php:633
+#: classes/BfwAdmin.php:745
 msgid "Awarding points to the client for logging in. Charged once a day."
 msgstr "Начисление баллов клиенту за вход в систему. Начисляется раз в сутки."
 
-#: classes/BfwAdmin.php:631
+#: classes/BfwAdmin.php:743
 msgid "Daily points for the first login"
 msgstr "Ежедневные баллы за первый вход"
 
-#: classes/BfwAdmin.php:629
+#: classes/BfwAdmin.php:740
 msgid "If more than 0 is specified, then the client will have a date entry field in the account settings."
 msgstr "Если указано больше 0, то у клиента будет поле ввода даты в настройках аккаунта."
 
-#: classes/BfwAdmin.php:627 classes/BfwAdmin.php:822
+#: classes/BfwAdmin.php:738 classes/BfwAdmin.php:1099
 msgid "Points on your birthday"
 msgstr "Баллы в день рождения"
 
-#: classes/BfwAdmin.php:626
+#: classes/BfwAdmin.php:737
 msgid "From what date to count the amount of orders?"
 msgstr "С какой даты считать сумму заказов?"
 
-#: classes/BfwAdmin.php:625
+#: classes/BfwAdmin.php:736
 msgid "Product for which 100% cashback is charged."
 msgstr "Товар, за который начисляется 100% кешбэк."
 
-#: classes/BfwAdmin.php:623
-msgid "The icons will appear on the user's account page."
-msgstr "Значки появятся на странице учетной записи пользователя."
-
-#: classes/BfwAdmin.php:621
+#: classes/BfwAdmin.php:733
 msgid "Social links for the referral system"
 msgstr "Социальные ссылки для реферальной системы"
 
-#: classes/BfwAdmin.php:620
+#: classes/BfwAdmin.php:731
 msgid "The Sum of orders after which the referral system will become available to the client."
 msgstr "Сумма заказов, после которой клиенту станет доступна реферальная система."
 
-#: classes/BfwAdmin.php:619
+#: classes/BfwAdmin.php:730
 msgid "Show points that will be returned to the customer in the cart and checkout?"
 msgstr "Показать баллы, которые будут возвращены покупателю в корзине и при оформлении заказа?"
 
-#: classes/BfwAdmin.php:618
+#: classes/BfwAdmin.php:729
 msgid "Hide customer points history?"
 msgstr "Скрыть историю бонусных баллов у клиента?"
 
-#: classes/BfwAdmin.php:616
+#: classes/BfwAdmin.php:726
 msgid "Points will come for those invited by your friends."
 msgstr "Баллы будут приходить за тех, кого пригласили ваши друзья."
 
-#: classes/BfwAdmin.php:616
+#: classes/BfwAdmin.php:725
 msgid "Use a two-tier system"
 msgstr "Используйте двухуровневую систему"
 
-#: classes/BfwAdmin.php:615
+#: classes/BfwAdmin.php:723
 msgid "The referer will not receive points from the second order."
 msgstr "Реферер не будет получать баллы со второго заказа."
 
-#: classes/BfwAdmin.php:615
+#: classes/BfwAdmin.php:722
 msgid "Earn points only for the first referral order?"
 msgstr "Начислять баллы только за первый реферальный заказ?"
 
-#: classes/BfwAdmin.php:614
+#: classes/BfwAdmin.php:720
 msgid "The percentage of points accrued from the second level referral's order."
 msgstr "Процент баллов, начисленных от заказа реферала второго уровня."
 
-#: classes/BfwAdmin.php:613
+#: classes/BfwAdmin.php:719
 msgid "The percentage of points accrued from the referral's order."
 msgstr "Процент баллов, начисленных за заказ реферала."
 
-#: classes/BfwAdmin.php:612
+#: classes/BfwAdmin.php:718
 msgid "The minimum order amount to use points."
 msgstr "Минимальная сумма заказа для использования баллов."
 
-#: classes/BfwAdmin.php:610
+#: classes/BfwAdmin.php:715
 msgid "When the checkbox is checked, cashback for delivery will not be credited."
 msgstr "При установленном флажке кешбэк за доставку не начисляется."
 
-#: classes/BfwAdmin.php:610
+#: classes/BfwAdmin.php:714
 msgid "Remove cashback for delivery?"
 msgstr "Снять кешбэк за доставку?"
 
-#: classes/BfwAdmin.php:608
+#: classes/BfwAdmin.php:711
 msgid "Cashback will be credited without taking into account discounts."
 msgstr "Кешбэк будет начислен без учета скидок."
 
-#: classes/BfwAdmin.php:606
+#: classes/BfwAdmin.php:709
 msgid "Ignore coupons and discounts when calculating cashback"
 msgstr "Игнорировать купоны и скидки при начислении кешбэка"
 
-#: classes/BfwAdmin.php:605
+#: classes/BfwAdmin.php:707
 msgid "When the checkbox is selected, the points cannot be spent, but the cashback will be accrued."
 msgstr "При установленном флажке баллы нельзя потратить, но кешбэк будет начислен."
 
-#: classes/BfwAdmin.php:605
+#: classes/BfwAdmin.php:706
 msgid "Don't spend points if a coupon is applied?"
 msgstr "Не тратить баллы, если применяется купон?"
 
-#: classes/BfwAdmin.php:604
+#: classes/BfwAdmin.php:705
 msgid "Exclude roles from the bonus system"
 msgstr "Исключить роли из бонусной системы"
 
-#: classes/BfwAdmin.php:603
+#: classes/BfwAdmin.php:703
 msgid "Clear points that the customer wants to deduct when the number of items in the cart changes"
 msgstr "Очищать баллы, которые покупатель хочет списать при изменении количества товаров в корзине."
 
-#: classes/BfwAdmin.php:602
+#: classes/BfwAdmin.php:701
 msgid "Coupons"
 msgstr "Купоны"
 
-#: classes/BfwAdmin.php:599
+#: classes/BfwAdmin.php:698
 msgid "If the client uses points, cashback is not credited."
 msgstr "Если клиент использует баллы, кешбэк не начисляется."
 
-#: classes/BfwAdmin.php:597
+#: classes/BfwAdmin.php:696
 msgid "Accrue cashback on excluded products and categories?"
 msgstr "Начислять кешбэк за исключенные товары и категории?"
 
-#: classes/BfwAdmin.php:596
+#: classes/BfwAdmin.php:695
 msgid "Points for registration"
 msgstr "Баллы за регистрацию"
 
-#: classes/BfwAdmin.php:595
+#: classes/BfwAdmin.php:694
 msgid "Exclude products that cannot be purchased with cashback points."
 msgstr "Исключите товары, которые нельзя приобрести за кешбэк баллы."
 
-#: classes/BfwAdmin.php:594
+#: classes/BfwAdmin.php:693
 msgid "Exclude payment method from the bonus system."
 msgstr "Исключить метод оплаты из бонусной системы."
 
-#: classes/BfwAdmin.php:593
+#: classes/BfwAdmin.php:692
 msgid "Exclude product categories that cannot be purchased with cashback points."
 msgstr "Исключите категории товаров, которые нельзя приобрести за кешбэк баллы."
 
-#: classes/BfwAdmin.php:592
+#: classes/BfwAdmin.php:691
 msgid "Percentage of the order amount that can be spent by the client in points."
 msgstr "Процент суммы заказа, который может быть потрачен клиентом в баллах."
 
-#: classes/BfwAdmin.php:590
+#: classes/BfwAdmin.php:689
 msgid "Hide deduction of points for sale items?"
 msgstr "Скрыть возможность потратить баллы для товаров со скидкой?"
 
-#: classes/BfwAdmin.php:589
+#: classes/BfwAdmin.php:687
 msgid "Uncheck the checkbox if the checkout is in the basket."
 msgstr "Снимите флажок, если оформление заказа находится в корзине."
 
-#: classes/BfwAdmin.php:589
+#: classes/BfwAdmin.php:686
 msgid "Writing off points in ordering"
 msgstr "Списание баллов в оформлении заказа"
 
-#: classes/BfwAdmin.php:587
+#: classes/BfwAdmin.php:682
 msgid "Do not show the word \"up to\" before the score."
 msgstr "Не показывайте слово «до» перед баллами."
 
-#: classes/BfwAdmin.php:584
+#: classes/BfwAdmin.php:679
 msgid "Do not round decimals in points?"
 msgstr "Не округлять десятичные дроби в баллах?"
 
-#: classes/BfwAdmin.php:583
+#: classes/BfwAdmin.php:678
 msgid "Link to the terms and conditions."
 msgstr "Ссылка на правила и условия."
 
-#: classes/BfwAdmin.php:581
+#: classes/BfwAdmin.php:675
 msgid "* Accrued only if the customer bought this product."
 msgstr "* Начисляется только в том случае, если покупатель приобрел данный товар."
 
-#: classes/BfwAdmin.php:581
+#: classes/BfwAdmin.php:674
 msgid "* If the value is greater than 0, all reviews will have to be manually approved."
 msgstr "* Если значение больше 0, все отзывы необходимо будет утверждать вручную."
 
-#: classes/BfwAdmin.php:580
+#: classes/BfwAdmin.php:673
 msgid "Number of bonus points for a product review"
 msgstr "Количество бонусных баллов за обзор продукта"
 
-#: classes/BfwAdmin.php:579
+#: classes/BfwAdmin.php:672
 msgid "At what order status will points be returned?"
 msgstr "При каком статусе заказа будут возвращены баллы?"
 
-#: classes/BfwAdmin.php:578
+#: classes/BfwAdmin.php:670
 msgid "Attention! The amount of orders and the setting of user statuses will be calculated according to this order status."
 msgstr "Внимание! Количество заказов и установка пользовательских статусов будут рассчитываться в соответствии с этим статусом заказа."
 
-#: classes/BfwAdmin.php:578
+#: classes/BfwAdmin.php:669
 msgid "At what status of an order can points be awarded?"
 msgstr "При каком статусе заказа могут начисляться баллы?"
 
-#: classes/BfwAdmin.php:577
+#: classes/BfwAdmin.php:668
 msgid "At what order status can points be debited?"
 msgstr "При каком статусе заказа могут списываться баллы?"
 
-#: classes/BfwAdmin.php:575 classes/BfwAdmin.php:2576
+#: classes/BfwAdmin.php:666 classes/BfwAdmin.php:2998
 msgid "Plugin settings"
 msgstr "Настройки плагина"
 
-#: classes/BfwAdmin.php:536 pages/logs.php:9
+#: classes/BfwAdmin.php:612 pages/logs.php:142
 msgid "Logs"
 msgstr "Логи"
 
-#: classes/BfwAdmin.php:532 pages/tools.php:27 pages/tools.php:29
+#: classes/BfwAdmin.php:606 classes/BfwAdmin.php:607 pages/generator.php:127
+#: pages/tools.php:390 pages/tools.php:400
 msgid "Rules and Conditions Generator"
 msgstr "Генератор правил и условий"
 
-#: classes/BfwAdmin.php:526 classes/BfwAdmin.php:2785
+#: classes/BfwAdmin.php:598
 msgid "Bonus points coupons"
 msgstr "Купоны бонусных баллов"
 
-#: classes/BfwAdmin.php:526
+#: classes/BfwAdmin.php:597
 msgid "Bonus points coupons - Bonus for Woo"
 msgstr "Купоны на бонусные баллы - Bonus for Woo"
 
-#: classes/BfwAdmin.php:522 pages/statistic.php:19 pages/statisticNEW.php:32
-#: pages/statisticOLD.php:32
+#: classes/BfwAdmin.php:591 pages/statisticNEW.php:33 pages/statisticOLD.php:34
 msgid "Bonus system statistic"
 msgstr "Статистика бонусной системы"
 
-#: classes/BfwAdmin.php:522
+#: classes/BfwAdmin.php:590
 msgid "Bonus points statistic - Bonus for Woo"
 msgstr "Статистика бонусных баллов - Bonus for Woo"
 
-#: classes/BfwAdmin.php:513
+#: classes/BfwAdmin.php:579
 msgid "History of bonus points for all customers"
 msgstr "История бонусных баллов для всех клиентов"
 
-#: classes/BfwAdmin.php:512
+#: classes/BfwAdmin.php:578
 msgid "Bonus points history"
 msgstr "История бонусных баллов"
 
-#: classes/BfwAdmin.php:497 classes/BfwAdmin.php:498
+#: classes/BfwAdmin.php:562 classes/BfwAdmin.php:564
 msgid "My bonuses"
 msgstr "Мои бонусы"
 
-#: classes/BfwAdmin.php:431 classes/BfwAdmin.php:486 classes/BfwAdmin.php:816
+#: classes/BfwAdmin.php:495 classes/BfwAdmin.php:550 classes/BfwAdmin.php:1085
 msgid "User status"
 msgstr "Статус пользователя"
 
-#: classes/BfwAdmin.php:386
+#: classes/BfwAdmin.php:449
 msgid "This user does not participate in the bonus system."
 msgstr "Этот пользователь не участвует в бонусной системе."
 
-#: classes/BfwAdmin.php:374
+#: classes/BfwAdmin.php:435
 msgid "Invited friends"
 msgstr "Приглашенные друзьями"
 
-#: classes/BfwAdmin.php:331
+#: classes/BfwAdmin.php:389
 msgid "Invited"
 msgstr "Приглашено"
 
-#: classes/BfwAdmin.php:322 classes/BfwAdmin.php:327
+#: classes/BfwAdmin.php:379 classes/BfwAdmin.php:384
 msgid "Invited by user"
 msgstr "Приглашение от пользователя"
 
-#: classes/BfwAdmin.php:303 classes/BfwAdmin.php:792 classes/BfwAdmin.php:794
-#: classes/BfwAdmin.php:799 classes/BfwAdmin.php:802 classes/BfwAdmin.php:805
-#: classes/BfwAdmin.php:807 classes/BfwAdmin.php:809 classes/BfwAdmin.php:812
-#: classes/BfwAdmin.php:816
+#: classes/BfwAdmin.php:359 classes/BfwAdmin.php:1000 classes/BfwAdmin.php:1009
+#: classes/BfwAdmin.php:1022 classes/BfwAdmin.php:1034
+#: classes/BfwAdmin.php:1045 classes/BfwAdmin.php:1055
+#: classes/BfwAdmin.php:1065 classes/BfwAdmin.php:1076
+#: classes/BfwAdmin.php:1087
 msgid "Referral link"
 msgstr "Реферальная ссылка"
 
-#: classes/BfwAdmin.php:277 classes/BfwAdmin.php:601
+#: classes/BfwAdmin.php:333 classes/BfwAdmin.php:700
 msgid "Referral system"
 msgstr "Реферальная система"
 
-#: classes/BfwAdmin.php:267
+#: classes/BfwAdmin.php:323
 msgid "change"
 msgstr "изменить"
 
-#: classes/BfwAdmin.php:264
+#: classes/BfwAdmin.php:319
 msgid "The reason for the change in points. It will be displayed in the client's accrual history."
 msgstr "Причина смены баллов. Он будет отображаться в истории начислений клиента."
 
-#: classes/BfwAdmin.php:260
+#: classes/BfwAdmin.php:315
 msgid "Change bonus points"
 msgstr "Изменить бонусные баллы"
 
-#: classes/BfwAdmin.php:255
+#: classes/BfwAdmin.php:310
 msgid "Total bonus points"
 msgstr "Всего бонусных баллов"
 
-#: classes/BfwAdmin.php:252
+#: classes/BfwAdmin.php:306
 msgid "You can change the number of bonus points."
 msgstr "Вы можете изменить количество бонусных баллов"
 
-#: classes/BfwAdmin.php:248
+#: classes/BfwAdmin.php:302
 msgid "The client did not receive points this year"
 msgstr "В этом году клиент не получил баллы"
 
-#: classes/BfwAdmin.php:246
+#: classes/BfwAdmin.php:300
 msgid "The client received points this year"
 msgstr "Клиент получил баллы в этом году"
 
-#: classes/BfwAdmin.php:236
+#: classes/BfwAdmin.php:290
 msgid "Add order"
 msgstr "Добавить заказ"
 
-#: classes/BfwAdmin.php:234
+#: classes/BfwAdmin.php:288
 msgid "Enter amount"
 msgstr "Введите сумму"
 
-#: classes/BfwAdmin.php:230
+#: classes/BfwAdmin.php:283
 msgid "Place an order offline"
 msgstr "Оформить заказ офлайн"
 
-#: classes/BfwAdmin.php:229
+#: classes/BfwAdmin.php:281
 msgid "The client will have a new order and earn bonus points"
 msgstr "Клиент получит новый заказ и заработает бонусные баллы"
 
-#: classes/BfwAdmin.php:223
+#: classes/BfwAdmin.php:274
 msgid "Cleared"
 msgstr "Очищено"
 
-#: classes/BfwAdmin.php:214 classes/BfwRoles.php:111 pages/coupons.php:52
-#: pages/list_history.php:15
+#: classes/BfwAdmin.php:262 classes/BfwAdmin.php:2989 pages/coupons.php:37
 msgid "deleted"
 msgstr "удален"
 
-#: classes/BfwAdmin.php:208 classes/BfwCoupons.php:120
-#: classes/BfwHistory.php:206 classes/BfwRoles.php:48 classes/BfwRoles.php:59
-#: classes/BfwRoles.php:90 classes/BfwRoles.php:111
+#: classes/BfwAdmin.php:252 classes/BfwAdmin.php:2989
+#: classes/BfwCoupons.php:130 classes/BfwHistory.php:246
+#: classes/BfwRoles.php:83 classes/BfwRoles.php:102 classes/BfwRoles.php:132
+#: classes/Bfw_Coupons_List_Table.php:78 classes/Bfw_Export.php:57
+#: pages/coupons.php:209
 msgid "Status"
 msgstr "Статус"
 
-#: classes/BfwAdmin.php:204
+#: classes/BfwAdmin.php:247
 msgid "Total amount of orders"
 msgstr "Общая сумма заказов"
 
-#: classes/BfwAdmin.php:202
+#: classes/BfwAdmin.php:245
 msgid "User bonus points"
 msgstr "Бонусные баллы пользователя"
 
-#: classes/BfwAdmin.php:1014 classes/BfwAdmin.php:1042
-#: classes/BfwAdmin.php:1084 classes/BfwAdmin.php:1126
-#: classes/BfwAdmin.php:1167 classes/BfwAdmin.php:1194
-#: classes/BfwAdmin.php:1220 classes/BfwAdmin.php:1260
-#: classes/BfwAdmin.php:1421
+#: classes/BfwAdmin.php:1344 classes/BfwAdmin.php:1373
+#: classes/BfwAdmin.php:1420 classes/BfwAdmin.php:1464
+#: classes/BfwAdmin.php:1510 classes/BfwAdmin.php:1541
+#: classes/BfwAdmin.php:1574 classes/BfwAdmin.php:1618
+#: classes/BfwAdmin.php:1788
 msgid "points"
 msgstr "баллов"
 
-#: classes/BfwAdmin.php:1014 classes/BfwAdmin.php:1042
-#: classes/BfwAdmin.php:1084 classes/BfwAdmin.php:1126
-#: classes/BfwAdmin.php:1167 classes/BfwAdmin.php:1194
-#: classes/BfwAdmin.php:1220 classes/BfwAdmin.php:1260
-#: classes/BfwAdmin.php:1421
+#: classes/BfwAdmin.php:1344 classes/BfwAdmin.php:1373
+#: classes/BfwAdmin.php:1420 classes/BfwAdmin.php:1464
+#: classes/BfwAdmin.php:1510 classes/BfwAdmin.php:1541
+#: classes/BfwAdmin.php:1574 classes/BfwAdmin.php:1618
+#: classes/BfwAdmin.php:1788
 msgid "The sum of your bonus points is now"
 msgstr "Сумма ваших бонусных баллов теперь"
 
-#: classes/BfwAdmin.php:792 classes/BfwAdmin.php:794 classes/BfwAdmin.php:799
-#: classes/BfwAdmin.php:802 classes/BfwAdmin.php:807 classes/BfwAdmin.php:1013
-#: classes/BfwAdmin.php:1041 classes/BfwAdmin.php:1083
-#: classes/BfwAdmin.php:1125 classes/BfwAdmin.php:1193
-#: classes/BfwAdmin.php:1259 classes/BfwReview.php:121
+#: classes/BfwAdmin.php:999 classes/BfwAdmin.php:1008 classes/BfwAdmin.php:1021
+#: classes/BfwAdmin.php:1033 classes/BfwAdmin.php:1054
+#: classes/BfwAdmin.php:1343 classes/BfwAdmin.php:1372
+#: classes/BfwAdmin.php:1419 classes/BfwAdmin.php:1463
+#: classes/BfwAdmin.php:1540 classes/BfwAdmin.php:1617
+#: classes/BfwReview.php:137 classes/Bfw_Export.php:87
 msgid "Cause"
 msgstr "Причина"
 
-#: classes/BfwAdmin.php:1012 classes/BfwAdmin.php:1082
+#: classes/BfwAdmin.php:1342 classes/BfwAdmin.php:1418
 msgid "%s bonus points have been added to you."
 msgstr "Вам начислено %s бонусных баллов."
 
-#: classes/BfwAccount.php:1022
+#: classes/BfwAccount.php:1128
 msgid "Bonus points update"
 msgstr "Обновление бонусных баллов"
 
-#: classes/BfwAccount.php:990
+#: classes/BfwAccount.php:1087
 msgid "Not specified."
 msgstr "Не указано."
 
-#: classes/BfwAccount.php:823
+#: classes/BfwAccount.php:907
 msgid "Register and get %1$d %2$s."
 msgstr "Зарегистрируйтесь и получите %1$d %2$s."
 
-#: classes/BfwAccount.php:782 classes/BfwAdmin.php:240
+#: classes/BfwAccount.php:861 classes/BfwAdmin.php:294
 msgid "Date of birth"
 msgstr "Дата рождения"
 
-#: classes/BfwAccount.php:748 classes/BfwAdmin.php:1009
-#: classes/BfwAdmin.php:1018 classes/BfwAdmin.php:1079
-#: classes/BfwAdmin.php:1088 classes/BfwAdmin.php:1130
-#: classes/BfwAdmin.php:1171 classes/BfwAdmin.php:1224
-#: classes/BfwAdmin.php:1264 classes/BfwAdmin.php:1417
-#: classes/BfwAdmin.php:1425 classes/BfwPoints.php:428
+#: classes/BfwAccount.php:821 classes/BfwAdmin.php:1339
+#: classes/BfwAdmin.php:1349 classes/BfwAdmin.php:1415
+#: classes/BfwAdmin.php:1425 classes/BfwAdmin.php:1469
+#: classes/BfwAdmin.php:1515 classes/BfwAdmin.php:1579
+#: classes/BfwAdmin.php:1623 classes/BfwAdmin.php:1784
+#: classes/BfwAdmin.php:1793 classes/BfwPoints.php:454
 msgid "Bonus points have been added to you!"
 msgstr "Вам начислены бонусные баллы!"
 
 #. translators: %s will be replaced with the name of the bonus points.
-#: classes/BfwAccount.php:738
+#: classes/BfwAccount.php:806
 msgid "%s for registration."
 msgstr "%s за регистрацию."
 
-#: classes/BfwAccount.php:544
+#: classes/BfwAccount.php:578
 msgid "To start using the referral system, you need to buy goods for"
 msgstr "Чтобы начать пользоваться реферальной системой, вам необходимо купить товаров на"
 
-#: classes/BfwAccount.php:595
+#: classes/BfwAccount.php:644
 msgid "Your friends invited"
 msgstr "Ваши друзья пригласили"
 
-#: classes/BfwAccount.php:586 classes/BfwAccount.php:597
-#: classes/BfwAdmin.php:331 classes/BfwAdmin.php:374
+#: classes/BfwAccount.php:635 classes/BfwAccount.php:646
+#: classes/BfwAdmin.php:390 classes/BfwAdmin.php:436
 msgid "people"
 msgstr "чел."
 
-#: classes/BfwAccount.php:584
+#: classes/BfwAccount.php:633
 msgid "You invited"
 msgstr "Вы пригласили"
 
-#: classes/BfwAccount.php:570 classes/BfwAccount.php:645
+#: classes/BfwAccount.php:616 classes/BfwAccount.php:710
 msgid "Copy link"
 msgstr "Копировать ссылку"
 
-#: classes/BfwAccount.php:568 classes/BfwAccount.php:645
+#: classes/BfwAccount.php:614 classes/BfwAccount.php:709
 msgid "My referral link"
 msgstr "Моя реферальная ссылка"
 
-#: classes/BfwAccount.php:438
+#: classes/BfwAccount.php:472
 msgid "At the moment, the bonus system is not available."
 msgstr "На данный момент бонусная система недоступна."
 
-#: classes/BfwAccount.php:435
+#: classes/BfwAccount.php:468
 msgid "You have the maximum cashback!"
 msgstr "У вас максимальный кешбэк!"
 
-#: classes/BfwAccount.php:418 classes/BfwAdmin.php:2288
-#: classes/BfwAdmin.php:2291
+#: classes/BfwAccount.php:450 classes/BfwAdmin.php:2669
+#: classes/BfwAdmin.php:2673
 msgid "Up to [percent]% cashback and «[status]» status, you have [sum] left to spend."
 msgstr "До кешбэка [percent]% и статуса «[status]»  осталось потратить [sum]."
 
-#: classes/BfwAccount.php:304
+#: classes/BfwAccount.php:329
 msgid "To take"
 msgstr "Получить"
 
-#: classes/BfwAccount.php:303 classes/BfwCoupons.php:108
+#: classes/BfwAccount.php:328 classes/BfwCoupons.php:118
+#: classes/Bfw_Coupons_List_Table.php:73 classes/Bfw_Export.php:53
 msgid "Coupon code"
 msgstr "Код купона"
 
 #. translators: %s will be replaced with the bonus points amount (lowercase)
-#: classes/BfwAccount.php:295
+#: classes/BfwAccount.php:320
 msgid "Enter coupon code to take %s."
 msgstr "Введите код купона, чтобы получить %s."
 
-#: classes/BfwAccount.php:262 classes/BfwAdmin.php:1558
-#: classes/BfwAdmin.php:2064
+#: classes/BfwAccount.php:287 classes/BfwAdmin.php:1929
+#: classes/BfwAdmin.php:2433
 msgid "days"
 msgstr "дней"
 
-#: classes/BfwAccount.php:203
+#: classes/BfwAccount.php:226
 msgid "will expire after"
 msgstr "сгорят через"
 
-#: classes/BfwAccount.php:84 classes/BfwAdmin.php:406 classes/BfwAdmin.php:420
-#: classes/BfwAdmin.php:475 classes/BfwAdmin.php:2334
-#: classes/BfwPoints.php:1074
+#: classes/BfwAccount.php:84 classes/BfwAdmin.php:470 classes/BfwAdmin.php:484
+#: classes/BfwAdmin.php:539 classes/BfwAdmin.php:2719
+#: classes/BfwPoints.php:1278
 msgid "Bonus points"
 msgstr "Бонусные баллы"
 
-#: classes/BfwAccount.php:83 classes/BfwAdmin.php:2276
-#: classes/BfwAdmin.php:2279
+#: classes/BfwAccount.php:83 classes/BfwAdmin.php:2655
+#: classes/BfwAdmin.php:2659
 msgid "My cashback percentage"
 msgstr "Мой процент кешбэка"
 
-#: classes/BfwAccount.php:82 classes/BfwAdmin.php:2262
-#: classes/BfwAdmin.php:2265
+#: classes/BfwAccount.php:82 classes/BfwAdmin.php:2641
+#: classes/BfwAdmin.php:2644
 msgid "My status"
 msgstr "Мой статус"
 
-#: classes/BfwAccount.php:23 classes/BfwAccount.php:664
-#: classes/BfwAccount.php:666 classes/BfwAdmin.php:2236
-#: classes/BfwAdmin.php:2239
+#: classes/BfwAccount.php:23 classes/BfwAccount.php:730
+#: classes/BfwAccount.php:732 classes/BfwAdmin.php:2614
+#: classes/BfwAdmin.php:2617
 msgid "Bonus page"
 msgstr "Страница бонусов"
 
@@ -2012,18 +2330,13 @@ msgstr "https://computy.ru"
 msgid "computy"
 msgstr "компьюти"
 
-#. Description of the plugin
-#: index.php
-msgid "This plugin adds a cashback system to the woocommerce functionality in the form of bonuses. Also, adding a percentage of cashback depending on the user's role. Also, changing the user's role, depending on the amount of all his purchases."
-msgstr "Этот плагин добавляет к функционалу woocommerce систему кешбэка в виде бонусов. Также добавление процента кешбэка в зависимости от роли пользователя. Также смена роли пользователя в зависимости от суммы всех его покупок"
-
 #. Plugin URI of the plugin
 #: index.php
 msgid "https://computy.ru/blog/bonus-for-woo-wordpress"
 msgstr "https://computy.ru/blog/bonus-for-woo-wordpress"
 
 #. Plugin Name of the plugin
-#: index.php classes/BfwAdmin.php:511 classes/BfwAdmin.php:2452
-#: pages/tools.php:7
+#: index.php classes/BfwAdmin.php:577 classes/BfwAdmin.php:2880
+#: pages/tools.php:230
 msgid "Bonus for Woo"
 msgstr "Бонусы для Woo"

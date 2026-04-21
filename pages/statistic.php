@@ -239,7 +239,7 @@ defined( 'ABSPATH' ) || exit;
                 <?php $burn = round($stats['prr'] ?? 0, 1); ?>
                 <div class="bfw-card-value" style="color: <?php echo $burn >= 20 && $burn <= 50 ? 'var(--bfw-success)' : 'var(--bfw-warning)'; ?>"><?php echo $burn; ?>%</div>
                 <div class="bfw-card-footer">
-                    <?php _e('Share of issued points that users actually spend. 20–40% is healthy.', 'bonus-for-woo'); ?>
+                    <?php _e('20-40% is a healthy figure for most stores.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
