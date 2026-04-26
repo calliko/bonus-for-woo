@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           8.0.1
+ * Version:           8.1.0
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
@@ -27,7 +27,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 
 // Define plugin constants.
-const BONUS_COMPUTY_VERSION = '8.0.1';
+const BONUS_COMPUTY_VERSION = '8.1.0';
 const BONUS_COMPUTY_VERSION_DB = '6';
 define('BONUS_COMPUTY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BONUS_COMPUTY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -94,3 +94,39 @@ function bfw_load_textdomain()
     load_plugin_textdomain('bonus-for-woo', false, dirname(plugin_basename(__FILE__)) . '/lang/');
 }
 
+/*-------Регистрация REST API маршрутов (отдельно от init для корректной работы)-------*/
+add_action('rest_api_init', function () {
+    register_rest_route('bfw/v1', '/clear-fast-bonus', [
+        'methods' => 'POST',
+        'callback' => ['BfwPoints', 'bfwoo_clean_fast_bonus_rest'],
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route('bfw/v1', '/apply-points', [
+        'methods' => 'POST',
+        'callback' => ['BfwPoints', 'rest_trata_points'],
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+    ]);
+
+    register_rest_route('bfw/v1', '/get-spisanie-html', [
+        'methods' => 'POST',
+        'callback' => ['BfwPoints', 'rest_get_spisanie_html'],
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route('bfw/v1', '/get-cashback-html', [
+        'methods' => 'POST',
+        'callback' => ['BfwCashback', 'rest_get_cashback_html'],
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route('bfw/v1', '/activate-coupon', [
+        'methods' => 'POST',
+        'callback' => ['BfwPoints', 'rest_activate_coupon'],
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+    ]);
+});

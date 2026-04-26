@@ -603,7 +603,8 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         }
         $computy_point = self::roundPoints(self::getPoints($user_id));
         $user_fast_points = self::getFastPoints($user_id);
-        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        $cart_discount = mb_strtolower($cart_discount_name);
 
         //удалить купон если нет баллов
         if ($user_fast_points == 0 && $woo->cart->has_discount($cart_discount)) {
@@ -643,11 +644,9 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             if ($vozmojniy_ball == 0) {
                 return apply_filters('bfw_not_use_points_text', $not_use_points_text);
             }
-            $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
 
             if ($woo->cart->applied_coupons && BfwSetting::get('balls-and-coupon')) {
                 /*Если применяется купон*/
-                $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
 
                 if (
                     !in_array($cart_discount, $woo->cart->get_applied_coupons()) or in_array(
@@ -788,8 +787,9 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             // Не начисляем кешбэк если применился сторонний купон
             if ($woocommerce->cart->applied_coupons && BfwSetting::get('yous_coupon_no_cashback')) {
                 /*Если применяется купон*/
-                $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
-                //если система с помощью купонов
+                $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+                $cart_discount = mb_strtolower($cart_discount_name);
+  //если система с помощью купонов
                 if (
                     !in_array($cart_discount, $woocommerce->cart->get_applied_coupons()) or in_array(
                         $cart_discount,
@@ -835,7 +835,8 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
             // Проверка на сторонние купоны
             if ($woocommerce->cart->applied_coupons && BfwSetting::get('yous_coupon_no_cashback')) {
-                $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+                $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+                $cart_discount = mb_strtolower($cart_discount_name);
                 $applied = $woocommerce->cart->get_applied_coupons();
 
                 if (!in_array($cart_discount, $applied) || count($applied) > 1) {
@@ -919,7 +920,9 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         // Subtract cart-wide coupons from eligible subtotal
         $applied_coupons = $woo->cart->get_applied_coupons();
-        $bonus_coupon_code = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        $bonus_coupon_code = mb_strtolower($cart_discount_name);
+
 
         foreach ($applied_coupons as $coupon_code) {
             if ($coupon_code !== $bonus_coupon_code) {
@@ -977,8 +980,8 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
     {
         $userId = get_current_user_id();
         self::updateFastPoints($userId, 0);
-
-        $cartDiscount = BfwSetting::get('bonus-points-on-cart');
+        $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        $cartDiscount = mb_strtolower($cart_discount_name);
         if ($cartDiscount) {
             $cartDiscount = mb_strtolower(trim($cartDiscount));
             $cart = WC()->cart;
@@ -1101,7 +1104,8 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         }
 
         // Создаем уникальный код купона
-        $coupon_code = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        $coupon_code = mb_strtolower($cart_discount_name);
         // Создаем купон
         $coupon = array(
             'post_title' => $coupon_code,
@@ -1199,40 +1203,149 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             return;
         if (is_admin() && !wp_doing_ajax())
             return;
-        $couponCodeSetting = BfwSetting::get('bonus-points-on-cart');
+
+        $couponCodeSetting = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');;
         if (!$cart || $cart->is_empty() || !$couponCodeSetting)
             return;
         $userId = get_current_user_id();
         if (!$userId || BfwPoints::getFastPoints($userId) <= 0)
             return;
         $couponCode = mb_strtolower($couponCodeSetting);
+        
         // ПУНКТ 1: Если купона нет в списке, ПРИНУДИТЕЛЬНО применяем его
         if (!$cart->has_discount($couponCode)) {
-
-            // Если мы еще не в режиме пересчета
-            if (!$is_calculating) {
-                $is_calculating = true;
-
-                // Применяем купон стандартным методом
-                $cart->apply_coupon($couponCode);
-
-                // СИЛОВОЙ МЕТОД: Если после apply_coupon он все еще не появился (бывает на некоторых версиях WC),
-                // добавляем его в массив принудительно
-                if (!$cart->has_discount($couponCode)) {
-                    $applied_coupons = $cart->get_applied_coupons();
-                    if (!in_array($couponCode, $applied_coupons)) {
-                        $cart->applied_coupons[] = $couponCode;
+            $is_calculating = true;
+            
+            // Применяем купон стандартным методом
+            $cart->apply_coupon($couponCode);
+            
+            // СИЛОВОЙ МЕТОД: Если после apply_coupon он все еще не появился, добавляем его в массив принудительно
+            if (!$cart->has_discount($couponCode)) {
+                $applied_coupons = $cart->get_applied_coupons();
+                if (!in_array($couponCode, $applied_coupons)) {
+                    $cart->applied_coupons[] = $couponCode;
+                }
+            }
+            
+            // Проверяем сессию и сохраняем примененные купоны
+            if (WC()->session) {
+                $session_coupons = WC()->session->get('applied_coupons', []);
+                if (!in_array($couponCode, $session_coupons)) {
+                    $session_coupons[] = $couponCode;
+                    WC()->session->set('applied_coupons', $session_coupons);
+                }
+            }
+            
+            if (wp_doing_ajax()) {
+                WC()->session->set('cart_totals', null);
+                WC()->session->set('shipping_for_package_0', null);
+            }
+            
+            $is_calculating = false;
+        }
+        
+        // Проверяем, что купон применился и баллы есть
+        if ($cart->has_discount($couponCode) && BfwPoints::getFastPoints($userId) > 0) {
+            // Обновляем виртуальный купон с правильной суммой
+            add_filter('woocommerce_get_shop_coupon_data', function($coupon_data, $coupon_code, $coupon) use ($couponCode) {
+                if (strtolower($coupon_code) === $couponCode) {
+                    $fast_points = BfwPoints::getFastPoints(get_current_user_id());
+                    if ($fast_points > 0) {
+                        $coupon_data['amount'] = $fast_points;
+                        $coupon_data['discount_type'] = 'fixed_cart';
+                        $coupon_data['individual_use'] = BfwSetting::get('balls-and-coupon') ? true : false;
                     }
                 }
-                // Пересчитываем всё сразу
-                $cart->calculate_totals();
-                if (wp_doing_ajax()) {
-                    WC()->session->set('cart_totals', null);
-                    WC()->session->set('shipping_for_package_0', null);
-                }
+                return $coupon_data;
+            }, 10, 3);
+        }
+    }
 
-                $is_calculating = false;
+    /**
+     * Гарантированное применение купона после расчета корзины
+     * 
+     * @param WC_Cart $cart
+     * @return void
+     */
+    public static function ensure_coupon_applied($cart): void
+    {
+        if (is_admin() && !wp_doing_ajax()) {
+            return;
+        }
+
+        $couponCodeSetting = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        if (!$couponCodeSetting || $cart->is_empty()) {
+            return;
+        }
+        
+        $userId = get_current_user_id();
+        if (!$userId || BfwPoints::getFastPoints($userId) <= 0) {
+            return;
+        }
+        
+        $couponCode = mb_strtolower($couponCodeSetting);
+        $fastPoints = BfwPoints::getFastPoints($userId);
+        
+        // Если есть быстрые баллы, но купон не применен - применяем принудительно
+        if ($fastPoints > 0 && !$cart->has_discount($couponCode)) {
+            // Добавляем купон в массив примененных купонов
+            $applied_coupons = $cart->get_applied_coupons();
+            if (!in_array($couponCode, $applied_coupons)) {
+                $cart->applied_coupons[] = $couponCode;
             }
+            
+            // Обновляем сессию
+            if (WC()->session) {
+                $session_coupons = WC()->session->get('applied_coupons', []);
+                if (!in_array($couponCode, $session_coupons)) {
+                    $session_coupons[] = $couponCode;
+                    WC()->session->set('applied_coupons', $session_coupons);
+                }
+            }
+        }
+        
+        // Если купон применен, но баллов нет - удаляем купон
+        if ($cart->has_discount($couponCode) && $fastPoints <= 0) {
+            $cart->remove_coupon($couponCode);
+        }
+    }
+
+    /**
+     * Clearing temporary points
+     * Очищение временных баллов (AJAX версия)
+     *
+     * @return void
+     * @version 5.3.3
+     */
+    public static function bfwoo_clean_fast_bonus(): void
+    {
+        // Получаем ID текущего пользователя
+        $userId = get_current_user_id();
+
+        // Обнуляем быстрые бонусные баллы
+        self::updateFastPoints($userId, 0);
+
+        // Проверяем, есть ли в опциях бонусные баллы в корзине
+        if (BfwSetting::get('bonus-points-on-cart')) {
+            $couponName = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+            $cartDiscount = mb_strtolower($couponName);
+            $woo = WC();
+
+            // Проверяем, есть ли корзина и примененные купоны
+            if (isset($woo->cart) && $woo->cart->get_applied_coupons()) {
+                foreach ($woo->cart->get_applied_coupons() as $code) {
+                    if (strtolower($code) === $cartDiscount) {
+                        $woo->cart->remove_coupon($code);
+                    }
+                }
+            }
+        }
+
+        // Проверяем, есть ли редирект в POST-запросе
+        if (isset($_POST['redirect'])) {
+            wp_send_json_success($_POST['redirect']);
+        } else {
+            wp_send_json_success(wc_get_cart_url());
         }
     }
 
@@ -1283,7 +1396,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             $fee_name = $fee->name;
             $remove_cart_text = BfwSetting::get('remove-on-cart', __('Remove points', 'bonus-for-woo'));
 
-            $cart_discount = BfwSetting::get('bonus-points-on-cart');
+            $cart_discount = BfwSetting::get('bonus-points-on-cart')  ??  __('Bonus points', 'bonus-for-woo');;
             if (mb_strtolower($cart_discount) === mb_strtolower($fee_name)) {
                 $cart_totals_fee_html .= '<a id="bfw_remove_cart_point" title="' . $remove_cart_text . '">' . $remove_cart_text . '</a>';
             }
@@ -1389,7 +1502,8 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
     {
         $removeOnCart = BfwSetting::get('balls-and-coupon', __('Remove points', 'bonus-for-woo'));
 
-        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $couponName = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        $cart_discount = mb_strtolower($couponName);
         $coupon_data = mb_strtolower($coupon->get_code());
         $userid = get_current_user_id();
         $computy_point_old = self::getFastPoints($userid); //узнаем баллы которые он решил списать
@@ -1414,10 +1528,11 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
      */
     public static function woocommerceChangeCouponLabelBfw($sprintf, $coupon): string
     {
-        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $couponName = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
+        $cart_discount = mb_strtolower($couponName);
         $coupon_data = $coupon->get_data();
         if (!empty($coupon_data) && strtolower($coupon_data['code']) === strtolower($cart_discount)) {
-            $sprintf = BfwSetting::get('bonus-points-on-cart');
+            $sprintf =$couponName;
         }
         return $sprintf;
     }
@@ -1509,8 +1624,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
 
         $offset = (int) ($_POST['offset'] ?? 0);
         $limit = 100;
-        $search_by = $_POST['search_by'] ?? 'by_id';
 
+        $search_by = in_array($_POST['search_by'] ?? 'by_id', ['by_id', 'by_email', 'by_phone'])
+            ? sanitize_text_field($_POST['search_by'])
+            : 'by_id';
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Access denied');
             return;
@@ -1827,6 +1944,9 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             self::updatePoints($user_id, $new_points);
             self::updateFastPoints($user_id, 0);
 
+            // Очищаем pending баллы для этого заказа
+            self::clearPendingPoints($order_id);
+
             // Сохраняем мета заказа о начислении покупателю
             $order->update_meta_data('cashback_receipt', 'received');
             $order->update_meta_data('cashback_amount', $cashback_for_user);
@@ -1909,7 +2029,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                         if ($totalref2 >= $sumordersforreferral2) {
                             $percent_for_referal_two_level = floatval(BfwSetting::get('referal-cashback-two-level', 0));
 
-                            $paid_amount = (float) $order->get_total();
+                            $paid_amount = (float) $order->get_total() - (float) $order->get_shipping_total() - (float) $order->get_total_tax();
                             $pointsForRef2 = $paid_amount * ($percent_for_referal_two_level / 100);
                             $pointsForRef2 = self::roundPoints($pointsForRef2);
 
@@ -2084,11 +2204,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         $pending_points = self::roundPoints(($order_total * $percent) / 100);
 
         if ($pending_points > 0) {
-            // Суммируем pending со всех текущих ожидающих заказов
-            $current_pending = (float) get_user_meta($customer_id, 'computy_point_pending', true);
-            update_user_meta($customer_id, 'computy_point_pending', $current_pending + $pending_points);
-
-            // Привязываем к заказу, чтобы точно знать сколько снять при очистке
+            // Сохраняем информацию о pending баллах в метаданные заказа для отображения в админке
             $order->update_meta_data('_bfw_pending_points', $pending_points);
             $order->save();
         }
@@ -2108,26 +2224,7 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
             return;
         }
 
-        $customer_id = (int) $order->get_customer_id();
-        if ($customer_id <= 0) {
-            return;
-        }
-
-        $order_pending = (float) $order->get_meta('_bfw_pending_points');
-        if ($order_pending <= 0) {
-            return;
-        }
-
-        $current_pending = (float) get_user_meta($customer_id, 'computy_point_pending', true);
-        $new_pending = max(0, $current_pending - $order_pending);
-
-        if ($new_pending > 0) {
-            update_user_meta($customer_id, 'computy_point_pending', $new_pending);
-        } else {
-            delete_user_meta($customer_id, 'computy_point_pending');
-        }
-
-        // Убираем метку заказа
+        // Убираем метку заказа о pending баллах
         $order->delete_meta_data('_bfw_pending_points');
         $order->save();
     }

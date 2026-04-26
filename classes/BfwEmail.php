@@ -33,7 +33,7 @@ class BfwEmail
 
         if (empty($subject)) {
             $subject = sprintf(__('Reward %s notification', 'bonus-for-woo'),
-                    (new BfwPoints())::pointsLabel(5)) . ' ' . $from_name;
+                    BfwPoints::pointsLabel(5)) . ' ' . $from_name;
         }
 
         if (empty($title)) {

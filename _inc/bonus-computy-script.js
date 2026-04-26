@@ -346,6 +346,63 @@ jQuery(document).ready(function ($) {
         };
 
         observeDOM();
+        
+        // Простое обновление кешбэка при смене вариации на основе данных с сервера
+        const initVariationCashback = () => {
+            // Проверяем есть ли данные о кешбэке вариаций
+            if (!window.bfwVariationCashback || !window.bfwVariationCashback.variations) {
+                return;
+            }
+            
+            // Для классических вариативных товаров
+            if ($('.variations_form').length) {
+                const variationForm = $('.variations_form');
+                
+                // Отслеживаем событие когда WooCommerce находит вариацию
+                variationForm.on('found_variation', function(event, variation) {
+                    updateCashbackDisplay(variation.variation_id);
+                });
+                
+                // Также отслеживаем изменение атрибутов для надежности
+                variationForm.on('change', '.variations select, .variations input', function() {
+                    setTimeout(() => {
+                        const variationId = $('.variation_id').val();
+                        if (variationId) {
+                            updateCashbackDisplay(variationId);
+                        }
+                    }, 100);
+                });
+            }
+        };
+        
+        const updateCashbackDisplay = (variationId) => {
+            const cashbackData = window.bfwVariationCashback;
+            const variation = cashbackData.variations[variationId];
+            
+            // Удаляем старый блок кешбэка
+            $('.how_mach_bonus').remove();
+            
+            if (variation && variation.cashback > 0) {
+                // Создаем новый блок кешбэка
+                const cashbackHtml = '<div class="how_mach_bonus"><span class="how_mach_bonus_title">' + 
+                                   cashbackData.label + '</span> ' + variation.cashback + ' ' + 
+                                   getPointsLabel(variation.cashback) + '</div>';
+                
+                // Добавляем после цены
+                $('.price').first().append(cashbackHtml);
+            }
+        };
+        
+        const getPointsLabel = (amount) => {
+            // Простая функция для определения правильного склонения
+            const absAmount = Math.abs(amount);
+            if (absAmount === 1) return window.bfwVariationCashback.pointsLabel || 'балл';
+            if (absAmount > 1 && absAmount < 5) return (window.bfwVariationCashback.pointsLabel || 'балл').replace('л', 'ла');
+            return (window.bfwVariationCashback.pointsLabel || 'балл').replace('л', 'лов');
+        };
+        
+        initVariationCashback();
+        
         // Первый запуск
         setTimeout(initBlocks, 1000);
     });

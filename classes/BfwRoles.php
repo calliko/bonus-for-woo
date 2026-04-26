@@ -93,7 +93,7 @@ class BfwRoles
         } else {
             $inserted = $wpdb->insert($table_name,
                 array('name' => $name, 'slug' => $slug, 'percent' => $percent, 'summa_start' => $summaStart),
-                array("%s", "%s", "%f", "%f"));
+                array("%s", "%s", "%s", "%s"));
             if (!$inserted) {
                 $message_type = 'bfw-notice-error';
                 $message = __('Error adding status. Please try again.', 'bonus-for-woo');

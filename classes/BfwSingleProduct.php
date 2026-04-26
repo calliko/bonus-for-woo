@@ -194,6 +194,36 @@ class BfwSingleProduct
 
         if (BfwSetting::get('bonus-in-price') && is_product()) {
             $price .= $price_width_bonuses;
+            
+            // Добавляем данные для JavaScript расчета кешбэка вариаций
+            if ($_product->is_type('variable')) {
+                $user_id = get_current_user_id();
+                if (!$user_id) $user_id = -1;
+                
+                $cashback_percent = $percent;
+                $variations_data = [];
+                
+                foreach ($_product->get_available_variations() as $variation_data) {
+                    $variation = wc_get_product($variation_data['variation_id']);
+                    if ($variation) {
+                        $variation_cashback = self::cashbackFromOneProduct($_product->get_id(), $user_id, $variation->get_id());
+                        $variations_data[$variation_data['variation_id']] = [
+                            'price' => (float) $variation->get_price(),
+                            'cashback' => BfwPoints::roundPoints($variation_cashback['amount']),
+                            'percent' => (float) $variation_cashback['percent']
+                        ];
+                    }
+                }
+                
+                $price .= '<script type="text/javascript">
+                    window.bfwVariationCashback = ' . json_encode([
+                        'percent' => $cashback_percent,
+                        'variations' => $variations_data,
+                        'label' => BfwSetting::get('how-mach-bonus-title', __('Cashback:', 'bonus-for-woo')),
+                        'pointsLabel' => BfwPoints::pointsLabel(1, false)
+                    ]) . ';
+                </script>';
+            }
         }
 
         return $price;
@@ -235,6 +265,7 @@ class BfwSingleProduct
         }
     }
 
+    
 
     /**
      * Какой кешбэк получит клиент с данного товара.
@@ -265,12 +296,17 @@ class BfwSingleProduct
         // Если это вариация - просто возвращаем ее цену
         if ($product->is_type('variation')) {
             $price = (float)$product->get_price();
+            $constant_cashback = get_post_meta($product->get_id(), '_constant_cashback_percentage_variation', true) ?? false;
         } elseif ($variation_id && $variation = wc_get_product($variation_id)) {
             // Если передан ID вариации и она существует
             if ($variation->is_type('variation') && $variation->get_parent_id() == $product_id) {
                 $price = (float)$variation->get_price();
                 $constant_cashback = get_post_meta($variation->get_id(), '_constant_cashback_percentage_variation',
                     true) ?? false;
+            } else {
+                // Если вариация не соответствует товару, используем базовую цену
+                $price = (float)$product->get_price();
+                $constant_cashback = get_post_meta($product_id, '_constant_cashback_percentage', true) ?? false;
             }
         } elseif ($product->is_type('variable')) {
             $constant_cashback = get_post_meta($product->get_id(), '_constant_cashback_percentage_variation',

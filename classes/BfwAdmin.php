@@ -111,7 +111,7 @@ class BfwAdmin
      */
     public static function display_cashback_info_in_admin($order)
     {
-        $cashback_status = $order->get_meta('cashback_receipt');
+        $cashback_status =  $order->get_meta('cashback_receipt');
         $cashback_amount = $order->get_meta('cashback_amount');
         $returned_points = $order->get_meta('_bfw_returned_points');
 

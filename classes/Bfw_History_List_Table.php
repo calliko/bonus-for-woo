@@ -75,7 +75,7 @@ class Bfw_History_List_Table extends WP_List_Table
     /**
      * Определение колонок
      */
-    public function get_columns()
+    public function get_columns(): array
     {
         return [
             'id'            => '№',
@@ -109,7 +109,7 @@ class Bfw_History_List_Table extends WP_List_Table
     /**
      * Сортируемые колонки
      */
-    public function get_sortable_columns()
+    public function get_sortable_columns(): array
     {
         return [
             'date'   => ['date', true],
@@ -136,7 +136,7 @@ class Bfw_History_List_Table extends WP_List_Table
     /**
      * Отрисовка колонки Пользователь
      */
-    public function column_user_info($item)
+    public function column_user_info($item): string
     {
         $user = get_userdata($item->user);
         if (!$user) {
@@ -158,7 +158,7 @@ class Bfw_History_List_Table extends WP_List_Table
     /**
      * Отрисовка колонки Баллы
      */
-    public function column_points($item)
+    public function column_points($item): string
     {
         $color = $item->symbol === '+' ? '#23CE48' : ($item->symbol === '-' ? '#FF001D' : '');
         return sprintf(
@@ -172,7 +172,7 @@ class Bfw_History_List_Table extends WP_List_Table
     /**
      * Отрисовка колонки Событие
      */
-    public function column_event($item)
+    public function column_event($item): string
     {
         $event_text = '';
         if ($item->orderz != '0') {
@@ -189,7 +189,7 @@ class Bfw_History_List_Table extends WP_List_Table
     /**
      * Отрисовка колонки Действия
      */
-    public function column_actions($item)
+    public function column_actions($item): string
     {
         $nonce = wp_create_nonce('bfw_action_history');
         return sprintf(

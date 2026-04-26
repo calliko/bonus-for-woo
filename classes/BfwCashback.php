@@ -64,10 +64,7 @@ class BfwCashback
             $cashback_this_order += $product_cashback_info['amount'] * $cart_item['quantity'];
 
             $product_percent = $product_cashback_info['percent'] ?? $user_percent;
-
-
         }
-
 
         $coupon_deduction = self::calculate_coupon_deduction_with_product_percents(
             $filtered_discounts,
@@ -76,10 +73,8 @@ class BfwCashback
             $user_percent
         );
 
-
         if ($user_percent != 0) {
             $cashback_this_order -= $coupon_deduction;
-            //$cashback_this_order -= $filtered_discounts * $user_percent / 100;
 
             if (!BfwSetting::get('cashback-for-shipping')) {
                 $shipping_total = $woocommerce->cart->shipping_total;
@@ -87,20 +82,16 @@ class BfwCashback
             }
         }
 
-
         // Calculate user's role and cashback percentage
         if (is_user_logged_in()) {
             //учитываем в кешбэке баллы, которые хочет списать
-
             $use_points = BfwPoints::getFastPoints($user_id);
-
 
             if ($user_percent != 0) {
                 // вычитаем использованные баллы из кешбэка
                 $cash_fast = $use_points * $user_percent / 100;
                 $cashback_this_order = $cashback_this_order - $cash_fast;
             }
-
 
             $total_all = BfwPoints::getSumUserOrders($user_id);
             $sumbudet = $total_all + $total_order;
@@ -120,21 +111,11 @@ class BfwCashback
             $percent = apply_filters('bfw-filter-percent-in-cart', $percent, $total_order);
             $cashback_this_order = apply_filters('bfw-cashback-this-order', $cashback_this_order, $total_order,
                 $percent);
-
+            
             if (BfwSetting::get('cashback_for_first_order') && (new BfwFunctions())->get_customer_order_count($user_id) === 0) {
                 $percent = BfwSetting::get('cashback_for_first_order');
             }
             $percentUp = ' ' . $percent . '%';
-
-            if (!BfwSetting::get('cashback_for_first_order') && $you_next_role && $you_next_role[0]->percent !== $this_percent['percent'] && $this_percent['percent'] !== 0) {
-                $percent = $you_next_role[0]->percent;
-                $percentUp = ' ' . $percent . "% ▲";
-
-                if ($this_percent['percent'] != 0) {
-                    $cashback_this_order = $cashback_this_order * $percent / $this_percent['percent'];
-                }
-
-            }
 
             //если используются баллы, то не начисляем кешбэк
             if (BfwSetting::get('yous_balls_no_cashback') && $use_points > 0) {
@@ -143,16 +124,12 @@ class BfwCashback
 
             // Не начисляем кешбэк если применился сторонний купон
             if ($woocommerce->cart->applied_coupons && BfwSetting::get('yous_coupon_no_cashback')) {
-                /*Если применяется купон*/
                 $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
-                //если система с помощью купонов
                 if (!in_array($cart_discount, $woocommerce->cart->get_applied_coupons()) or in_array($cart_discount,
                         $woocommerce->cart->get_applied_coupons()) && count($woocommerce->cart->get_applied_coupons()) > 1) {
                     $cashback_this_order = 0;
                 }
             }
-            // Не начисляем кешбэк если применился сторонний купон
-
 
         } else {
             if (!BfwSetting::get('bonus-in-price-upto')) {
@@ -163,7 +140,6 @@ class BfwCashback
         if (BfwRoles::isPro() && BfwSetting::get('minimal-amount') && $total_order < BfwSetting::get('minimal-amount') && BfwSetting::get('minimal-amount-cashback')) {
             $cashback_this_order = 0;
         }
-
 
         // Return cashback data
         $return = array();
@@ -189,6 +165,11 @@ class BfwCashback
     {
         $return = self::bfw_get_cashback_in_cart();
 
+        // Отладочная информация - временно
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            echo '<!-- DEBUG: Cashback data: ' . print_r($return, true) . ' -->';
+        }
+
         if ($return) {
             $cashback_title = esc_html($return['cashback_title']);
             $percent_up = esc_html($return['percentUp']);
@@ -207,8 +188,13 @@ class BfwCashback
     }
 
 
-// Метод для получения HTML кешбэка
-    public static function rest_get_cashback_html()
+
+
+    /** Метод для получения HTML кешбэка
+     *
+     * @return WP_REST_Response
+     */
+    public static function rest_get_cashback_html(): WP_REST_Response
     {
         // 1. Принудительная инициализация сессии
         if (null === WC()->session) {

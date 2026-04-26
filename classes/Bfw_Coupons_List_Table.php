@@ -37,7 +37,10 @@ class Bfw_Coupons_List_Table extends WP_List_Table
 
         $this->_column_headers = [$columns, $hidden, $sortable];
 
-        $orderby = (!empty($_GET['orderby'])) ? esc_sql($_GET['orderby']) : 'id';
+        $allowed_orderby = ['id', 'created', 'sum', 'code', 'status'];
+        $orderby = (!empty($_GET['orderby']) && in_array($_GET['orderby'], $allowed_orderby))
+                ? sanitize_text_field($_GET['orderby'])
+                : 'id';
         $order = (!empty($_GET['order'])) ? esc_sql($_GET['order']) : 'DESC';
 
         $where = '';
@@ -101,20 +104,23 @@ class Bfw_Coupons_List_Table extends WP_List_Table
 
     /**
      * Сортируемые колонки
+     *
+     * @return array
      */
-    public function get_sortable_columns()
+    public function get_sortable_columns():array
     {
         return [
             'created' => ['created', true],
             'sum'     => ['sum', false],
             'id'      => ['id', false],
+           'status'      => ['status', false],
         ];
     }
 
     /**
      * Чекбокс для массовых действий
      */
-    public function column_cb($item)
+    public function column_cb($item): string
     {
         return sprintf('<input type="checkbox" name="bulk-delete[]" value="%d" />', $item->id);
     }
@@ -122,7 +128,7 @@ class Bfw_Coupons_List_Table extends WP_List_Table
     /**
      * Отрисовка колонки Код
      */
-    public function column_code($item)
+    public function column_code($item): string
     {
         $reusable = ($item->reusable == 1) ? ' <span title="' . esc_attr(__('Reusable', 'bonus-for-woo')) . '" class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;"></span>' : '';
         return '<strong>' . esc_html($item->code) . '</strong>' . $reusable;
@@ -131,7 +137,7 @@ class Bfw_Coupons_List_Table extends WP_List_Table
     /**
      * Сумма
      */
-    public function column_sum($item)
+    public function column_sum($item): string
     {
         return '<strong>' . BfwPoints::roundPoints($item->sum) . '</strong>';
     }
@@ -155,7 +161,7 @@ class Bfw_Coupons_List_Table extends WP_List_Table
     /**
      * Использование
      */
-    public function column_usage($item)
+    public function column_usage($item): string
     {
         if ($item->reusable == 1) {
             return __('Coupon usage:', 'bonus-for-woo') . ' ' . BfwCoupons::countUsedReusableCoupon($item->id);
@@ -175,7 +181,7 @@ class Bfw_Coupons_List_Table extends WP_List_Table
     /**
      * Статус
      */
-    public function column_status($item)
+    public function column_status($item):string
     {
         $status_labels = [
             'active'   => ['label' => __('Active', 'bonus-for-woo'), 'color' => '#46b450'],
@@ -195,7 +201,7 @@ class Bfw_Coupons_List_Table extends WP_List_Table
     /**
      * Действия
      */
-    public function column_actions($item)
+    public function column_actions($item): string
     {
         $actions = [];
         $nonce = wp_create_nonce('bfw_action_coupon');

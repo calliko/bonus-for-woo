@@ -45,7 +45,7 @@ class BfwCoupons
                             'status' => $status,
                             'reusable' => $reusable
                     ],
-                    ['%s', '%s', '%f', '%s', '%s', '%d']
+                    ['%s', '%s', '%s', '%s', '%s', '%d']
             );
         }
     }

@@ -101,17 +101,17 @@ class BfwAccount
         $output .= self::renderPointsRow($roundedPoints, $pointLabel, $options, $userId, $titleBonusPoints);
 
         // Pending-баллы: показываем ожидаемый кешбэк по заказам в обработке
-        $pending = (float)get_user_meta($userId, 'computy_point_pending', true);
+        $pending = self::getPendingPointsFromOrders($userId);
         if ($pending > 0) {
             $pendingRounded = BfwPoints::roundPoints($pending);
             $pendingLabel = BfwPoints::pointsLabel($pendingRounded);
             $output .= sprintf(
-                '<div class="bonus_computy_account bfw-account_pending_points">
+                    '<div class="bonus_computy_account bfw-account_pending_points">
                     <span class="bfw-pending-badge"><svg class="bfw-icon bfw-icon-pending" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> %s: <b>+%s %s</b></span>
                 </div>',
-                esc_html(__('Awaiting accrual', 'bonus-for-woo')),
-                number_format($pendingRounded, 0, '', ' '),
-                esc_html($pendingLabel)
+                    esc_html(__('Awaiting accrual', 'bonus-for-woo')),
+                    number_format($pendingRounded, 0, '', ' '),
+                    esc_html($pendingLabel)
             );
         }
 
@@ -121,10 +121,48 @@ class BfwAccount
         if ($shortcode['view'] === 'true') {
             return $output;
         } else {
-            echo wp_kses_post($output);
+            echo $output;
         }
     }
 
+    /**
+     * Получение суммы ожидающих баллов на основе заказов пользователя
+     *
+     * @param int $userId ID пользователя
+     * @return float Сумма ожидающих баллов
+     * @version 8.0.0
+     */
+    private static function getPendingPointsFromOrders(int $userId): float
+    {
+        $pending_total = 0;
+        
+        // Получаем заказы пользователя со статусами processing/on-hold
+        $orders = wc_get_orders([
+            'customer_id' => $userId,
+            'status' => ['processing', 'on-hold'],
+            'limit' => -1,
+            'return' => 'ids'
+        ]);
+        
+        foreach ($orders as $order_id) {
+            $order = wc_get_order($order_id);
+            if ($order) {
+                // Проверяем, что реальные баллы еще не начислены
+                $cashback_status = $order->get_meta('cashback_receipt');
+                if ($cashback_status !== 'received') {
+                    // Рассчитываем ожидаемый кешбэк для этого заказа
+                    $estimated = BfwPoints::howMatchCashbackInOrder($order_id);
+                    if ($estimated > 0) {
+                        $pending_total += $estimated;
+                    }
+                }
+            }
+        }
+        
+        return $pending_total;
+    }
+
+    
     /**
      * Шапка карточки
      *
@@ -231,7 +269,7 @@ class BfwAccount
             );
         }
 
-        $output .=  '</div>';
+        $output .= '</div>';
         return $output;
     }
 
@@ -593,7 +631,7 @@ class BfwAccount
         $bfwReferral = new BfwReferral();
 
         $text_before = BfwSetting::get('referral-text-before', '');
-        
+
         $output = '<div class="bfw-referral-container">';
 
         if (!empty($text_before)) {
@@ -767,6 +805,71 @@ class BfwAccount
         }
     }
 
+    /**
+     * Display cashback information on the customer's order view page
+     * Вывод информации о кешбэке на странице просмотра заказа клиента
+     *
+     * @param $order_id
+     * @return void
+     * @version 8.0.2
+     */
+    public static function display_cashback_info_in_order_view($order_id)
+    {
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        // Check if the current user is the order customer
+        if ($order->get_customer_id() !== get_current_user_id()) {
+            return;
+        }
+
+        // Check if user participates in bonus system
+        if (!BfwRoles::isInvalve(get_current_user_id())) {
+            return;
+        }
+
+        $cashback_status = $order->get_meta('cashback_receipt');
+        $cashback_amount = $order->get_meta('cashback_amount');
+        $returned_points = $order->get_meta('_bfw_returned_points');
+
+        if ($cashback_status || $cashback_amount || $returned_points) {
+            echo '<div class="order-cashback-info bfw-customer-order-info">';
+            echo '<h4>' . esc_html__('Bonus Information', 'bonus-for-woo') . '</h4>';
+
+            if ($cashback_status === 'received' && $cashback_amount) {
+                echo '<p><strong>' . esc_html__('Cashback received:', 'bonus-for-woo') . '</strong> ' 
+                    . esc_html($cashback_amount) . ' ' . esc_html(BfwPoints::pointsLabel($cashback_amount)) . '</p>';
+            } elseif ($cashback_status === 'refunded') {
+                echo '<p><strong style="color: #a00;">' . esc_html__('Refund of bonus points', 'bonus-for-woo') . '</strong></p>';
+            }
+
+            if ($returned_points) {
+                echo '<p><strong>' . esc_html__('Returned spent points:', 'bonus-for-woo') . '</strong> ' 
+                    . esc_html($returned_points) . ' ' . esc_html(BfwPoints::pointsLabel($returned_points)) . '</p>';
+            }
+
+            echo '</div>';
+        } else {
+            $estimated = BfwPoints::howMatchCashbackInOrder($order_id);
+            if ((int)$estimated > 0) {
+                echo '<div class="order-cashback-info bfw-customer-order-info">';
+                echo '<h4>' . esc_html__('Bonus Information', 'bonus-for-woo') . '</h4>';
+                echo '<p><strong>' . esc_html__('Estimated cashback:', 'bonus-for-woo') . '</strong> ' 
+                    . esc_html($estimated) . ' ' . esc_html(BfwPoints::pointsLabel($estimated)) . '</p>';
+
+                $pending = $order->get_meta('_bonus_cashback_pending', true);
+                if (is_array($pending)) {
+                    $date = wp_date('d.m.y H:i:s', $pending['process_after']);
+                    echo '<p><strong>' . esc_html__('Planned accrual time:', 'bonus-for-woo') . '</strong> ' . esc_html($date) . '</p>';
+                }
+                
+                echo '</div>';
+            }
+        }
+    }
+
 
     /**
      * Adding points when registering a user
@@ -923,7 +1026,7 @@ class BfwAccount
     public static function addBallWhenUserLogin($user_login, $user): void
     {
         //Начисление ежедневных баллов за первый вход
-        (new BfwPoints())::addEveryDays($user->ID);
+        BfwPoints::addEveryDays($user->ID);
     }
 
     /**
@@ -1098,7 +1201,8 @@ class BfwAccount
         $history::add_history($user_id, $action, $diff, '0', $reason);
 
         // Добавляем лог
-        BfwLogs::addLog($action === '+' ? 'add_points' : 'remove_points', $user_id, $reason . ' (' .$action.$diff.' '. __('Manual adjustment', 'bonus-for-woo') . ')');
+        BfwLogs::addLog($action === '+' ? 'add_points' : 'remove_points', $user_id,
+                $reason . ' (' . $action . $diff . ' ' . __('Manual adjustment', 'bonus-for-woo') . ')');
 
         // Отправка email
         self::sendPointsChangeEmail($user_id, $email, $new_points, $old_points, $diff, $reason);

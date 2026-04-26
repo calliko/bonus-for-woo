@@ -419,7 +419,13 @@ defined( 'ABSPATH' ) || exit;
                 new Chart($('#bfwTrendChart'), {
                     type: 'line',
                     data: {
-                        labels: <?php echo json_encode($stats['chart_data']['labels'] ?? []); ?>,
+                        labels: <?php
+                        $rawLabels = $stats['chart_data']['labels'] ?? [];
+                        $formattedLabels = array_map(function($date) {
+                            return date('d.m.y', strtotime($date));
+                        }, $rawLabels);
+                        echo json_encode($formattedLabels);
+                        ?>,
                         datasets: [
                             {
                                 label: '<?php _e('Issued Points (+)', 'bonus-for-woo'); ?>',
