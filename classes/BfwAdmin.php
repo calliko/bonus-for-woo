@@ -2852,9 +2852,31 @@ class BfwAdmin
 
         /*CRON*/
 
+
+
+// Используйте:
+        $allowed_html = array(
+                'a' => array(
+                        'href' => array(),
+                        'title' => array(),
+                        'target' => array(),
+                        'rel' => array()
+                ),
+                'img' => array(
+                        'src' => array(),
+                        'alt' => array(),
+                        'title' => array(),
+                        'width' => array(),
+                        'height' => array(),
+                        'class' => array()
+                )
+        );
+
+
         foreach ($options as $name => & $val) {
             if ($name && !is_array($val)) {
-                $val = wp_strip_all_tags($val);
+              //  $val = wp_strip_all_tags($val);
+                $val = wp_kses($val, $allowed_html);
             }
         }
         return $options;

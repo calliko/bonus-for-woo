@@ -261,8 +261,8 @@ FROM  {$wpdb->prefix}wc_order_operational_data WHERE
      )
  )", $userId));
 
-            if ($total_refunds) {
-                $total_all -= $total_refunds;
+            if ($total_refunds && $total_refunds > 0) {
+                $total_all = max(0, $total_all - $total_refunds);
             }
 
             $total_alls = $total_all - $total_shipping;
@@ -285,9 +285,9 @@ AND pm2.meta_value LIKE %d $data_start
     AND pm.meta_key LIKE '_order_refund_amount' AND pm2.meta_key LIKE '_customer_user'
     AND pm2.meta_value LIKE %d $data_start", ...$args_base));
 
-            // Вычитаем сумму возвратов из общей суммы заказов
-            if ($total_refunds) {
-                $total_all -= $total_refunds;
+            // Вычитаем сумму возвратов из общей суммы заказов с защитой от отрицательных значений
+            if ($total_refunds && $total_refunds > 0) {
+                $total_all = max(0, $total_all - $total_refunds);
             }
 
             $total_shipping = 0;
@@ -315,10 +315,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 }
             }
 
-            $total_alls = $total_all - $total_shipping;
+            $total_alls = (float)$total_all - (float)$total_shipping;
         }
 
-        if (empty($total_alls)) {
+        if (empty($total_alls) || (float)$total_alls < 0) {
             $total_alls = 0;
         }
 
@@ -2279,9 +2279,15 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 $current_refund_amount = abs($refund->get_amount());
                 $is_full_refund = ($current_refund_amount >= $original_total);
             }
-        } elseif (in_array($order->get_status(), $refund_statuses)) {
-            $current_refund_amount = $original_total;
-            $is_full_refund = true;
+        } else {
+            // Проверяем статус заказа с учетом префикса wc-
+            $order_status = $order->get_status();
+            $order_status_clean = ltrim($order_status, 'wc-');
+            
+            if (in_array($order_status_clean, $refund_statuses) || in_array($order_status, $refund_statuses)) {
+                $current_refund_amount = $original_total;
+                $is_full_refund = true;
+            }
         }
 
         if ($current_refund_amount <= 0) {
@@ -2415,6 +2421,85 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
         unset($processing_order[$order_id]);
     }
 
+    /**
+     * Обработка изменения статуса заказа для возвратов (1С и внешние системы)
+     *
+     * @param int $order_id
+     * @param string $from_status
+     * @param string $to_status
+     * @param WC_Order $order
+     * @return void
+     */
+    public static function handleOrderStatusChangeForRefunds(int $order_id, string $from_status, string $to_status, WC_Order $order): void
+    {
+        $refund_statuses = (array) BfwSetting::get('refunded_points_order_status', array('refunded'));
+        
+        // Нормализуем статусы для сравнения (убираем префикс wc- если есть)
+        $to_status_clean = ltrim($to_status, 'wc-');
+        
+        // Создаем массив для проверки обоих вариантов (с префиксом и без)
+        $statuses_to_check = [];
+        foreach ($refund_statuses as $status) {
+            $statuses_to_check[] = $status;           // без префикса
+            $statuses_to_check[] = 'wc-' . $status;   // с префиксом
+        }
+        
+        // Если статус изменился на статус возврата
+        if (in_array($to_status, $statuses_to_check) || in_array($to_status_clean, $refund_statuses)) {
+            self::refundedPoints($order_id);
+        }
+    }
+
+    /**
+     * Обработка создания возврата через wp_insert_post (для 1С)
+     *
+     * @param int $post_id
+     * @param WP_Post $post
+     * @param bool $update
+     * @return void
+     */
+    public static function handleRefundCreation(int $post_id, WP_Post $post, bool $update): void
+    {
+        // Обрабатываем только создание новых возвратов
+        if ($update || $post->post_type !== 'shop_order_refund') {
+            return;
+        }
+
+        $refund = wc_get_order($post_id);
+        if (!$refund) {
+            return;
+        }
+
+        $parent_order_id = $refund->get_parent_id();
+        if ($parent_order_id) {
+            self::refundedPoints($parent_order_id, $post_id);
+        }
+    }
+
+    /**
+     * Обработка обновления возврата (для 1С)
+     *
+     * @param int $post_id
+     * @param WP_Post $post
+     * @param bool $update
+     * @return void
+     */
+    public static function handleRefundUpdate(int $post_id, WP_Post $post, bool $update): void
+    {
+        if ($post->post_type !== 'shop_order_refund') {
+            return;
+        }
+
+        $refund = wc_get_order($post_id);
+        if (!$refund) {
+            return;
+        }
+
+        $parent_order_id = $refund->get_parent_id();
+        if ($parent_order_id) {
+            self::refundedPoints($parent_order_id, $post_id);
+        }
+    }
 
     /**
      * Removing points for inactivity.

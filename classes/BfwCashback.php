@@ -362,32 +362,60 @@ class BfwCashback
         }
         $order_status = BfwSetting::get('add_points_order_status', 'completed');
         $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
-        $args = [
+        
+        // Сначала ищем все заказы нужного статуса без дополнительных условий
+        $args_all = [
             'type' => 'shop_order',
             'status' => ['wc-' . $order_status],
             'limit' => -1,
             'return' => 'ids',
-
+        ];
+        
+        $all_ids = wc_get_orders($args_all);
+        
+        // Теперь ищем заказы с уже начисленным кешбэком
+        $args_with_cashback = [
+            'type' => 'shop_order',
+            'status' => ['wc-' . $order_status],
+            'limit' => -1,
+            'return' => 'ids',
             'meta_query' => [
-                'relation' => 'AND',
-
-                // 1. cashback_receipt не существует
                 [
                     'key' => 'cashback_receipt',
-                    'compare' => 'NOT EXISTS',
-                ],
-
-                // 2. не должно быть применено купона "bonus_points"
-                [
-                    'key' => '_used_coupons',
-                    'value' => $cart_discount, // ваш системный код купона
-                    'compare' => 'NOT LIKE',
+                    'compare' => 'EXISTS',
                 ],
             ],
         ];
-
-
-        $ids = wc_get_orders($args);
+        
+        $with_cashback_ids = wc_get_orders($args_with_cashback);
+        
+        // Получаем заказы без кешбэка
+        $ids = array_diff($all_ids, $with_cashback_ids);
+        
+        // Дополнительно фильтруем заказы с бонусными купонами и исключаем гостевые
+        $filtered_ids = [];
+        foreach ($ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if ($order) {
+                $user_id = $order->get_customer_id();
+                
+                // Исключаем гостевые заказы (user_id = 0)
+                if ($user_id === 0) {
+                    continue;
+                }
+                
+                // Проверяем купоны если нужно
+                if (!empty($cart_discount)) {
+                    $used_coupons = $order->get_coupon_codes();
+                    if (in_array($cart_discount, $used_coupons)) {
+                        continue;
+                    }
+                }
+                
+                $filtered_ids[] = $order_id;
+            }
+        }
+        $ids = $filtered_ids;
         update_option('cashback_orders_to_recount', $ids);
 
         wp_send_json([

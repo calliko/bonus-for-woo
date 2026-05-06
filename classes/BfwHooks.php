@@ -142,6 +142,15 @@ class BfwHooks
             add_action('woocommerce_order_status_' . $refund_statuses, array('BfwPoints', 'refundedPoints'), 10, 1);
         }
 
+        // Дополнительные хуки для обработки возвратов через 1С и внешние API
+        add_action('woocommerce_order_status_changed', array('BfwPoints', 'handleOrderStatusChangeForRefunds'), 20, 4);
+        
+        // Хук для обработки создания возврата через wp_insert_post (1С часто создает возвраты так)
+        add_action('wp_insert_post', array('BfwPoints', 'handleRefundCreation'), 10, 3);
+        
+        // Хук для обработки обновления поста (возможно 1С обновляет возвраты)
+        add_action('save_post_shop_order_refund', array('BfwPoints', 'handleRefundUpdate'), 10, 3);
+
         //Если отзыв о товаре одобрен добавляет баллы
         add_action('comment_unapproved_to_approved', array('BfwReview', 'bfwoo_approve_comment_callback'));
 
@@ -208,30 +217,9 @@ class BfwHooks
      */
     private static function initAdminHooks()
     {
-        /*-------Списание баллов в редакторе заказа-------*/
-        add_action('wp_ajax_deduct_points', array('BfwPoints', 'handle_deduct_points_in_order'));
-
-        /*-------Возврат баллов при удалении купона бонусных баллов в редакторе заказа-------*/
-        add_action('wp_ajax_track_coupon_removal', array('BfwPoints', 'handle_track_coupon_removal'));
-        
-        /*-------Экспорт csv файла бонусов  */
-        add_action('wp_ajax_bfw_export_bonuses', array('BfwPoints', 'bfw_export_bonuses'));
-
-        /*-------Экспорт csv файла купонов  */
-        add_action('wp_ajax_bfw_export_coupons', array('BfwCoupons', 'bfwExportCoupons'));
-
-        /*-------Возможность менеджерам настраивать плагин-------*/
+         /*-------Возможность менеджерам настраивать плагин-------*/
         add_filter('woocommerce_shop_manager_editable_roles', array('BfwRoles', 'bfwManagerRoleEditCapabilities'));
 
-        /*Начисление кешбэка за прошлые заказы*/
-        add_action('wp_ajax_cashback_prepare', array('BfwCashback', 'cashbackPrepare'));
-        add_action('wp_ajax_cashback_recount', array('BfwCashback', 'cashbackRecount'));
-
-        /*Массовое начисление баллов без уведомленний*/
-        add_action('wp_ajax_computy_mass_add_points', array('BfwCashback', 'computyMassAddPoints'));
-
-        /*Пересчет баллов у всех пользователей на основе истории*/
-        add_action('wp_ajax_computy_recalculation_points', array('BfwPoints', 'computyRecalculationPoints'));
     }
 
     /**
