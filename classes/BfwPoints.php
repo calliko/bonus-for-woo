@@ -161,170 +161,217 @@ class BfwPoints
     }
 
 
+
     /**
      * Find the sum of all paid orders of the client
      * Находим сумму всех оплаченных заказов клиента
      * так как wc_get_customer_total_spent ($to_user->ID); включает сумму не оплаченных заказов тоже.
      *
-     * @param $userId
-     *
+     * @param int|null $userId
      * @return float
-     * @version 6.5.0
-     *
+     * @version 6.5.1
      */
     public static function getSumUserOrders($userId = null): float
     {
-        if ($userId == null) {
-            $current_user = get_current_user_id();
-            if ($current_user === 0) {
-                return 0;
-            } else {
-                $userId = $current_user;
-            }
+        $userId = self::resolveUserId($userId);
+        if ($userId === 0) {
+            return 0.0;
         }
 
+        // Check cache first
         $cached_sum = get_user_meta($userId, 'total_purchases_sum', true);
         if ($cached_sum !== '') {
             return (float) $cached_sum;
         }
 
-        $order_staus = sanitize_text_field(BfwSetting::get('add_points_order_status', 'completed'));
+        $total = self::calculateTotalPurchases($userId);
 
-        $data_start = '';
-        if (BfwRoles::isPro()) {
-            /*С какой даты начинать считать сумму заказов*/
-            $data_start = BfwSetting::get('order_start_date', '');
-            if (!empty($data_start)) {
-                $datastart = sanitize_text_field(BfwSetting::get('order_start_date'));
+        update_user_meta($userId, 'total_purchases_sum', $total);
 
-                if (class_exists(OrderUtil::class) && OrderUtil::custom_orders_table_usage_is_enabled()) {
-                    $data_start = "AND date_created_gmt >=   '$datastart' ";
-                } else {
-                    $data_start = "AND p.post_date >=   '$datastart' ";
-                }
-            }
+        return $total;
+    }
+
+    /**
+     * Resolve user ID from input or current user
+     */
+    private static function resolveUserId($userId): int
+    {
+        if ($userId !== null) {
+            return (int) $userId;
         }
 
-        // Обработка статусов - добавляем префикс wc- к каждому статусу
-        $order_staus = apply_filters('bfw_add_points_order_status_filter', $order_staus);
+        $current_user = get_current_user_id();
+        return $current_user ?: 0;
+    }
 
-        // Преобразуем в массив если это строка
-        if (!is_array($order_staus)) {
-            $order_staus = [$order_staus];
-        }
-
-        // Добавляем префикс 'wc-' к каждому статусу
-        $prefixed_statuses = array_map(function ($status) {
-            return 'wc-' . $status;
-        }, $order_staus);
-
-        // Экранируем для SQL
-        $prefixed_statuses = array_map('esc_sql', $prefixed_statuses);
-
-
-        // Создаем плейсхолдеры для IN запроса
-        $placeholders = implode(', ', array_fill(0, count($prefixed_statuses), '%s'));
-
-        // Массив аргументов (статусы + ID клиента)
-        $args_base = array_merge($prefixed_statuses, [$userId]);
-
+    /**
+     * Calculate total purchases for a user
+     */
+    private static function calculateTotalPurchases(int $userId): float
+    {
         global $wpdb;
 
-        if (class_exists(OrderUtil::class) && OrderUtil::custom_orders_table_usage_is_enabled()) {
-            $total_all = $wpdb->get_var($wpdb->prepare("SELECT SUM(total_amount) FROM {$wpdb->prefix}wc_orders  WHERE status IN ({$placeholders}) AND customer_id = %d {$data_start}", ...$args_base));
+        $statuses = self::getOrderStatuses();
+        $dateFilter = self::getDateFilter();
+        $excludeShipping = !BfwSetting::get('shipping-total-sum');
 
-            $total_shipping = 0;
-
-            if (BfwSetting::get('shipping-total-sum')) {
-                $total_shipping = $wpdb->get_var($wpdb->prepare("SELECT SUM(shipping_total_amount)
-FROM  {$wpdb->prefix}wc_order_operational_data WHERE 
-    order_id IN (
-        SELECT 
-            id
-        FROM 
-            {$wpdb->prefix}wc_orders
-        WHERE 
-          status IN ({$placeholders}) AND customer_id = %d {$data_start})", ...$args_base));
-            }
-
-            // Получаем общую сумму возвратов
-            $total_refunds = $wpdb->get_var($wpdb->prepare("SELECT SUM(meta_value) 
- FROM {$wpdb->prefix}wc_orders_meta 
- WHERE meta_key = '_refund_amount' 
- AND order_id IN (
-     SELECT id 
-     FROM {$wpdb->prefix}wc_orders 
-     WHERE parent_order_id IN (
-         SELECT id 
-         FROM {$wpdb->prefix}wc_orders 
-         WHERE customer_id = %d
-     )
- )", $userId));
-
-            if ($total_refunds && $total_refunds > 0) {
-                $total_all = max(0, $total_all - $total_refunds);
-            }
-
-            $total_alls = $total_all - $total_shipping;
+        if (self::isCustomOrdersTableEnabled()) {
+            $total = self::calculateTotalFromOrdersTable($wpdb, $userId, $statuses, $dateFilter, $excludeShipping);
         } else {
-            $total_all = $wpdb->get_var(
-                $wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
-INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
-INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
-WHERE p.post_status IN ({$placeholders})  AND p.post_type LIKE 'shop_order'
-AND pm.meta_key LIKE '_order_total' AND pm2.meta_key LIKE '_customer_user'
-AND pm2.meta_value LIKE %d $data_start 
-", ...$args_base)
-            );
-
-            // Получаем общую сумму возвратов
-            $total_refunds = $wpdb->get_var($wpdb->prepare("SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta as pm
-    INNER JOIN {$wpdb->prefix}posts as p ON pm.post_id = p.ID
-    INNER JOIN {$wpdb->prefix}postmeta as pm2 ON pm.post_id = pm2.post_id
-    WHERE p.post_status IN  ({$placeholders}) AND p.post_type LIKE 'shop_order'
-    AND pm.meta_key LIKE '_order_refund_amount' AND pm2.meta_key LIKE '_customer_user'
-    AND pm2.meta_value LIKE %d $data_start", ...$args_base));
-
-            // Вычитаем сумму возвратов из общей суммы заказов с защитой от отрицательных значений
-            if ($total_refunds && $total_refunds > 0) {
-                $total_all = max(0, $total_all - $total_refunds);
-            }
-
-            $total_shipping = 0;
-            if (BfwSetting::get('shipping-total-sum')) {
-                $query = $wpdb->prepare("SELECT post_id
-FROM {$wpdb->prefix}postmeta
-WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
-
-                $order_ids = $wpdb->get_col($query);
-
-                foreach ($order_ids as $order_id) {
-                    // Получаем статус заказа
-                    $order_statust = get_post_status($order_id);
-
-                    // Проверяем, что статус заказа в списке разрешенных
-                    if (in_array($order_statust, $prefixed_statuses)) {
-                        // Получаем стоимость доставки для заказа
-                        $shipping_cost = get_post_meta($order_id, '_order_shipping', true);
-
-                        // Если стоимость доставки существует, добавляем её к общей сумме
-                        if (!empty($shipping_cost)) {
-                            $total_shipping += (float) $shipping_cost;
-                        }
-                    }
-                }
-            }
-
-            $total_alls = (float)$total_all - (float)$total_shipping;
+            $total = self::calculateTotalFromPostsTable($wpdb, $userId, $statuses, $dateFilter, $excludeShipping);
         }
 
-        if (empty($total_alls) || (float)$total_alls < 0) {
-            $total_alls = 0;
+        return max(0.0, (float) $total);
+    }
+
+    /**
+     * Get order statuses with wc- prefix
+     */
+    private static function getOrderStatuses(): array
+    {
+        $statuses = sanitize_text_field(BfwSetting::get('add_points_order_status', 'completed'));
+        $statuses = apply_filters('bfw_add_points_order_status_filter', $statuses);
+
+        if (!is_array($statuses)) {
+            $statuses = [$statuses];
         }
 
-        update_user_meta($userId, 'total_purchases_sum', $total_alls);
+        // Add 'wc-' prefix and escape once
+        return array_map(function($status) {
+            return 'wc-' . esc_sql($status);
+        }, $statuses);
+    }
 
-        return $total_alls;
+    /**
+     * Get date filter for pro users
+     */
+    private static function getDateFilter(): string
+    {
+        if (!BfwRoles::isPro()) {
+            return '';
+        }
+
+        $dataStart = BfwSetting::get('order_start_date', '');
+        if (empty($dataStart)) {
+            return '';
+        }
+global $wpdb;
+        $dataStart = sanitize_text_field($dataStart);
+        $dateColumn = self::isCustomOrdersTableEnabled() ? 'date_created_gmt' : 'p.post_date';
+
+        return $wpdb->prepare(" AND {$dateColumn} >= %s ", $dataStart);
+    }
+
+    /**
+     * Check if custom orders table is enabled
+     */
+    private static function isCustomOrdersTableEnabled(): bool
+    {
+        return class_exists(OrderUtil::class) && OrderUtil::custom_orders_table_usage_is_enabled();
+    }
+
+    /**
+     * Calculate total from HPOS (custom orders table)
+     */
+    private static function calculateTotalFromOrdersTable($wpdb, int $userId, array $statuses, string $dateFilter, bool $excludeShipping): float
+    {
+        $placeholders = implode(', ', array_fill(0, count($statuses), '%s'));
+        $args = array_merge($statuses, [$userId]);
+
+        // Single query to get order totals and shipping in one go
+        $query = $wpdb->prepare(
+            "SELECT 
+            SUM(o.total_amount) as total,
+            " . ($excludeShipping ? "0" : "SUM(odata.shipping_total_amount)") . " as shipping
+        FROM {$wpdb->prefix}wc_orders o
+        LEFT JOIN {$wpdb->prefix}wc_order_operational_data odata ON o.id = odata.order_id
+        WHERE o.status IN ({$placeholders}) 
+        AND o.customer_id = %d 
+        {$dateFilter}",
+            ...$args
+        );
+
+        $result = $wpdb->get_row($query);
+
+        if (!$result) {
+            return 0.0;
+        }
+
+        $total = (float) $result->total;
+        $shipping = (float) $result->shipping;
+
+        // Subtract refunds
+        $refunds = self::getRefundsFromOrdersTable($wpdb, $userId);
+
+        return max(0.0, $total - $refunds - $shipping);
+    }
+
+    /**
+     * Get refunds from HPOS
+     */
+    private static function getRefundsFromOrdersTable($wpdb, int $userId): float
+    {
+        $refund = $wpdb->get_var($wpdb->prepare(
+            "SELECT SUM(meta_value) 
+        FROM {$wpdb->prefix}wc_orders_meta 
+        WHERE meta_key = '_refund_amount' 
+        AND order_id IN (
+            SELECT id 
+            FROM {$wpdb->prefix}wc_orders 
+            WHERE parent_order_id IN (
+                SELECT id 
+                FROM {$wpdb->prefix}wc_orders 
+                WHERE customer_id = %d
+            )
+        )",
+            $userId
+        ));
+
+        return (float) $refund;
+    }
+
+    /**
+     * Calculate total from posts table (legacy)
+     */
+    private static function calculateTotalFromPostsTable($wpdb, int $userId, array $statuses, string $dateFilter, bool $excludeShipping): float
+    {
+        $placeholders = implode(', ', array_fill(0, count($statuses), '%s'));
+        $args = array_merge($statuses, [$userId]);
+
+        // Optimized query using joins instead of subqueries
+        $query = $wpdb->prepare(
+            "SELECT 
+            SUM(CASE WHEN pm.meta_key = '_order_total' THEN CAST(pm.meta_value AS DECIMAL(15,2)) ELSE 0 END) as total,
+            " . ($excludeShipping ? "0" : "
+            SUM(CASE WHEN pm.meta_key = '_order_shipping' THEN CAST(pm.meta_value AS DECIMAL(15,2)) ELSE 0 END)
+            ") . " as shipping,
+            SUM(CASE WHEN pm.meta_key = '_order_refund_amount' THEN CAST(pm.meta_value AS DECIMAL(15,2)) ELSE 0 END) as refunds
+        FROM {$wpdb->prefix}posts p
+        INNER JOIN {$wpdb->prefix}postmeta pm ON p.ID = pm.post_id
+        WHERE p.post_type = 'shop_order'
+        AND p.post_status IN ({$placeholders})
+        AND p.ID IN (
+            SELECT post_id 
+            FROM {$wpdb->prefix}postmeta 
+            WHERE meta_key = '_customer_user' 
+            AND meta_value = %d
+        )
+        {$dateFilter}
+        AND pm.meta_key IN ('_order_total', '_order_shipping', '_order_refund_amount')",
+            ...$args
+        );
+
+        $result = $wpdb->get_row($query);
+
+        if (!$result) {
+            return 0.0;
+        }
+
+        $total = (float) $result->total;
+        $shipping = (float) $result->shipping;
+        $refunds = (float) $result->refunds;
+
+        return max(0.0, $total - $refunds - $shipping);
     }
 
     /**
@@ -2506,51 +2553,91 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
      * Удаление баллов за бездействие.
      *
      * @return void
-     * @version 6.3.5
+     * @version 6.4.0
      */
     public static function deleteBallsOldClients(): void
     {
+        global $wpdb;
+
+        // 1. Выносим глобальные настройки из цикла
         $day_day = (int) BfwSetting::get('day-inactive', 0);
+        if ($day_day <= 1) {
+            return; // Если проверка отключена или некорректна, сразу выходим
+        }
+
+        $day_notice_remove_points = (int) BfwSetting::get('day-inactive-notice', 0);
+        $enable_notice = BfwSetting::get('day-inactive-notice') && $day_notice_remove_points > 0;
+        $send_email_allowed = (bool) BfwSetting::get('email-when-inactive-notice');
+
         $exclude_role = BfwSetting::get('exclude-role', array());
         $exclude_role = apply_filters('bfw-exclude-role-for-cron', $exclude_role);
+
+        // 2. Получаем пользователей с баллами стандартным WP_User_Query (быстро, благодаря индексам)
         $args = array(
             'role__not_in' => $exclude_role,
-            'meta_query' => array(array('key' => 'computy_point', 'value' => 0, 'compare' => '>')),
+            'meta_query'   => array(
+                array('key' => 'computy_point', 'value' => 0, 'compare' => '>')
+            ),
+            'fields'       => array('ID', 'display_name', 'user_registered'),
         );
         $users = get_users($args);
-        $today = strtotime(gmdate("d.m.Y"));
-        global $wpdb;
+
+        if (empty($users)) {
+            return;
+        }
+
+        // Подготавливаем объекты
         $bfwEmail = new BfwEmail();
         $bfwHistory = new BfwHistory();
+        $today = new DateTime('today'); // Текущая дата (00:00:00) для точного расчета дней
 
+        // Шаблоны писем (выносим из цикла, чтобы не дергать базу)
+        if ($enable_notice) {
+            $title_email = BfwSetting::get(
+                'email-when-inactive-notice-title',
+                __('Your points will be deleted soon.', 'bonus-for-woo')
+            );
+            $text_email = BfwSetting::get('email-when-inactive-notice-text', '');
+        }
+
+        // 3. Собираем массив ID для ОДНОГО массового запроса дат активности
+        $user_ids = wp_list_pluck($users, 'ID');
+        $ids_string = implode(',', array_map('intval', $user_ids));
+
+        // Получаем последние действия для ВСЕХ пользователей одним махом
+        $history_table = "{$wpdb->prefix}bfw_history_computy";
+        $last_actions_raw = $wpdb->get_results(
+            "SELECT user, MAX(date) as last_date FROM {$history_table} WHERE user IN ($ids_string) GROUP BY user",
+            OBJECT_K
+        );
+
+        // 4. Основной цикл теперь работает только с готовыми данными в памяти
         foreach ($users as $user) {
-            $last_actions = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bfw_history_computy WHERE user = {$user->ID} ORDER BY date DESC LIMIT 1");
-            $last_action = $last_actions ? strtotime(gmdate(
-                "d.m.Y",
-                strtotime($last_actions[0]->date)
-            )) : strtotime(gmdate("d.m.Y", strtotime($user->user_registered)));
-            $seconds = abs($today - $last_action);
-            $days = floor($seconds / 86400);
+            // Определяем дату последней активности
+            if (isset($last_actions_raw[$user->ID])) {
+                $last_action_date = new DateTime($last_actions_raw[$user->ID]->last_date);
+            } else {
+                $last_action_date = new DateTime($user->user_registered);
+            }
 
-            if (BfwSetting::get('day-inactive-notice')) {
-                $day_notice_remove_points = BfwSetting::get('day-inactive-notice');
-                if ($day_notice_remove_points !== '' && $day_notice_remove_points > 0) {
-                    $notice = get_user_meta($user->ID, 'mail_remove_points', true) ?? '';
-                    if ($notice !== 'yes' && $days > $day_day - $day_notice_remove_points) {
-                        $title_email = BfwSetting::get(
-                            'email-when-inactive-notice-title',
-                            __('Your points will be deleted soon.', 'bonus-for-woo')
-                        );
+            // Считаем разницу в полных днях
+            $last_action_date->setTime(0, 0, 0);
+            $days = $today->diff($last_action_date)->days;
 
-                        $text_email = BfwSetting::get('email-when-inactive-notice-text', '');
-                        $ball_user = self::getPoints($user->ID);
-                        $text_email_array = array(
-                            '[user]' => $user->display_name,
-                            '[days]' => $day_notice_remove_points,
-                            '[points]' => $ball_user
-                        );
-                        $message_email = $bfwEmail::template($text_email, $text_email_array);
-                        if (BfwSetting::get('email-when-inactive-notice')) {
+            // Блок уведомления
+            if ($enable_notice) {
+                if ($days > ($day_day - $day_notice_remove_points)) {
+                    $notice = get_user_meta($user->ID, 'mail_remove_points', true);
+
+                    if ($notice !== 'yes') {
+                        if ($send_email_allowed) {
+                            $ball_user = self::getPoints($user->ID);
+                            $text_email_array = array(
+                                '[user]'   => $user->display_name,
+                                '[days]'   => $day_notice_remove_points,
+                                '[points]' => $ball_user
+                            );
+                            $message_email = $bfwEmail::template($text_email, $text_email_array);
                             $bfwEmail->getMail($user->ID, '', $title_email, $message_email);
                         }
                         update_user_meta($user->ID, 'mail_remove_points', 'yes');
@@ -2558,8 +2645,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                 }
             }
 
-            if ($days > $day_day && $day_day > 1) {
+            // Блок удаления баллов
+            if ($days > $day_day) {
                 $computy_point_old = self::getPoints($user->ID);
+
                 $bfwHistory::add_history(
                     $user->ID,
                     '-',
@@ -2567,10 +2656,10 @@ WHERE meta_key = '_customer_user' AND meta_value = %d", $userId);
                     '0',
                     sprintf(__('Inactivity %d days', 'bonus-for-woo'), $day_day)
                 );
+
                 update_user_meta($user->ID, 'mail_remove_points', 'no');
                 self::updatePoints($user->ID, 0);
 
-                // Добавляем лог
                 BfwLogs::addLog('remove_points', $user->ID, sprintf(__('Inactivity %d days', 'bonus-for-woo'), $day_day));
             }
         }

@@ -159,7 +159,7 @@ class BfwRoles
     public static function getRoles()
     {
         global $wpdb;
-        return $wpdb->get_results("SELECT *,summa_start FROM  {$wpdb->prefix}bfw_computy ORDER BY summa_start + 0 asc");
+        return $wpdb->get_results("SELECT id,name,slug,percent,summa_start FROM  {$wpdb->prefix}bfw_computy ORDER BY summa_start + 0 asc");
     }
 
 

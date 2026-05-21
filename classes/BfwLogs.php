@@ -64,7 +64,7 @@ class BfwLogs
 
         }
         global $wpdb;
-        $table_bfw = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bfw_logs_computy {$where}  ORDER BY created DESC {$limit}");
+        $table_bfw = $wpdb->get_results("SELECT id,event,message,status,created,user FROM {$wpdb->prefix}bfw_logs_computy {$where}  ORDER BY created DESC {$limit}");
         if ($table_bfw) { ?>
 
             <table class="table-bfw table-bfw-history-points"

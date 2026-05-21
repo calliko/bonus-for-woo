@@ -2852,9 +2852,6 @@ class BfwAdmin
 
         /*CRON*/
 
-
-
-// Используйте:
         $allowed_html = array(
                 'a' => array(
                         'href' => array(),

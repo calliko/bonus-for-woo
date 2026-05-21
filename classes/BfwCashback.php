@@ -104,8 +104,8 @@ class BfwCashback
                     $summa = $a['summa_start'];
                 }
             }
-            $you_next_role = $wpdb->get_results($wpdb->prepare("SELECT * FROM " . $wpdb->prefix . "bfw_computy WHERE summa_start=%s",
-                $summa));
+          /*  $you_next_role = $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM " . $wpdb->prefix . "bfw_computy WHERE summa_start=%s",
+                $summa));*/
             $this_percent = BfwRoles::getRole($user_id);
             $percent = $this_percent['percent'] ?? 0;
             $percent = apply_filters('bfw-filter-percent-in-cart', $percent, $total_order);

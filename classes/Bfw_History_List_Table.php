@@ -60,7 +60,7 @@ class Bfw_History_List_Table extends WP_List_Table
 
         $offset = ($current_page - 1) * $per_page;
 
-        $query = "SELECT * FROM {$wpdb->prefix}bfw_history_computy {$where} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
+        $query = "SELECT id,user,date,symbol,points,orderz,comment_admin,status FROM {$wpdb->prefix}bfw_history_computy {$where} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
         $data = $wpdb->get_results($wpdb->prepare($query, $per_page, $offset));
 
         $this->items = $data;

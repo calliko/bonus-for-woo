@@ -20,7 +20,7 @@ if (isset($_POST['bfw_computy_add_coupon_ajax'])) {
         $status = sanitize_text_field($_POST['status']);
         $reusable = $_POST['reusable'] ?? 0;
 
-        if ($wpdb->get_results($wpdb->prepare("SELECT * FROM " . $wpdb->prefix . "bfw_coupons_computy WHERE `code` = %s", $code))) {
+        if ($wpdb->get_results($wpdb->prepare("SELECT id,code,sum,created,status,date_use,user,reusable,comment_admin FROM " . $wpdb->prefix . "bfw_coupons_computy WHERE `code` = %s", $code))) {
             echo '<div class="bfw-notice bfw-notice-warning"><span class="dashicons dashicons-warning"></span> ' . sprintf(__('Coupon <b>%s</b> is already being used.', 'bonus-for-woo'), $code) . '</div>';
         } else {
             BfwCoupons::addCoupon($code, $sum, $comment_admin, $status, $reusable);

@@ -104,7 +104,7 @@ class BfwCoupons
     public static function getListCoupons(): void
     {
         global $wpdb;
-        $table_bfw = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}bfw_coupons_computy ORDER BY id DESC");
+        $table_bfw = $wpdb->get_results("SELECT id,code,sum,created,status,date_use,user,reusable,comment_admin FROM {$wpdb->prefix}bfw_coupons_computy ORDER BY id DESC");
 
         if ($table_bfw) {
             ob_start();
@@ -310,7 +310,7 @@ class BfwCoupons
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_coupons_computy';
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_name} WHERE code = %s", $code));
+        return $wpdb->get_row($wpdb->prepare("SELECT id,code,sum,created,status,date_use,user,reusable,comment_admin FROM {$table_name} WHERE code = %s", $code));
     }
 
 

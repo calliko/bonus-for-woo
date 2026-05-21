@@ -106,20 +106,47 @@ class BfwRouter
     private static function prepareExportData($status): array
     {
         global $wpdb;
-        $users = $wpdb->get_results("SELECT * FROM {$wpdb->users} ORDER BY ID");
-        $data = [];
 
+        // 1. Получаем только необходимые поля
+        $users = $wpdb->get_results("SELECT ID, user_nicename, user_email FROM {$wpdb->users} ORDER BY ID");
+
+        if (empty($users)) {
+            return [];
+        }
+
+        $user_ids = wp_list_pluck($users, 'ID');
+        $metas = [];
+
+        // 2. Собираем метаполя ОДНИМ запросом для всех
+        $placeholders = implode(',', array_fill(0, count($user_ids), '%d'));
+        $meta_query = $wpdb->prepare(
+            "SELECT user_id, meta_key, meta_value 
+         FROM {$wpdb->usermeta} 
+         WHERE user_id IN ($placeholders) AND meta_key IN ('computy_point', 'billing_phone')",
+            ...$user_ids // Важно: распаковываем массив для wpdb->prepare
+        );
+
+        foreach ($wpdb->get_results($meta_query) as $meta) {
+            $metas[$meta->user_id][$meta->meta_key] = $meta->meta_value;
+        }
+
+        // 3. Формируем итоговый массив
+        $data = [];
         foreach ($users as $user) {
-            $points = (int)(get_user_meta($user->ID, 'computy_point', true) ?? 0);
+            $points = (int)($metas[$user->ID]['computy_point'] ?? 0);
+            $phone = $metas[$user->ID]['billing_phone'] ?? '';
+
+            // Внимание: если getRole внутри делает SQL-запрос,
+            // скрипт все еще может притормаживать на больших объемах.
             $arrayRole = $status->getRole($user->ID);
 
             $data[] = [
-                'id' => (int)$user->ID,
-                'name' => sanitize_text_field($user->user_nicename),
-                'email' => sanitize_email($user->user_email),
-                'phone' => sanitize_text_field(get_user_meta($user->ID, 'billing_phone', true) ?? ''),
-                'points' => $points,
-                'status' => sanitize_text_field($arrayRole['name']),
+                'id'      => (int)$user->ID,
+                'name'    => sanitize_text_field($user->user_nicename),
+                'email'   => sanitize_email($user->user_email),
+                'phone'   => sanitize_text_field($phone),
+                'points'  => $points,
+                'status'  => sanitize_text_field($arrayRole['name'] ?? ''),
                 'comment' => '',
             ];
         }

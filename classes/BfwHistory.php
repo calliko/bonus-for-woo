@@ -82,7 +82,7 @@ class BfwHistory
         $history_title = esc_html(BfwSetting::get('title-on-history-account', __('Points accrual', 'bonus-for-woo')));
 
         $history = $wpdb->get_results(
-                $wpdb->prepare("SELECT * FROM {$wpdb->prefix}bfw_history_computy WHERE `user` = %d ORDER BY id DESC",
+                $wpdb->prepare("SELECT id,user,date,symbol,points,orderz,comment_admin,status FROM {$wpdb->prefix}bfw_history_computy WHERE `user` = %d ORDER BY id DESC",
                         $user_id)
         );
 
@@ -206,7 +206,7 @@ class BfwHistory
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_history_computy';
-        $query = "SELECT * FROM {$table_name}";
+        $query = "SELECT id,user,date,symbol,points,orderz,comment_admin,status FROM {$table_name}";
         $args = [];
 
         if ($date_start) {

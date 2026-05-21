@@ -157,9 +157,6 @@ class BfwHooks
         //Если отзыв о товаре отклонен удаляет баллы
         add_action('comment_approved_to_unapproved', array('BfwReview', 'bfwoo_unapproved_comment_callback'));
 
-        /*-------Начисляем кешбэк-баллы в редакторе заказа-------*/
-        add_action('wp_ajax_bfw_send_points_from_order', array('BfwPoints', 'handleSendPointsFromOrder'));
-
         add_action(
             'woocommerce_checkout_create_order_line_item',
             array('BfwFunctions', 'saveSaleStatusToOrderItemMeta'),

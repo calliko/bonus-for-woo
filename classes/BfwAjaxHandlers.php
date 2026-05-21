@@ -32,11 +32,11 @@ class BfwAjaxHandlers
     {
         /*-------AJAX обработка списания баллов-------*/
         add_action('wp_ajax_computy_trata_points', array('BfwPoints', 'bfwoo_trata_points'));
-        add_action('wp_ajax_nopriv_computy_trata_points', array('BfwPoints', 'bfwoo_trata_points'));
+        /*add_action('wp_ajax_nopriv_computy_trata_points', array('BfwPoints', 'bfwoo_trata_points')); */
         
         /*-------AJAX очистка быстрых баллов-------*/
         add_action('wp_ajax_clear_bonus', array('BfwPoints', 'bfwoo_clean_fast_bonus'));
-        add_action('wp_ajax_nopriv_clear_bonus', array('BfwPoints', 'bfwoo_clean_fast_bonus'));
+        /*add_action('wp_ajax_nopriv_clear_bonus', array('BfwPoints', 'bfwoo_clean_fast_bonus'));*/
 
         /*-------Списание баллов в редакторе заказа-------*/
         add_action('wp_ajax_deduct_points', array('BfwPoints', 'handle_deduct_points_in_order'));

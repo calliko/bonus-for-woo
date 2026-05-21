@@ -3,10 +3,10 @@ Contributors: calliko
 Donate link: https://yoomoney.ru/to/410011302808683
 Tags: loyalty, cashback, points, reward, referral
 Requires at least:  5.6
-Tested up to:  6.9
+Tested up to:  7.0
 WC requires at least: 6.0
 WC tested up to: 10.7.0
-Stable tag: 8.1.1
+Stable tag: 8.1.2
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -118,6 +118,9 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.1.2 - 2026-05-04 =
+* Optimizing database queries.
 
 = 8.1.1 - 2026-05-04 =
 * Fixed the accrual of points for past orders.
