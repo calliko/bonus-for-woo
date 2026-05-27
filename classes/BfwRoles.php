@@ -278,48 +278,56 @@ class BfwRoles
      * @param int $userId
      *
      * @return array
-     * @version 6.3.4
+     * @version 8.1.3
      */
     public static function getNextRole(int $userId): array
     {
         global $wpdb;
 
-        $bfw_computy_count = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . $wpdb->prefix . "bfw_computy");
+        static $statuses_cache = null;
 
-        if ($bfw_computy_count === 0) {
+        // Кэшируем статусы в статической переменной для всех вызовов
+        if ($statuses_cache === null) {
+            $statuses_cache = $wpdb->get_results(
+                "SELECT name, percent, summa_start 
+             FROM " . $wpdb->prefix . "bfw_computy 
+             ORDER BY CAST(summa_start AS DECIMAL) ASC",
+                ARRAY_A
+            );
+        }
+
+        // Быстрая проверка на пустые данные
+        if (empty($statuses_cache)) {
             return ['status' => 'no'];
         }
 
-        $table_bfw = $wpdb->get_results("SELECT name, percent, summa_start FROM " . $wpdb->prefix . "bfw_computy ORDER BY summa_start+0 ASC",
-            ARRAY_A);
-
         $total_all = max(BfwPoints::getSumUserOrders($userId), 0);
 
-        $next_status = '';
-        $next_cash = 0;
-        $summa = 0;
-
-        foreach ($table_bfw as $bfw) {
-            if ($total_all < $bfw['summa_start']) {
-                $next_cash = $bfw['percent'];
-                $next_status = $bfw['name'];
-                $summa = $bfw['summa_start'];
+        // Ищем следующий статус через бинарный поиск (если summa_start уникальны и отсортированы)
+        $next_status_index = null;
+        foreach ($statuses_cache as $index => $status) {
+            if ($total_all < (float)$status['summa_start']) {
+                $next_status_index = $index;
                 break;
             }
         }
 
-        if ($next_status) {
-            $ostatok = $summa - $total_all;
-            return [
-                'percent-zarabotannogo' => 100 * $total_all / $summa,
-                'sum' => $ostatok,
-                'name' => $next_status,
-                'percent' => $next_cash,
-                'status' => 'next'
-            ];
+        // Если статус не найден - достигнут максимум
+        if ($next_status_index === null) {
+            return ['status' => 'max'];
         }
 
-        return ['status' => 'max'];
+        $next = $statuses_cache[$next_status_index];
+        $summa = (float)$next['summa_start'];
+        $ostatok = $summa - $total_all;
+
+        return [
+            'percent-zarabotannogo' => ($summa > 0) ? 100 * $total_all / $summa : 0,
+            'sum' => $ostatok,
+            'name' => $next['name'],
+            'percent' => $next['percent'],
+            'status' => 'next'
+        ];
     }
 
 
@@ -330,25 +338,24 @@ class BfwRoles
      * @param int $userId
      *
      * @return bool
-     * @version 7.6.7
+     * @version 8.1.3
      */
     public static function isInvalve(int $userId): bool
     {
         static $exclude_roles = null;
         static $cache = [];
 
-        // Инициализация исключенных ролей один раз
-        if ($exclude_roles === null) {
-            $exclude_roles = BfwSetting::get('exclude-role', array());
-            if (empty($exclude_roles)) {
-                $exclude_roles = []; // оптимизация для пустого массива
-            }
-        }
-
         // Проверка кэша
         if (isset($cache[$userId])) {
             return $cache[$userId];
         }
+
+
+        // Инициализация исключенных ролей один раз
+        if ($exclude_roles === null) {
+            $exclude_roles = (array) BfwSetting::get('exclude-role', []);
+        }
+
 
         if ($userId === 0) {
             return $cache[$userId] = false;
@@ -364,9 +371,7 @@ class BfwRoles
             return $cache[$userId] = false;
         }
 
-        $result = empty(array_intersect($user->roles, $exclude_roles));
-        return $cache[$userId] = $result;
-
+        return $cache[$userId] = !array_intersect($user->roles, $exclude_roles);
     }
 
 
@@ -394,8 +399,9 @@ class BfwRoles
     public static function maxPercent(): float
     {
         global $wpdb;
-        $max_percent = $wpdb->get_var("SELECT MAX(CAST(percent AS DECIMAL(10, 2))) FROM {$wpdb->prefix}bfw_computy");
-        return (float)$max_percent;
+        return (float)($wpdb->get_var(
+            "SELECT MAX(percent) FROM {$wpdb->prefix}bfw_computy"
+        ) ?? 0.0);
     }
 
 

@@ -630,6 +630,10 @@
     background-image: url("../img/social/009-vk.svg");
 }
 
+.ref-social-max {
+    background-image: url("../img/social/max.svg");
+}
+
 .ref-social-qrcode {
     background-image: url("../img/social/qr-code.png");
 }

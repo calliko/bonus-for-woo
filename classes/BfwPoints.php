@@ -2043,7 +2043,15 @@ global $wpdb;
 
                 if ($totalref >= $sumordersforreferral) {
                     // процент рефералки из настроек
-                    $percent_for_referal = (float) BfwSetting::get('referal-cashback', 0.0);
+                   // $percent_for_referal = (float) BfwSetting::get('referal-cashback', 0.0);
+                    $percent_for_referal = (float) apply_filters(
+                        'bfw_referral_level_percent',
+                        (float) BfwSetting::get('referal-cashback', 0.0),
+                        $get_referral_invite,
+                        1,
+                        $order,
+                        $user_id
+                    );
                     // База для рефералки: Сумма всего чека минус налоги и доставка (чистая сумма за товары)
                     $paid_amount = (float) $order->get_total() - (float) $order->get_shipping_total() - (float) $order->get_total_tax();
                     if ($paid_amount < 0) {
@@ -2074,8 +2082,15 @@ global $wpdb;
                         $totalref2 = self::getSumUserOrders($get_referral_invite_two_level);
 
                         if ($totalref2 >= $sumordersforreferral2) {
-                            $percent_for_referal_two_level = floatval(BfwSetting::get('referal-cashback-two-level', 0));
-
+                           // $percent_for_referal_two_level = floatval(BfwSetting::get('referal-cashback-two-level', 0));
+                            $percent_for_referal_two_level = (float) apply_filters(
+                                'bfw_referral_level_percent',
+                                (float) BfwSetting::get('referal-cashback-two-level', 0),
+                                $get_referral_invite_two_level,
+                                2,
+                                $order,
+                                $user_id
+                            );
                             $paid_amount = (float) $order->get_total() - (float) $order->get_shipping_total() - (float) $order->get_total_tax();
                             $pointsForRef2 = $paid_amount * ($percent_for_referal_two_level / 100);
                             $pointsForRef2 = self::roundPoints($pointsForRef2);

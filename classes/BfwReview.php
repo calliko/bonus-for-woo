@@ -35,23 +35,24 @@ class BfwReview
      * @param $comment
      *
      * @return void
-     * @version 6.4.0
+     * @version 8.1.3
      */
     public static function bfwoo_approve_comment_callback($comment): void
     {
+        $user_id = $comment->user_id;
 
         if (BfwSetting::get('bonus-for-otziv')) {
             $bonusfor_otziv_raw = (float)BfwSetting::get('bonus-for-otziv');
             // Применяем округление согласно настройкам плагина
             $bonusfor_otziv_new = BfwPoints::roundPoints($bonusfor_otziv_raw);
-            $current_points = BfwPoints::getPoints($comment->user_id);
+            $current_points = BfwPoints::getPoints($user_id);
             $computy_user_point = $current_points + $bonusfor_otziv_new;
 
             if (get_post_type($comment->comment_post_ID) === 'product') {
                 add_filter('woocommerce_order_is_paid_statuses', array('BfwReview', 'bfw_paid_is_paid_status'));
 
 
-                $bought_product = wc_customer_bought_product($comment->comment_author_email, $comment->user_id,
+                $bought_product = wc_customer_bought_product($comment->comment_author_email, $user_id,
                     $comment->comment_post_ID);
                 $bought_product = apply_filters('bfw_bought_product', $bought_product);
 
@@ -60,25 +61,35 @@ class BfwReview
 
                     global $wpdb;
                     $count_comment = $wpdb->get_var($wpdb->prepare('SELECT COUNT(comment_ID) FROM ' . $wpdb->prefix . 'comments WHERE user_id = %d AND comment_post_ID = %d AND comment_approved ="1" ',
-                        $comment->user_id, $comment->comment_post_ID));
+                        $user_id, $comment->comment_post_ID));
 
 
                     if ((int)$count_comment === 1) {/*если количество отзывов у этого товара у этого клиента 0, то добавим баллы*/
-                        BfwPoints::updatePoints($comment->user_id, $computy_user_point);//добавляем баллы клиенту
+                        BfwPoints::updatePoints($user_id, $computy_user_point);//добавляем баллы клиенту
                         $cause = __('For review', 'bonus-for-woo');
                         /*В историю*/
-                        BfwHistory::add_history($comment->user_id, '+', $bonusfor_otziv_new, '0', $cause);
+                        BfwHistory::add_history($user_id, '+', $bonusfor_otziv_new, '0', $cause);
 
                         /*email*/
 
                         /*шаблонизатор письма*/
 
+                        if (!BfwSetting::get('email-when-review')) {
+                            return; // Выходим сразу, если отправка выключена
+                        }
+
+                        $user = get_userdata($user_id);
+                        if (!$user || !$user->user_email) {
+                            BfwLogs::addLog('error', $user_id, 'Email not sent: invalid user or email');
+                            return;
+                        }
+
                         $text_email = BfwSetting::get('email-when-review-text', '');
                         $title_email = BfwSetting::get('email-when-review-title',
                             __('Points accrual', 'bonus-for-woo'));
 
-                        $user = get_userdata($comment->user_id);
-                        $get_referral = get_user_meta($comment->user_id, 'bfw_points_referral', true);
+
+                        $get_referral = get_user_meta($user_id, 'bfw_points_referral', true);
                         $text_email_array = array(
                             '[referral-link]' => esc_url(site_url() . '?bfwkey=' . $get_referral),
                             '[user]' => $user->display_name,
@@ -90,9 +101,8 @@ class BfwReview
                         /*шаблонизатор письма*/
 
 
-                        if (BfwSetting::get('email-when-review')) {
-                            (new BfwEmail())->getMail($comment->user_id, '', $title_email, $message_email);
-                        }
+                        (new BfwEmail())->getMail($user_id, '', $title_email, $message_email);
+
                         /*email*/
                     }
                 }
@@ -112,22 +122,30 @@ class BfwReview
      */
     public static function bfwoo_unapproved_comment_callback($comment): void
     {
+        // 1. Ранняя валидация
+        if (!$comment || empty($comment->user_id) || get_post_type($comment->comment_post_ID) !== 'product') {
+            return;
+        }
+        $user_id = $comment->user_id;
         $bonusfor_otziv_new = (float)BfwSetting::get('bonus-for-otziv');
-        $current_points = BfwPoints::getPoints($comment->user_id);
+        if ($bonusfor_otziv_new <= 0) {
+            return;
+        }
+        $current_points = BfwPoints::getPoints($user_id);
         $computy_user_point = max(0, $current_points - $bonusfor_otziv_new);
-        if (get_post_type($comment->comment_post_ID) === 'product') {
+
             global $wpdb;
             $count_comment = $wpdb->get_var($wpdb->prepare('SELECT COUNT(comment_ID) FROM ' . $wpdb->prefix . 'comments WHERE user_id = %d AND comment_post_ID = %d AND comment_approved ="1"',
-                $comment->user_id, $comment->comment_post_ID));
+                $user_id, $comment->comment_post_ID));
 
-            $bought_product = wc_customer_bought_product($comment->comment_author_email, $comment->user_id,
+            $bought_product = wc_customer_bought_product($comment->comment_author_email, $user_id,
                 $comment->comment_post_ID);
             if ($count_comment === 0 && $bought_product) {/*Если количество одобренных у этого товара у этого клиента 1, то удаляем баллы*/
 
-                BfwPoints::updatePoints($comment->user_id, $computy_user_point);//Удаляем баллы клиенту
+                BfwPoints::updatePoints($user_id, $computy_user_point);//Удаляем баллы клиенту
                 $cause = sprintf(__('Return of %s for Product Review', 'bonus-for-woo'), BfwPoints::pointsLabel(5));
                 /*В историю*/
-                BfwHistory::add_history($comment->user_id, '-', $bonusfor_otziv_new, '0', $cause);
+                BfwHistory::add_history($user_id, '-', $bonusfor_otziv_new, '0', $cause);
 
                 /*email*/
                 $title_email = sprintf(__('Return of %s', 'bonus-for-woo'), BfwPoints::pointsLabel(5));
@@ -140,11 +158,11 @@ class BfwReview
 
 
                 if (BfwSetting::get('email-when-review')) {
-                    (new BfwEmail())->getMail($comment->user_id, '', $title_email, $message_email);
+                    (new BfwEmail())->getMail($user_id, '', $title_email, $message_email);
                 }
                 /*email*/
             }
-        }
+
     }
 
     /**

@@ -1181,6 +1181,7 @@ class BfwAdmin
     public static function fill_primer_field_social(): void
     {
         $checkedvk = BfwSetting::get('ref-social-vk') ? "checked" : "";
+        $checkedmax = BfwSetting::get('ref-social-max') ? "checked" : "";
         $checkedfb = BfwSetting::get('ref-social-fb') ? "checked" : "";
         $checkedtw = BfwSetting::get('ref-social-tw') ? "checked" : "";
         $checkedtg = BfwSetting::get('ref-social-tg') ? "checked" : "";
@@ -1191,6 +1192,10 @@ class BfwAdmin
         <input id="ref-social-vk" name="bonus_option_name[ref-social-vk]" type="checkbox"
                value="1" <?php echo esc_attr($checkedvk); ?> >
         <label for="ref-social-vk" class="ref-social ref-social-vk">VK</label>
+
+        <input id="ref-social-max" name="bonus_option_name[ref-social-max]" type="checkbox"
+               value="1" <?php echo esc_attr($checkedmax); ?> >
+        <label for="ref-social-max" class="ref-social ref-social-max">MAX</label>
 
         <input id="ref-social-fb" name="bonus_option_name[ref-social-fb]" type="checkbox"
                value="1" <?php echo esc_attr($checkedfb); ?> >

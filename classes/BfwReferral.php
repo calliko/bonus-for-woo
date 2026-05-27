@@ -128,6 +128,7 @@ class BfwReferral
         $options = get_option('bonus_option_name');
         $socialLinks = [
             'ref-social-vk' => 'https://vk.com/share.php?url=',
+            'ref-social-max' => 'https://max.ru/:share?text=',
             'ref-social-fb' => 'https://www.facebook.com/sharer/sharer.php?u=',
             'ref-social-tw' => 'https://twitter.com/share?url=',
             'ref-social-tg' => 'https://telegram.me/share/url?url=',

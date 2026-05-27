@@ -146,7 +146,11 @@
 .woocommerce-variation-price .bfw_social_links {
     display: none;
 }
-
+.bfw_social_links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 .bfw_not_participant {
     color: #F44336;
     font-weight: bold;
@@ -243,6 +247,10 @@
 
 .bfw_ref_icon_vk {
     background-image: url("../img/social/009-vk.svg");
+}
+
+.bfw_ref_icon_max {
+    background-image: url("../img/social/max.svg");
 }
 
 .bfw_ref_icon_viber {

@@ -625,7 +625,13 @@ class BfwAccount
             int $secondLevelReferralCount,
             bool $showQrCode
     ): string {
-        $url = esc_url(site_url() . '?bfwkey=' . $referralCode);
+
+        // Базовый URL с возможностью фильтрации
+        $baseUrl = apply_filters('bfw_referral_base_url', site_url(), null);
+        $url = esc_url(add_query_arg('bfwkey', $referralCode, $baseUrl));
+
+
+     //   $url = esc_url(site_url() . '?bfwkey=' . $referralCode);
         $title = get_bloginfo('name');
         $description = get_bloginfo('description');
         $bfwReferral = new BfwReferral();
@@ -744,8 +750,13 @@ class BfwAccount
         $userOrderTotal = BfwPoints::getSumUserOrders($userid);
 
         if (!empty($get_referral) && $userOrderTotal >= $requiredOrderTotal) {
+
+            // Базовый URL с возможностью фильтрации
+            $baseUrl = apply_filters('bfw_referral_base_url', site_url(), $userid);
+            $referralUrl = esc_url(add_query_arg('bfwkey', $get_referral, $baseUrl));
+
             return '<div class="bonus_computy_account bfw-account_referral"><span class="title_bca">' . __('My referral link',
-                            'bonus-for-woo') . ':</span> <code id="code_referal" class="value_bca">' . esc_url(site_url() . '?bfwkey=' . $get_referral) . '</code> <span  title="' . __('Copy link',
+                            'bonus-for-woo') . ':</span> <code id="code_referal" class="value_bca">' . $referralUrl . '</code> <span  title="' . __('Copy link',
                             'bonus-for-woo') . '"  id="copy_referal"></span><span id="copy_good"></span> </div>';
         }
 
