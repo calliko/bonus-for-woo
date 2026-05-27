@@ -25,7 +25,9 @@ defined('ABSPATH') || exit;
     /*
      * Ввод купонов (только для PRO-версии)
      * */
-    echo do_shortcode('[bfw_coupon_form]'); ?>
+    echo do_shortcode('[bfw_coupon_form]');
+    do_action('bfw_account_coupon');
+    ?>
 
     <?php
     /*
