@@ -891,7 +891,7 @@ class BfwAdmin
                         'pro_page_bonus', 'bonus_section_id');
                 add_settings_field('my_checkbox_field26', $trans26, array('BfwAdmin', 'fill_primer_field26'),
                         'pro_page_bonus', 'bonus_section_id');
-                if (!empty($ref['level-two-referral'])) {
+                if (BfwSetting::get('level-two-referral') ) {
                     add_settings_field('my_cashback_two_level', $trans_referral_cashback_two_level,
                             array('BfwAdmin', 'fill_referal_cashback_two_level'), 'pro_page_bonus', 'bonus_section_id');
                 }
@@ -907,7 +907,7 @@ class BfwAdmin
             }
             add_settings_field('my_checkbox_coupon', $trans_coupon, array('BfwAdmin', 'fill_primer_coupons'),
                     'pro_page_bonus', 'bonus_section_id');
-            if (!empty($ref['coupon-system'])) {
+            if (BfwSetting::get('coupon-system') ) {
                 add_settings_field('limit_coupon',
                         __('Maximum number of coupons per day for one client.', 'bonus-for-woo'),
                         array('BfwAdmin', 'limit_coupon'), 'pro_page_bonus', 'bonus_section_id');

@@ -2082,10 +2082,10 @@ global $wpdb;
                         $totalref2 = self::getSumUserOrders($get_referral_invite_two_level);
 
                         if ($totalref2 >= $sumordersforreferral2) {
-                           // $percent_for_referal_two_level = floatval(BfwSetting::get('referal-cashback-two-level', 0));
+                           // $percent_for_referal_two_level = floatval(BfwSetting::get('level-two-referral-percent', 0));
                             $percent_for_referal_two_level = (float) apply_filters(
                                 'bfw_referral_level_percent',
-                                (float) BfwSetting::get('referal-cashback-two-level', 0),
+                                (float) BfwSetting::get('level-two-referral-percent', 0),
                                 $get_referral_invite_two_level,
                                 2,
                                 $order,

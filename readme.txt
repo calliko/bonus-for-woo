@@ -6,7 +6,7 @@ Requires at least:  5.6
 Tested up to:  7.0
 WC requires at least: 6.0
 WC tested up to: 10.8.0
-Stable tag: 8.2.1
+Stable tag: 8.2.2
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -118,6 +118,9 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.2.2 - 2026-06-02 =
+* fix bug
 
 = 8.2.1 - 2026-05-27 =
 * Added a max limit for referral links.

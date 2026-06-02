@@ -309,8 +309,8 @@ defined( 'ABSPATH' ) || exit;
                         echo '<p>За покупки приглашённых друзей вы получите ' . ($val['referal-cashback'] ?? 0) . '% кешбэка';
                         echo !empty($val['first-order-referal']) ? ', но только за первую покупку.</p>' : '.</p>';
 
-                        if (!empty($val['level-two-referral']) && !empty($val['referal-cashback-two-level'])) {
-                            echo '<p>За друзей второго уровня вы получите дополнительные ' . (int)$val['referal-cashback-two-level'] . '% кешбэка.</p>';
+                        if (!empty($val['level-two-referral']) && !empty($val['level-two-referral-percent'])) {
+                            echo '<p>За друзей второго уровня вы получите дополнительные ' . (int)$val['level-two-referral-percent'] . '% кешбэка.</p>';
                         }
                     }
                 }
