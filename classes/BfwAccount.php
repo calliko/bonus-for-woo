@@ -85,7 +85,7 @@ class BfwAccount
 
         // Активируем ежедневные начисления и обновляем роль
         BfwPoints::addEveryDays($userId);
-        BfwRoles::updateRole($userId);
+        BfwRoles::updateRole($userId, true, true);
 
         // Получаем данные пользователя
         $role = BfwRoles::getRole($userId);

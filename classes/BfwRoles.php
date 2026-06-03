@@ -217,13 +217,13 @@ class BfwRoles
      *
      * @param int $userId
      * @param bool $sendEmail
-     *
+     * @param bool $nocache true - удалить кеш
      * @return void
      * @version 6.3.4
      */
-    public static function updateRole(int $userId, bool $sendEmail = true): void
+    public static function updateRole(int $userId, bool $sendEmail = true, $nocache = false): void
     {
-        $total_all = BfwPoints::getSumUserOrders($userId);
+        $total_all = BfwPoints::getSumUserOrders($userId,$nocache);
         global $wpdb;
         $allrole = $wpdb->get_results("SELECT id, name, percent, summa_start FROM " . $wpdb->prefix . "bfw_computy ORDER BY summa_start+0 ASC");
         if (!empty($allrole)) {

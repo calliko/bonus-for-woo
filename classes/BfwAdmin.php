@@ -258,7 +258,10 @@ class BfwAdmin
             if (BfwRoles::isInvalve($user->ID)) {
                 $roles = BfwRoles::getRole($user->ID);
                 echo '<p><b>' . esc_html(__('Status',
-                                'bonus-for-woo')) . ': ' . esc_html($roles['name']) . '</b></p> <hr>';
+                                'bonus-for-woo')) . ': ' . esc_html($roles['name']) . '</b></p> ';
+?>
+
+<?php                echo '<hr>';
 
                 /*Обработчик удаления записи истории начисления баллов*/
                 if (isset($_POST['bfw_delete_post_history_points'])) {

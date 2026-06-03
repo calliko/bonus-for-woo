@@ -161,28 +161,31 @@ class BfwPoints
     }
 
 
-
     /**
      * Find the sum of all paid orders of the client
      * Находим сумму всех оплаченных заказов клиента
      * так как wc_get_customer_total_spent ($to_user->ID); включает сумму не оплаченных заказов тоже.
      *
      * @param int|null $userId
+     * @param bool $nocache true - не использовать кеш
      * @return float
      * @version 6.5.1
      */
-    public static function getSumUserOrders($userId = null): float
+    public static function getSumUserOrders($userId = null, $nocache = false): float
     {
         $userId = self::resolveUserId($userId);
         if ($userId === 0) {
             return 0.0;
         }
 
-        // Check cache first
-        $cached_sum = get_user_meta($userId, 'total_purchases_sum', true);
-        if ($cached_sum !== '') {
-            return (float) $cached_sum;
+        if($nocache===false){
+            // Check cache first
+            $cached_sum = get_user_meta($userId, 'total_purchases_sum', true);
+            if ($cached_sum !== '') {
+                return (float) $cached_sum;
+            }
         }
+
 
         $total = self::calculateTotalPurchases($userId);
 
@@ -1977,7 +1980,7 @@ global $wpdb;
         $bfwEmail = new BfwEmail();
 
         // обновляем роль пользователя
-        $bfwRoles::updateRole($user_id);
+        $bfwRoles::updateRole($user_id, true, true);
 
         $cashback_for_user = self::howMatchCashbackInOrder($order_id);
 
@@ -2100,7 +2103,7 @@ global $wpdb;
                                     $user_id,
                                     $pointsForRef2,
                                     $get_referral_invite_two_level,
-                                    $order_id
+                                    $order_id, 2
                                 );
                             }
                         }
@@ -2451,7 +2454,7 @@ global $wpdb;
         }
 
         self::updatePoints($customer_user, $new_points);
-        BfwRoles::updateRole($customer_user);
+        BfwRoles::updateRole($customer_user, true, true);
 
         // 7. Update order status if fully processed
         if ($is_full_refund || ($revoked_so_far + $points_to_revoke >= $total_earned && $total_earned > 0)) {

@@ -374,7 +374,7 @@ defined( 'ABSPATH' ) || exit;
                          $exclude_roles = BfwSetting::get('exclude-role', array());
                          $args1 = array('role__not_in' => $exclude_roles, 'number' => -1, 'fields' => 'ID');
                          $users_bs = get_users($args1);
-                         foreach ($users_bs as $user) { BfwRoles::updateRole($user, false); }
+                         foreach ($users_bs as $user) { BfwRoles::updateRole($user, false, true); }
                          echo '<p style="color:var(--bfw-success); margin-top:10px; font-weight:600; font-size:13px;">✅ ' . sprintf(__('Updated %d users.', 'bonus-for-woo'), count($users_bs)) . '</p>';
                     } ?>
                  </div>

@@ -62,7 +62,8 @@ class BfwAjaxHandlers
         /*Начисление кешбэка за прошлые заказы*/
         add_action('wp_ajax_cashback_prepare', array('BfwCashback', 'cashbackPrepare'));
         add_action('wp_ajax_cashback_recount', array('BfwCashback', 'cashbackRecount'));
-
+        /* Пересчет суммы заказов конкретного пользователя*/
+        add_action('wp_ajax_cashback_recount', array('BfwCashback', 'recount_user_orders'));
         /*Массовое начисление баллов без уведомленний*/
         add_action('wp_ajax_computy_mass_add_points', array('BfwCashback', 'computyMassAddPoints'));
     }

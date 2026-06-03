@@ -569,4 +569,15 @@ class BfwCashback
         ]);
     }
 
+
+    /**
+     * @return void
+     */
+    public static function recount_user_orders()
+    {
+        check_ajax_referer( 'bfw_recount_nonce', 'nonce' );
+
+        wp_send_json_success( array( 'message' => 'Сумма пересчитана' ) );
+    }
+
 }

@@ -159,7 +159,6 @@ class BfwReferral
     }
 
 
-
     /**
      * Add points to the referrer (inviter, sponsor)
      * Добавляем баллы рефереру (пригласителю, спонсору)
@@ -168,6 +167,7 @@ class BfwReferral
      * @param $points float Баллы, которые получит реферал
      * @param $get_referral_invite int Реферер клиента
      * @param int $order_id
+     * @param int $level 1 уровень или 2 уровень
      * @return void
      * @version 7.0.0
      */
@@ -175,7 +175,8 @@ class BfwReferral
         int $customer_user,
         float $points,
         int $get_referral_invite,
-        int $order_id
+        int $order_id,
+        int $level=1
     ): void {
         $BfwPoints = new BfwPoints();
         $points = $BfwPoints->roundPoints($points);
@@ -194,8 +195,11 @@ class BfwReferral
                 return; // Сумма заказа меньше минимальной — не начисляем
             }
         }
-
-        $pricinaref = __('Points for referral', 'bonus-for-woo');
+        $twolevel='';
+    if($level===2){
+        $twolevel = __('(second level)', 'bonus-for-woo');
+    }
+        $pricinaref = __('Points for referral', 'bonus-for-woo').$twolevel;
         $text_email = BfwSetting::get('email-when-order-change-referal-text', '');
         $title_email = BfwSetting::get('email-when-order-change-referal-title',
             __('Points accrual', 'bonus-for-woo'));
