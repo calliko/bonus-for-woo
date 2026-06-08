@@ -1176,6 +1176,25 @@
     align-items: center;
 }
 
+@media (max-width: 720px) {
+    .bfw-tabs-nav {
+        flex-wrap: wrap;
+    }
+    .bfw-dashboard-header h1 {
+        flex-wrap: wrap;
+    }
+    .form-table label {
+        font-size: 0;
+    }
+    .bfw-tab-content .form-table td {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+    }
+    .bfw-filter-bar {
+        flex-wrap: wrap;}
+}
 /* Print Styles - Чистая печать ТОЛЬКО таблицы */
 @media print {
     /* Скрываем всё лишнее на уровне движка WP */

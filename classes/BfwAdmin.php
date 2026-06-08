@@ -3016,7 +3016,7 @@ class BfwAdmin
                     echo  BfwRoles::addRole(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
 
                 } elseif (isset($_POST['bfw_computy_ajax']) && $_POST['bfw_computy_ajax'] === 'editrolehidden') {
-                    echo  BfwRoles::updateStatus(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start']);
+                    echo  BfwRoles::updateStatus(sanitize_text_field($_POST['name_role']), sanitize_text_field($_POST['percent_role']), (float)$_POST['summa_start'], (int)$_POST['id_role']);
 
                 }
                 if (isset($_POST['delete_role'])) {
@@ -3105,7 +3105,7 @@ class BfwAdmin
                         <form method="post" id="status-form">
                             <?php wp_nonce_field('bfw_role_action', 'bfw_role_nonce'); ?>
                             <input type="hidden" id="bfw_computy_ajax" name="bfw_computy_ajax" value="bfw_computy_ajax">
-
+                            <input type="hidden" id="id_role" name="id_role">
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px;">
                                 <div>
                                     <label for="r_name" style="display:block; margin-bottom: 8px; font-weight:700; font-size: 13px;"><?php echo __('Status name', 'bonus-for-woo'); ?></label>
@@ -3278,6 +3278,7 @@ class BfwAdmin
                     $('#role-form-title').html('<span class="dashicons dashicons-edit"></span> <?php _e('Editing Status:', 'bonus-for-woo'); ?> ' + data.name);
                     $('#submit-role-btn').html('<span class="dashicons dashicons-saved"></span> <?php _e('Update status', 'bonus-for-woo'); ?>');
                     $('#bfw_computy_ajax').val('editrolehidden');
+                    $('#id_role').val(data.id);
                     $('#cancel-edit').show();
 
                     $('html, body').animate({

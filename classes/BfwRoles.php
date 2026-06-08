@@ -118,11 +118,11 @@ class BfwRoles
      * @return string
      * @version 6.4.3
      */
-    public static function updateStatus(string $name, float $percent, float $summaStart): string
+    public static function updateStatus(string $name, float $percent, float $summaStart, int $id): string
     {
         global $wpdb;
         $updated = $wpdb->update($wpdb->prefix . "bfw_computy",
-            array('percent' => $percent, 'summa_start' => $summaStart), array('name' => $name));
+            array('name'=>$name, 'percent' => $percent, 'summa_start' => $summaStart), array('id' => $id));
 
         if ($updated === false) {
             return '<div   class="bfw-notice bfw-notice-error is-dismissible"><p>' . __('Error updating status. Please try again.',
@@ -202,11 +202,12 @@ class BfwRoles
         }
 
 
-        return [
+
+        return apply_filters('bfw_get_role_filter', [
             'name' => $you_role->name ?? __('Client', 'bonus-for-woo'),
             'percent' => $you_role->percent ?? 0,
             'slug' => $you_role->slug ?? 'client'
-        ];
+        ], $userId, $status_id);
     }
 
 

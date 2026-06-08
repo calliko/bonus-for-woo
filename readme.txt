@@ -6,7 +6,7 @@ Requires at least:  5.6
 Tested up to:  7.0
 WC requires at least: 6.0
 WC tested up to: 10.8.0
-Stable tag: 8.2.3
+Stable tag: 8.2.4
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -119,8 +119,14 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
+= 8.2.4 - 2026-06-08 =
+* Adjusted styles in the admin panel.
+* Added the `bfw_get_role_filter` filter.
+* Added the `bfw_check_first_order_referral_filter` filter.
+* Corrected the status title update.
+
 = 8.2.3 - 2026-06-03 =
-* Очистка кеша при пересчете статусов.
+* Clear cache when recalculating statuses.
 
 = 8.2.2 - 2026-06-02 =
 * fix bug

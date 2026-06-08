@@ -392,13 +392,12 @@ jQuery(document).ready(function ($) {
                 $('.price').first().append(cashbackHtml);
             }
         };
-        
+
         const getPointsLabel = (amount) => {
-            // Простая функция для определения правильного склонения
             const absAmount = Math.abs(amount);
             if (absAmount === 1) return window.bfwVariationCashback.pointsLabel || 'балл';
-            if (absAmount > 1 && absAmount < 5) return (window.bfwVariationCashback.pointsLabel || 'балл').replace('л', 'ла');
-            return (window.bfwVariationCashback.pointsLabel || 'балл').replace('л', 'лов');
+            if (absAmount >= 2 && absAmount <= 4) return 'балла';
+            return 'баллов';
         };
         
         initVariationCashback();

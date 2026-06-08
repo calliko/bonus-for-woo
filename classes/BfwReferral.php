@@ -215,16 +215,17 @@ class BfwReferral
         );
         $message_email = BfwEmail::template($text_email, $text_email_array);
 
-        if (BfwSetting::get('first-order-referal')) {
+        // Применяем фильтр для проверки необходимости проверки первого заказа
+        $check_first_order = apply_filters('bfw_check_first_order_referral_filter', true, $customer_user, $get_referral_invite);
+
+        if ($check_first_order && BfwSetting::get('first-order-referal')) {
             $numorders = wc_get_customer_order_count($customer_user);
-            if ($numorders == 1) {
-                $BfwPoints->updatePoints($get_referral_invite, $referral_points);
-                BfwHistory::add_history($get_referral_invite, '+', $points, $order_id, $pricinaref);
-                if (BfwSetting::get('email-when-order-change')) {
-                    (new BfwEmail())->getMail($get_referral_invite, '', $title_email, $message_email);
-                }
+            if ($numorders > 1) {
+               return;
             }
-        } else {
+        }
+
+
             $BfwPoints->updatePoints($get_referral_invite, $referral_points);
             BfwHistory::add_history($get_referral_invite, '+', $points, $order_id, $pricinaref, $customer_user);
 
@@ -234,7 +235,7 @@ class BfwReferral
             if (BfwSetting::get('email-when-order-change')) {
                 (new BfwEmail())->getMail($get_referral_invite, '', $title_email, $message_email);
             }
-        }
+
     }
 
 
