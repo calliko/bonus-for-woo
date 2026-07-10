@@ -181,8 +181,8 @@ class BfwHooks
         add_action('woocommerce_before_checkout_form', array('BfwPoints', 'bfwoo_spisaniebonusov_in_checkout'), 9);
 
         /*-------Добавляем скидку-------*/
-        add_action('woocommerce_cart_calculate_fees', array('BfwPoints', 'bfwoo_add_fee'), 1, 1);
-        
+      //  add_action('woocommerce_cart_calculate_fees', array('BfwPoints', 'bfwoo_add_fee'), 1, 1);
+
         /*-------Дополнительный хук для применения купона после расчета-------*/
         add_action('woocommerce_after_calculate_totals', array('BfwPoints', 'ensure_coupon_applied'), 10, 1);
 

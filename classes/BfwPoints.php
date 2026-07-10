@@ -1246,6 +1246,11 @@ global $wpdb;
     }
 
 
+    /**
+     * @param $cart
+     * @return void
+     * @deprecated
+     */
     public static function bfwoo_add_fee($cart)
     {
         static $is_calculating = false;
@@ -1261,14 +1266,14 @@ global $wpdb;
         if (!$userId || BfwPoints::getFastPoints($userId) <= 0)
             return;
         $couponCode = mb_strtolower($couponCodeSetting);
-        
+
         // ПУНКТ 1: Если купона нет в списке, ПРИНУДИТЕЛЬНО применяем его
         if (!$cart->has_discount($couponCode)) {
             $is_calculating = true;
-            
+
             // Применяем купон стандартным методом
             $cart->apply_coupon($couponCode);
-            
+
             // СИЛОВОЙ МЕТОД: Если после apply_coupon он все еще не появился, добавляем его в массив принудительно
             if (!$cart->has_discount($couponCode)) {
                 $applied_coupons = $cart->get_applied_coupons();
@@ -1276,7 +1281,7 @@ global $wpdb;
                     $cart->applied_coupons[] = $couponCode;
                 }
             }
-            
+
             // Проверяем сессию и сохраняем примененные купоны
             if (WC()->session) {
                 $session_coupons = WC()->session->get('applied_coupons', []);
@@ -1285,15 +1290,15 @@ global $wpdb;
                     WC()->session->set('applied_coupons', $session_coupons);
                 }
             }
-            
+
             if (wp_doing_ajax()) {
                 WC()->session->set('cart_totals', null);
                 WC()->session->set('shipping_for_package_0', null);
             }
-            
+
             $is_calculating = false;
         }
-        
+
         // Проверяем, что купон применился и баллы есть
         if ($cart->has_discount($couponCode) && BfwPoints::getFastPoints($userId) > 0) {
             // Обновляем виртуальный купон с правильной суммой
@@ -1310,6 +1315,8 @@ global $wpdb;
             }, 10, 3);
         }
     }
+
+
 
     /**
      * Гарантированное применение купона после расчета корзины
@@ -1359,6 +1366,7 @@ global $wpdb;
             $cart->remove_coupon($couponCode);
         }
     }
+
 
     /**
      * Clearing temporary points
@@ -2519,12 +2527,16 @@ global $wpdb;
      * Обработка создания возврата через wp_insert_post (для 1С)
      *
      * @param int $post_id
-     * @param WP_Post $post
+     * @param WP_Post|null $post
      * @param bool $update
      * @return void
      */
-    public static function handleRefundCreation(int $post_id, WP_Post $post, bool $update): void
+    public static function handleRefundCreation(int $post_id, ?WP_Post $post, bool $update): void
     {
+        if ($post_id <= 0 || !$post instanceof WP_Post) {
+            return;
+        }
+
         // Обрабатываем только создание новых возвратов
         if ($update || $post->post_type !== 'shop_order_refund') {
             return;

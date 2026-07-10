@@ -23,6 +23,10 @@ jQuery(document).ready(function ($) {
             const data = await response.json();
 
             if (data.success && data.data) {
+                // Обновляем блоки кешбэка и списания
+                if (typeof window.bfwUpdateBlocks === 'function') {
+                    window.bfwUpdateBlocks();
+                }
                 window.location.href = data.data;
             } else {
                 throw new Error('Некорректный ответ сервера');
@@ -58,6 +62,10 @@ jQuery(document).ready(function ($) {
             const data = await response.json();
 
             if (data.success && data.data) {
+                // Обновляем блоки кешбэка и списания
+                if (typeof window.bfwUpdateBlocks === 'function') {
+                    window.bfwUpdateBlocks();
+                }
                 window.location.href = data.data;
             } else {
                 throw new Error('Некорректный ответ сервера');
@@ -166,6 +174,10 @@ jQuery(document).ready(function ($) {
             const result = await response.json();
 
             if (result.success) {
+                // Обновляем блоки кешбэка и списания
+                if (typeof window.bfwUpdateBlocks === 'function') {
+                    window.bfwUpdateBlocks();
+                }
                 window.location.href = result.data;
             } else {
                 alert(result.message || 'Error');
@@ -246,6 +258,12 @@ jQuery(document).ready(function ($) {
 });
 
 
+// Глобальные функции для обновления блоков
+window.bfwUpdateBlocks = function() {
+    const event = new CustomEvent('bfw-update-blocks');
+    document.dispatchEvent(event);
+};
+
 (function ($) {
     $(() => {
         let observer;
@@ -316,9 +334,64 @@ jQuery(document).ready(function ($) {
             if (isUpdating) return;
             loadSpisanieBlock();
             loadCashbackBlock();
-        }, 600); // Увеличили debounce
+        }, 500); // Debounce 500ms для баланса между нагрузкой и отзывчивостью
 
-        const observeDOM = () => {
+// Проверяем, что wp.data доступен на странице
+        if (typeof wp !== 'undefined' && wp.data) {
+            const { subscribe, select } = wp.data;
+
+// Проверяем, что корзина WooCommerce Blocks доступна на странице
+            if ( select( 'wc/store/cart' ) ) {
+            let previousCart = null;
+
+            subscribe(() => {
+                const currentCart = select( 'wc/store/cart' ).getCartData();
+
+                // Если данные корзины еще не загрузились — выходим
+                if ( ! currentCart ) {
+                    return;
+                }
+
+                // Сравниваем по количеству товаров, их количествам и общей сумме
+                let cartChanged = false;
+                if (!previousCart) {
+                    cartChanged = true;
+                } else {
+                    // Проверяем изменилась ли общая сумма
+                    const currentTotal = currentCart.totals ? currentCart.totals.total_price : 0;
+                    const previousTotal = previousCart.totals ? previousCart.totals.total_price : 0;
+
+                    if (currentTotal !== previousTotal) {
+                        cartChanged = true;
+                    } else {
+                        // Проверяем изменилось ли количество товаров или их количества
+                        const currentItems = currentCart.items ? currentCart.items.length : 0;
+                        const previousItems = previousCart.items ? previousCart.items.length : 0;
+
+                        if (currentItems !== previousItems) {
+                            cartChanged = true;
+                        } else {
+                            // Проверяем количества каждого товара
+                            for (let i = 0; i < currentItems; i++) {
+                                if (currentCart.items[i].quantity !== previousCart.items[i].quantity) {
+                                    cartChanged = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (cartChanged) {
+                    previousCart = currentCart;
+                    // Вызываем обновление блоков
+                    initBlocks();
+                }
+            });
+            }
+        }
+
+      /*  const observeDOM = () => {
             const container = document.querySelector('.wc-block-cart, .wc-block-checkout');
             if (!container) return;
 
@@ -345,7 +418,7 @@ jQuery(document).ready(function ($) {
             observer.observe(container, { childList: true, subtree: true });
         };
 
-        observeDOM();
+        observeDOM(); */
         
         // Простое обновление кешбэка при смене вариации на основе данных с сервера
         const initVariationCashback = () => {
@@ -404,6 +477,11 @@ jQuery(document).ready(function ($) {
         
         // Первый запуск
         setTimeout(initBlocks, 1000);
+
+        // Слушатель для ручного обновления блоков
+        document.addEventListener('bfw-update-blocks', function() {
+            initBlocks();
+        });
     });
 })(jQuery);
 

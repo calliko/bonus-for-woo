@@ -601,6 +601,10 @@ class BfwAccount
         $directReferralIds = wp_list_pluck($directReferrals, 'ID');
         global $wpdb;
 
+        if (empty($directReferralIds)) {
+            return 0; // Возвращаем 0, если список пуст
+        }
+
         return (int)$wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->usermeta} 
          WHERE meta_key = 'bfw_points_referral_invite' 
