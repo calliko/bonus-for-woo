@@ -315,6 +315,7 @@ window.bfwUpdateBlocks = function() {
         };
 
         const loadCashbackBlock = async () => {
+            console.log('считаем кешбэк');
             isUpdating = true;
             const html = await fetchBlockData('/get-cashback-html');
             if (html) {
@@ -330,10 +331,17 @@ window.bfwUpdateBlocks = function() {
             setTimeout(() => { isUpdating = false; }, 100);
         };
 
+        const isCartOrCheckout = () => {
+            return $('body').hasClass('woocommerce-cart') || $('body').hasClass('woocommerce-checkout');
+        };
+
         const initBlocks = debounce(() => {
             if (isUpdating) return;
             loadSpisanieBlock();
-            loadCashbackBlock();
+            // Загружаем кешбэк только на страницах корзины и оформления заказа
+            if (isCartOrCheckout()) {
+                loadCashbackBlock();
+            }
         }, 500); // Debounce 500ms для баланса между нагрузкой и отзывчивостью
 
 // Проверяем, что wp.data доступен на странице

@@ -90,9 +90,10 @@ class BfwHooks
             $order_status_write_action = 'woocommerce_new_order';
         } else {
             $order_status_write_action = 'woocommerce_order_status_' . $order_status_write;
+       
         }
 
-        add_action($order_status_write_action, array('BfwPoints', 'newOrder'), 20, 1);
+        add_action($order_status_write_action, array('BfwPoints', 'newOrder'), 5, 1);
 
         /*------------Действие когда статус заказа выполнен - начисление баллов------------*/
         $order_status = BfwSetting::get('add_points_order_status', 'completed');
@@ -163,6 +164,9 @@ class BfwHooks
             10,
             4
         );
+
+        /*------------Сохраняем баллы для списания в метазаписи заказа------------*/
+        add_action('woocommerce_checkout_create_order', array('BfwPoints', 'savePointsToDeductInOrder'), 10, 1);
     }
 
     /**

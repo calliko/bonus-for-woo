@@ -394,6 +394,30 @@ global $wpdb;
     }
 
     /**
+     * Сохраняем баллы для списания в метазаписи заказа при оформлении
+     * Save points to deduct in order metadata during checkout
+     *
+     * @param WC_Order $order
+     * @return void
+     * @version 8.0.2
+     */
+    public static function savePointsToDeductInOrder($order): void
+    {
+        $customer_user = $order->get_customer_id();
+        if ($customer_user === 0) {
+            return;
+        }
+
+        $computy_point_fast = self::getFastPoints($customer_user);
+        if ($computy_point_fast > 0) {
+            // Сохраняем баллы для списания в метазаписи заказа
+            $order->update_meta_data('_bfw_points_to_deduct', $computy_point_fast);
+            // Очищаем временные баллы после сохранения в заказ
+            self::updateFastPoints($customer_user, 0);
+        }
+    }
+
+    /**
      * Carrying out an offline order
      * Проведение оффлайн-заказа
      *
@@ -1801,7 +1825,12 @@ global $wpdb;
         $bfwEmail = new BfwEmail();
 
         $computy_point_old = self::getPoints($customer_user);
-        $computy_point_fast = self::getFastPoints($customer_user);
+        // Используем сохраненные баллы из метазаписи заказа, если они есть
+        $computy_point_fast = $order->get_meta('_bfw_points_to_deduct', true);
+        if (empty($computy_point_fast)) {
+            // Fallback к старому методу, если метазапись не сохранена
+            $computy_point_fast = self::getFastPoints($customer_user);
+        }
 
         if ($computy_point_fast > 0) {
             $count_point = $computy_point_old - $computy_point_fast;
@@ -1926,13 +1955,6 @@ global $wpdb;
         // Если включена опция "если используются баллы — не начислять кешбэк" — обнуляем кешбэк покупателю
         if (BfwSetting::get('yous_balls_no_cashback') && $fee_total > 0) {
             $cashback_for_user = 0;
-        } else {
-
-            $cd = $fee_total * $percent / 100;
-            $cashback_for_user = $cashback_for_user - $cd;
-            if ($cashback_for_user < 0) {
-                $cashback_for_user = 0;
-            }
         }
 
         // Применяем фильтры/корректировки

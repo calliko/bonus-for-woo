@@ -65,6 +65,8 @@ class BfwAdmin
             add_action('admin_enqueue_scripts', array('BfwAdmin', 'load_scripts'));
             /*Вывод настроек в меню*/
             add_action('admin_init', array('BfwAdmin', 'plugin_settings'));
+            /*Обработчик удаления истории*/
+            add_action('admin_init', array('BfwAdmin', 'handle_delete_history'));
 
             /*------------Добавление поля в профиле клиента для администратора------------*/
             if (current_user_can('administrator') || current_user_can('shop_manager')) {
@@ -273,19 +275,6 @@ class BfwAdmin
 	<p>' . esc_html__('deleted', 'bonus-for-woo') . '.</p></div>';
                 }
                 /*Обработчик удаления записи истории начисления баллов*/
-
-                /*Обработчик удаления всей истории начисления баллов*/
-                if (isset($_GET['bfw_delete_all_post_history_points'])) {
-                    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_delete_all_history')) {
-                        wp_die('Ошибка безопасности!');
-                    }
-                    $delete_history_points = sanitize_text_field($_GET['bfw_delete_all_post_history_points']);
-                    BfwHistory::clearAllHistoryUser($delete_history_points);
-
-                    echo '<div id="message" class="notice notice-warning is-dismissible"><p>' . esc_html__('Cleared',
-                                    'bonus-for-woo') . '.</p></div>';
-                }
-                /*Обработчик удаления всей истории начисления баллов*/
 
                 if (BfwRoles::isPro()) { ?>
                     <div class="bfw-offline-block"><span class="bfw-help-tip faq"
@@ -661,6 +650,37 @@ class BfwAdmin
             wp_localize_script('custom-admin-script', 'bfw_order_points', [
                     'nonce' => wp_create_nonce('bfw_order_points_nonce')
             ]);
+        }
+    }
+
+
+    /**
+     * Обработчик удаления всей истории начисления баллов
+     *
+     * @return void
+     */
+    public static function handle_delete_history(): void
+    {
+        if (isset($_GET['bfw_delete_all_post_history_points'])) {
+            if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_delete_all_history')) {
+                wp_die('Ошибка безопасности!');
+            }
+            $delete_history_points = sanitize_text_field($_GET['bfw_delete_all_post_history_points']);
+            BfwHistory::clearAllHistoryUser($delete_history_points);
+
+            // Remove delete parameter and add cleared parameter
+            $redirect_url = remove_query_arg(array('bfw_delete_all_post_history_points', '_wpnonce'));
+            $redirect_url = add_query_arg('bfw_cleared', '1', $redirect_url);
+            wp_redirect($redirect_url);
+            exit;
+        }
+
+        // Show notice after redirect
+        if (isset($_GET['bfw_cleared']) && $_GET['bfw_cleared'] === '1') {
+            add_action('admin_notices', function() {
+                echo '<div id="message" class="notice notice-warning is-dismissible"><p>' . esc_html__('Cleared',
+                        'bonus-for-woo') . '.</p></div>';
+            });
         }
     }
 

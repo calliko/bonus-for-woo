@@ -105,8 +105,12 @@ class BfwHistory
                     function confirmClearHistory() {
                         if (confirm("<?php echo esc_js(__('Are you sure you want to clear this customer bonus points history?',
                                 'bonus-for-woo')); ?>")) {
-                            window.location = "<?php echo esc_js(wp_nonce_url(admin_url('user-edit.php?user_id=' . $user_id . '&bfw_delete_all_post_history_points=' . $user_id), 'bfw_delete_all_history')); ?>";
+                            var nonce = "<?php echo wp_create_nonce('bfw_delete_all_history'); ?>";
+                            var currentUrl = window.location.href;
+                            var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                            window.location.href = currentUrl + separator + "bfw_delete_all_post_history_points=<?php echo esc_js($user_id); ?>&_wpnonce=" + nonce;
                         }
+                        return false;
                     }
                 </script>
             <?php endif; ?>

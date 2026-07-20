@@ -6,7 +6,7 @@ Requires at least:  5.6
 Tested up to:  7.0
 WC requires at least: 6.0
 WC tested up to: 10.9.4
-Stable tag: 8.2.5
+Stable tag: 8.2.6
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -68,6 +68,7 @@ You can test the plugin on [**this page**](https://demo.tastewp.com/bonus-for-wo
 * With the WPML plugin
 * With the Elementor plugin
 * With the Yandex.Delivery (Boxberry) plugin for WooCommerce
+* With the CDEK shipping method plugin for WooCommerce
 * With the Post SMTP plugin
 * With high-performance order storage
 * Multi-site support
@@ -118,6 +119,10 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.2.6 - 2026-07-20 =
+* Fixed the deduction of points for other statuses.
+* Fixed the clearing of bonus history in the user editor.
 
 = 8.2.5 - 2026-07-10 =
 * Optimized the loading of deduction blocks.
