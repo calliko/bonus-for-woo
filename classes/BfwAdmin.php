@@ -187,7 +187,7 @@ class BfwAdmin
     {
         // Получаем значение поля
         $custom_field_value = isset($_POST['_constant_cashback_percentage']) ? sanitize_text_field($_POST['_constant_cashback_percentage']) : 0;
-        if ($custom_field_value < 0 || $custom_field_value > 100) {
+        if (!empty($custom_field_value) && ($custom_field_value < 0 || $custom_field_value > 100)) {
             wp_die(__('Invalid percentage value', 'bonus-for-woo'));
         }
         // Сохраняем значение в метаданных товара
@@ -225,7 +225,7 @@ class BfwAdmin
     {
         // Получаем значение поля
         $custom_field_value = isset($_POST['_constant_cashback_percentage_variation'][$variation_id]) ? sanitize_text_field($_POST['_constant_cashback_percentage_variation'][$variation_id]) : '';
-        if ($custom_field_value < 0 || $custom_field_value > 100) {
+        if (!empty($custom_field_value) && ($custom_field_value < 0 || $custom_field_value > 100)) {
             wp_die(__('Invalid percentage value', 'bonus-for-woo'));
         }
         // Сохраняем значение в метаданных вариации
