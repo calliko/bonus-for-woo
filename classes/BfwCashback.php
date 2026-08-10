@@ -95,7 +95,9 @@ class BfwCashback
 
             $total_all = BfwPoints::getSumUserOrders($user_id);
             $sumbudet = $total_all + $total_order;
+
             $all_role = $wpdb->get_results("SELECT summa_start FROM " . $wpdb->prefix . "bfw_computy");
+
             $all_role = json_decode(wp_json_encode($all_role), true);
             $all_role = $bfwFunctions::arrayMultisortValue($all_role, 'summa_start', SORT_ASC);
             $summa = 0;

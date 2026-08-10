@@ -224,7 +224,7 @@ class BfwPoints
             $total = self::calculateTotalFromPostsTable($wpdb, $userId, $statuses, $dateFilter, $excludeShipping);
         }
 
-        return max(0.0, (float) $total);
+        return max(0.0, $total);
     }
 
     /**
@@ -1705,7 +1705,7 @@ global $wpdb;
         check_ajax_referer('bfw_export_bonuses_nonce', 'nonce');
 
         $offset = (int) ($_POST['offset'] ?? 0);
-        $limit = 100;
+
 
         $search_by = in_array($_POST['search_by'] ?? 'by_id', ['by_id', 'by_email', 'by_phone'])
             ? sanitize_text_field($_POST['search_by'])
@@ -1743,7 +1743,7 @@ global $wpdb;
         }
 
         $processed = 0;
-        while (!feof($fileHandle) && $processed < $limit) {
+        while (!feof($fileHandle) && $processed < BFW_CSV_IMPORT_LIMIT) {
             $currRow = fgetcsv($fileHandle);
             if (!$currRow || count($currRow) < 5) {
                 continue;

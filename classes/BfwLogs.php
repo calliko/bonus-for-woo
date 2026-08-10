@@ -56,7 +56,7 @@ class BfwLogs
     public static function getListLog(string $date_start = '', string $date_finish = ''): void
     {
         $where = '';
-        $limit = ' LIMIT 500';
+        $limit = ' LIMIT '.BFW_HISTORY_LIMIT;
         if (!empty($date_start)) {
             $limit = '';
             $endDate = $date_finish ?? gmdate('Y-m-d');

@@ -337,9 +337,9 @@ window.bfwUpdateBlocks = function() {
 
         const initBlocks = debounce(() => {
             if (isUpdating) return;
-            loadSpisanieBlock();
-            // Загружаем кешбэк только на страницах корзины и оформления заказа
+
             if (isCartOrCheckout()) {
+                loadSpisanieBlock();
                 loadCashbackBlock();
             }
         }, 500); // Debounce 500ms для баланса между нагрузкой и отзывчивостью

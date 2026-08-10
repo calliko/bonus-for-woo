@@ -159,7 +159,8 @@ class BfwRoles
     public static function getRoles()
     {
         global $wpdb;
-        return $wpdb->get_results("SELECT id,name,slug,percent,summa_start FROM  {$wpdb->prefix}bfw_computy ORDER BY summa_start + 0 asc");
+        $table_name = $wpdb->prefix . 'bfw_computy';
+        return $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM %i ORDER BY summa_start + 0 ASC", $table_name));
     }
 
 
@@ -226,7 +227,10 @@ class BfwRoles
     {
         $total_all = BfwPoints::getSumUserOrders($userId,$nocache);
         global $wpdb;
-        $allrole = $wpdb->get_results("SELECT id, name, percent, summa_start FROM " . $wpdb->prefix . "bfw_computy ORDER BY summa_start+0 ASC");
+
+        $table_name = $wpdb->prefix . 'bfw_computy';
+        $allrole =  $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM %i ORDER BY summa_start + 0 ASC", $table_name));
+
         if (!empty($allrole)) {
             $status_id = null;
             $status_name = null;
@@ -289,12 +293,8 @@ class BfwRoles
 
         // Кэшируем статусы в статической переменной для всех вызовов
         if ($statuses_cache === null) {
-            $statuses_cache = $wpdb->get_results(
-                "SELECT name, percent, summa_start 
-             FROM " . $wpdb->prefix . "bfw_computy 
-             ORDER BY CAST(summa_start AS DECIMAL) ASC",
-                ARRAY_A
-            );
+            $table_name = $wpdb->prefix . 'bfw_computy';
+            $statuses_cache =  $wpdb->get_results($wpdb->prepare("SELECT name, percent, summa_start FROM %i  ORDER BY CAST(summa_start AS DECIMAL) ASC", $table_name),  ARRAY_A);
         }
 
         // Быстрая проверка на пустые данные

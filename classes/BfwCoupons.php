@@ -448,7 +448,7 @@ class BfwCoupons
             return;
         }
 
-        $limit = 100; // сколько строк обрабатывать в каждом пакете
+
         $fileHandle = fopen($url_export_file, "rb");
 
         if ($fileHandle === false) {
@@ -460,7 +460,7 @@ class BfwCoupons
 
         while (!feof($fileHandle)) {
             $i = 0;
-            while ($i < $limit && ($currRow = fgetcsv($fileHandle)) !== false) {
+            while ($i < BFW_CSV_IMPORT_LIMIT && ($currRow = fgetcsv($fileHandle)) !== false) {
                 $i++;
 
                 $coupon = (string)$currRow[0];
@@ -524,12 +524,12 @@ class BfwCoupons
         global $wpdb;
         $table = $wpdb->prefix . 'bfw_coupons_computy';
 
-        $limit = 100; // сколько строк обрабатывать в каждом пакете
+
         $processed = 0;
         $total_lines = count($lines);
 
-        for ($j = 0; $j < $total_lines; $j += $limit) {
-            $end = min($j + $limit, $total_lines);
+        for ($j = 0; $j < $total_lines; $j += BFW_CSV_IMPORT_LIMIT) {
+            $end = min($j + BFW_CSV_IMPORT_LIMIT, $total_lines);
 
             for ($i = $j; $i < $end; $i++) {
                 // Пропускаем пустые строки
@@ -572,7 +572,7 @@ class BfwCoupons
             }
 
             // Делаем небольшую паузу между пакетами для оптимизации нагрузки
-            if (($j + $limit) < $total_lines) {
+            if (($j + BFW_CSV_IMPORT_LIMIT) < $total_lines) {
                 sleep(1);
             }
         }

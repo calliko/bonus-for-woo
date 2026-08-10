@@ -220,7 +220,7 @@ class BfwHistory
             $args[] = $endDate . ' 23:59:59';
             $limit = '';
         } else {
-            $limit = ' LIMIT 500';
+            $limit = ' LIMIT '.BFW_HISTORY_LIMIT;
         }
 
         $query .= " ORDER BY date DESC {$limit}";
