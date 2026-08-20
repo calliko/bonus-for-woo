@@ -4,7 +4,9 @@
  *
  * Config file, feel free to modify
  */
-
+if (!defined('ABSPATH')) {
+    exit;
+}
 define('QR_CACHEABLE',
     true);                                                               // use cache - more disk reads but less CPU power, masks and format templates are stored there
 define('QR_CACHE_DIR',

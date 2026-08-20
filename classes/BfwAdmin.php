@@ -21,8 +21,10 @@ class BfwAdmin
             $last = isset($u->last_name) ? trim((string)$u->last_name) : '';
             $login = isset($u->user_login) ? trim((string)$u->user_login) : '';
             $name = trim(($first || $last) ? ($first . ' ' . $last) : $login);
+            /* translators: %d: user ID */
             return $name !== '' ? $name : sprintf(__('User #%d', 'bonus-for-woo'), $user_id);
         }
+        /* translators: %d: user ID */
         return sprintf(__('Deleted user #%d', 'bonus-for-woo'), $user_id);
     }
 
@@ -123,7 +125,7 @@ class BfwAdmin
 
             if ($cashback_status === 'received' && $cashback_amount) {
                 echo '<p><strong>' . __('Cashback received:',
-                                'bonus-for-woo') . '</strong> ' . $cashback_amount . ' ' . BfwPoints::pointsLabel($cashback_amount) . '</p>';
+                                'bonus-for-woo') . '</strong> ' . esc_html($cashback_amount) . ' ' . BfwPoints::pointsLabel($cashback_amount) . '</p>';
             } elseif ($cashback_status === 'refunded') {
                 echo '<p><strong style="color: #a00;">' . __('Refund of bonus points', 'bonus-for-woo') . '</strong></p>';
             }
@@ -377,6 +379,7 @@ class BfwAdmin
                             $login = isset($inviter_obj->user_login) ? trim((string)$inviter_obj->user_login) : '';
                             $inviter_label = trim(($first || $last) ? ($first . ' ' . $last) : $login);
                             if ($inviter_label === '') {
+                                /* translators: %d: user ID */
                                 $inviter_label = sprintf(__('User #%d', 'bonus-for-woo'), $inviter_id);
                             }
 
@@ -385,6 +388,7 @@ class BfwAdmin
                                     . '<a href="' . esc_url($edit_url) . '">' . esc_html($inviter_label) . '</a><br>';
                         } else {
                             // Пользователь удалён — без ссылки
+                            /* translators: %d: user ID */
                             $deleted_label = sprintf(__('Deleted user #%d', 'bonus-for-woo'), $inviter_id);
                             echo esc_html(__('Invited by user',
                                             'bonus-for-woo')) . ': ' . esc_html($deleted_label) . '<br>';
@@ -1379,6 +1383,7 @@ class BfwAdmin
         $value = BfwSetting::get('email-change-admin-title',
                 __('Bonus points have been added to you!', 'bonus-for-woo'));
 
+        /* translators: %s: number of points */
         $text_email = '<p>' . __('Hello', 'bonus-for-woo') . ', [user]</p>
       <p>' . sprintf(__('%s bonus points have been added to you.', 'bonus-for-woo'), '[points]') . '</p>
       <p>' . __('Cause', 'bonus-for-woo') . ': [cause]</p>

@@ -731,6 +731,7 @@ global $wpdb;
                     self::updateFastPoints($user_id, 0);
                     $woo->cart->remove_coupon($cart_discount);
                     $woo->cart->calculate_totals();//Пересчет общей суммы заказа
+                    /* translators: %s: points label */
                     return $head . ' <div class="text_how_many_points">' . sprintf(__(
                             'To use %s, you must remove the coupon.',
                             'bonus-for-woo'
@@ -1209,6 +1210,7 @@ global $wpdb;
             $order->save();
             wp_delete_post($new_coupon_id, true); // Удаляем купон из базы данных
 
+            /* translators: %s: points label */
             $prichina = sprintf(__('Use of %s', 'bonus-for-woo'), self::pointsLabel(5));
             BfwHistory::add_history($user_id, '-', $points, $order_id, $prichina);
             self::updateFastPoints($user_id, 0);
@@ -1840,6 +1842,7 @@ global $wpdb;
             $order->update_meta_data('_bfw_points_deducted', $computy_point_fast);
             $order->save();
 
+            /* translators: %s: points label */
             $prichina = sprintf(__('Use of %s', 'bonus-for-woo'), self::pointsLabel(5));
             BfwHistory::add_history($customer_user, '-', $computy_point_fast, $order_id, $prichina);
 
@@ -2453,6 +2456,7 @@ global $wpdb;
                 $points_to_revoke,
                 $order_id
             );
+            /* translators: %1$s: number of points, %2$d: order ID */
             BfwLogs::addLog('remove_points', $customer_user,
                 sprintf(__('Cancellation of %s points for order #%d due to refund.', 'bonus-for-woo'),
                     $points_to_revoke, $order_id));
@@ -2469,6 +2473,7 @@ global $wpdb;
                 $points_to_return,
                 $order_id
             );
+            /* translators: %1$s: number of points, %2$d: order ID */
             BfwLogs::addLog('add_points', $customer_user,
                 sprintf(__('Refund of %s spent points for order #%d.', 'bonus-for-woo'),
                     $points_to_return, $order_id));
@@ -2706,12 +2711,14 @@ global $wpdb;
                     '-',
                     $computy_point_old,
                     '0',
+                    /* translators: %d: number of days */
                     sprintf(__('Inactivity %d days', 'bonus-for-woo'), $day_day)
                 );
 
                 update_user_meta($user->ID, 'mail_remove_points', 'no');
                 self::updatePoints($user->ID, 0);
 
+                /* translators: %d: number of days */
                 BfwLogs::addLog('remove_points', $user->ID, sprintf(__('Inactivity %d days', 'bonus-for-woo'), $day_day));
             }
         }
@@ -2863,6 +2870,7 @@ global $wpdb;
         $new_offset = $offset + count($users);
         $percent = min(100, round(($new_offset / $total_users) * 100));
 
+        /* translators: %1$d: processed count, %2$d: total count, %3$d: percentage */
         wp_send_json(sprintf(__('Processed %d of %d users (%d%%)...', 'bonus-for-woo'), $new_offset, $total_users, $percent));
     }
 }

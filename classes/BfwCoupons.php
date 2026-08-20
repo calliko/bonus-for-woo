@@ -463,8 +463,11 @@ class BfwCoupons
             while ($i < BFW_CSV_IMPORT_LIMIT && ($currRow = fgetcsv($fileHandle)) !== false) {
                 $i++;
 
-                $coupon = (string)$currRow[0];
-                $sum = (float)$currRow[1];
+                $coupon = sanitize_text_field($currRow[0]);
+                $sum = floatval($currRow[1]);
+                if (!is_numeric($sum) || $sum < 0 || $sum > 1000000) {
+                    continue; // Пропускаем невалидные записи
+                }
                 $comment_admin = $currRow[2];
                 $status = in_array($currRow[3], ['active', 'noactive', 'used']) ? $currRow[3] : 'noactive';
                 $reusable = (int)$currRow[4] ?? 0;

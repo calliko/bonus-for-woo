@@ -16,16 +16,16 @@ if (!empty($val['clear-bfw-bd'])) {
     global $wpdb;
 
     $table_name1 = $wpdb->prefix . 'bfw_computy';
-    $wpdb->query("DROP TABLE IF EXISTS {$table_name1}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table_name1));
 
     $table_name2 = $wpdb->prefix . 'bfw_history_computy';
-    $wpdb->query("DROP TABLE IF EXISTS {$table_name2}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table_name2));
 
     $table_name3 = $wpdb->prefix . 'bfw_logs_computy';
-    $wpdb->query("DROP TABLE IF EXISTS {$table_name3}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table_name3));
 
     $table_name4 = $wpdb->prefix . 'bfw_coupons_computy';
-    $wpdb->query("DROP TABLE IF EXISTS {$table_name4}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table_name4));
 
     //delete user_meta
     $users = get_users();

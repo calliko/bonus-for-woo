@@ -1022,6 +1022,7 @@ class BfwAccount
         $pointsForRegistration = BfwSetting::get('points-for-registration');
 
         if ($pointsForRegistration && !BfwSetting::get('register-points-only-referal')) {
+            /* translators: %1$d: number of points, %2$s: points label */
             echo '<div class="bfw-in-register-form">' . sprintf(__('Register and get %1$d %2$s.', 'bonus-for-woo'),
                             $pointsForRegistration, BfwPoints::pointsLabel($pointsForRegistration)) . '</div>';
         }

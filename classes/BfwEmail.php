@@ -32,6 +32,7 @@ class BfwEmail
         $headers = array('From: ' . $from_name . ' <' . $from_address . '>', 'content-type: text/html',);
 
         if (empty($subject)) {
+            /* translators: %s: points label */
             $subject = sprintf(__('Reward %s notification', 'bonus-for-woo'),
                     BfwPoints::pointsLabel(5)) . ' ' . $from_name;
         }

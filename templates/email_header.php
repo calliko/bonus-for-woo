@@ -1,3 +1,4 @@
+<?php if ( ! defined( 'ABSPATH' ) ) exit; ?>
 <div class="js-message-body-content mail-Message-Body-Content">
     <div style="background-color:{background_color};margin:0;padding:70px 0 70px 0;width:100%">
         <table border="0" cellpadding="0" cellspacing="0" height="100%"

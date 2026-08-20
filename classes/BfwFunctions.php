@@ -485,6 +485,8 @@ class BfwFunctions
         );
 
         if ($exclude_order_id) {
+            // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude
+            // Justified: only excluding one order, query already filtered by customer_id
             $args['exclude'] = [$exclude_order_id];
         }
 

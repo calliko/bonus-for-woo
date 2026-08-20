@@ -4,13 +4,13 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           8.2.8
+ * Version:           8.2.9
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
  * Author URI:        https://computy.ru
  * Text Domain:       bonus-for-woo
- * Domain Path:       /languages
+ * Domain Path:       /lang
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * WC requires at least: 6.0
@@ -27,7 +27,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 
 // Define plugin constants.
-const BONUS_COMPUTY_VERSION = '8.2.8';
+const BONUS_COMPUTY_VERSION = '8.2.9';
 const BONUS_COMPUTY_VERSION_DB = '6';
 define('BONUS_COMPUTY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BONUS_COMPUTY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -99,7 +99,9 @@ add_action('rest_api_init', function () {
     register_rest_route('bfw/v1', '/clear-fast-bonus', [
         'methods' => 'POST',
         'callback' => ['BfwPoints', 'bfwoo_clean_fast_bonus_rest'],
-        'permission_callback' => '__return_true',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
     ]);
 
     register_rest_route('bfw/v1', '/apply-points', [

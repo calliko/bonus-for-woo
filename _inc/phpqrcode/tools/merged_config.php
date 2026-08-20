@@ -4,7 +4,9 @@
  *
  * Config file, tuned-up for merged verion
  */
-
+if (!defined('ABSPATH')) {
+    exit;
+}
 define('QR_CACHEABLE',
     false);       // use cache - more disk reads but less CPU power, masks and format templates are stored there
 define('QR_CACHE_DIR', false);       // used when QR_CACHEABLE === true

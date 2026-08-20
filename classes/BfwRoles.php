@@ -88,6 +88,7 @@ class BfwRoles
         } elseif (empty($name) || empty($slug)) {
             $message = __('The status name cannot be empty.', 'bonus-for-woo');
         } elseif ($existing_sumaStart) {
+            /* translators: %s: status name */
             $message = sprintf(__('This amount of orders is in the <b>%s</b> status, change it to another amount.',
                 'bonus-for-woo'), $existing_sumaStart->name);
         } else {
@@ -249,6 +250,7 @@ class BfwRoles
                     update_user_meta($userId, 'bfw_status', $status_id);
 
                     // Добавляем лог
+                    /* translators: %s: status name */
                     BfwLogs::addLog('status_change', $userId, sprintf(__('Status changed to: %s', 'bonus-for-woo'), $status_name));
 
                     if (BfwSetting::get('email-when-status-chenge') && !empty($sendEmail)) {

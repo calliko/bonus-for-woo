@@ -140,6 +140,7 @@ class Bfw_History_List_Table extends WP_List_Table
     {
         $user = get_userdata($item->user);
         if (!$user) {
+            /* translators: %d: user ID */
             return sprintf(__('Deleted user #%d', 'bonus-for-woo'), $item->user);
         }
 

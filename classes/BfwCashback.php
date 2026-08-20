@@ -146,6 +146,7 @@ class BfwCashback
         // Return cashback data
         $return = array();
         if ($cashback_this_order > 0) {
+            /* translators: %s: cashback percentage */
             $return['cashback_title'] = sprintf(__('Cashback %s', 'bonus-for-woo'), $upto);
             $return['percentUp'] = $percentUp;
             $return['cashback_this_order'] = BfwPoints::roundPoints($cashback_this_order);
@@ -376,6 +377,8 @@ class BfwCashback
         $all_ids = wc_get_orders($args_all);
         
         // Теперь ищем заказы с уже начисленным кешбэком
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+        // Justified: need to find orders with specific meta key
         $args_with_cashback = [
             'type' => 'shop_order',
             'status' => ['wc-' . $order_status],

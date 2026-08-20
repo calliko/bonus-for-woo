@@ -24,7 +24,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+if (!defined('ABSPATH')) {
+    exit;
+}
 define('STRUCTURE_HEADER_BITS', 20);
 define('MAX_STRUCTURED_SYMBOLS', 16);
 

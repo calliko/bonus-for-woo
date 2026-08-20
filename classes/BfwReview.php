@@ -143,16 +143,20 @@ class BfwReview
             if ($count_comment === 0 && $bought_product) {/*Если количество одобренных у этого товара у этого клиента 1, то удаляем баллы*/
 
                 BfwPoints::updatePoints($user_id, $computy_user_point);//Удаляем баллы клиенту
+                /* translators: %s: points label */
                 $cause = sprintf(__('Return of %s for Product Review', 'bonus-for-woo'), BfwPoints::pointsLabel(5));
                 /*В историю*/
                 BfwHistory::add_history($user_id, '-', $bonusfor_otziv_new, '0', $cause);
 
                 /*email*/
+                /* translators: %s: points label */
                 $title_email = sprintf(__('Return of %s', 'bonus-for-woo'), BfwPoints::pointsLabel(5));
+                /* translators: %1$s: number of points, %2$s: points label */
                 $info_email = sprintf(__('Your product review has been rejected. %1$s %2$s are canceled.',
                     'bonus-for-woo'), $bonusfor_otziv_new, BfwPoints::pointsLabel(5));
                 $message_email = '<p>' . $info_email . '</p>';
                 $message_email .= '<p>' . __('Cause', 'bonus-for-woo') . ': ' . $cause . '</p>';
+                /* translators: %s: points label */
                 $message_email .= '<p>' . sprintf(__('The sum of your %s is now', 'bonus-for-woo'),
                         BfwPoints::pointsLabel(5)) . ': <b>' . $computy_user_point . ' ' . BfwPoints::pointsLabel($computy_user_point) . '</b></p>';
 

@@ -165,6 +165,15 @@ class BfwHooks
             4
         );
 
+        /* Инвалидация кэша при изменении настроек*/
+        add_action('update_option_bonus_option_name', function() {
+            // Очистить кэш для всех пользователей
+            $users = get_users(['fields' => 'ID']);
+            foreach ($users as $user_id) {
+                delete_user_meta($user_id, 'total_purchases_sum');
+            }
+        });
+
         /*------------Сохраняем баллы для списания в метазаписи заказа------------*/
         add_action('woocommerce_checkout_create_order', array('BfwPoints', 'savePointsToDeductInOrder'), 10, 1);
     }
