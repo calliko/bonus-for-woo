@@ -678,7 +678,10 @@ global $wpdb;
             //Если находимся в редакторе страницы, то ничего не делаем
             return '';
         }
-
+        // Не трогаем корзину/купоны на странице повторной оплаты уже созданного заказа
+        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
+            return '';
+        }
         $woo = WC();
         $user_id = get_current_user_id();
 

@@ -2904,6 +2904,22 @@ class BfwAdmin
             $existing = [];
         }
 
+        // Список полей-массивов, которые должны быть очищены, если не переданы
+        $array_fields = [
+                'points-only-products',
+                'points-only-categories',
+                'exclude-category-cashback',
+                'exclude-payment-method',
+                'exclude-role',
+                'refunded_points_order_status'
+        ];
+
+        foreach ($array_fields as $field) {
+            if (!isset($options[$field]) || !is_array($options[$field])) {
+                $options[$field] = [];
+            }
+        }
+
         if (is_array($options)) {
             $options = array_merge($existing, $options);
         } else {

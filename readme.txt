@@ -6,7 +6,7 @@ Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.0
 WC tested up to: 11.0.1
-Stable tag: 8.3.0
+Stable tag: 8.3.1
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -119,7 +119,7 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
-= 8.3.0 - 2026-09-01 =
+= 8.3.1 - 2026-09-01 =
 * Added a "Do not deduct points for the first order" setting for the PRO version.
 * Added functionality to select products that can be purchased only with points.
 * Translation-related work.

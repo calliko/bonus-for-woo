@@ -355,10 +355,13 @@ class BfwFunctions
      * Обновляет страницу при выборе метода оплаты при выводе [woocommerce_checkout]
      *
      * @return void
-     * @version 6.4.0
+     * @version 8.3.0
      */
     public static function updatePageIfChangePaymentMethod(): void
     {
+        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
+            return;
+        }
         $expm = BfwSetting::get('exclude-payment-method', array());
         if (isset($expm[0])) {
             $count_expm = count($expm);
