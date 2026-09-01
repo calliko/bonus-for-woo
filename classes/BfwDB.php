@@ -61,7 +61,10 @@ class BfwDB
 		comment_admin VARCHAR(255)  DEFAULT NULL,
 		status varchar(10)  DEFAULT NULL,
 		PRIMARY KEY (id),
-		INDEX name_index (user)
+		 INDEX user_index (user),
+    INDEX date_index (date),
+    INDEX order_index (orderz),
+    INDEX user_date_index (user, date)
 	) $charset_collate;";
 
 

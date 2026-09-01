@@ -102,7 +102,17 @@ class BfwPoints
     public static function roundPoints(float $points): float
     {
         $precision = BfwSetting::get('round_points') ? 2 : 0;
-        return round($points, $precision);
+
+        $pointsStr = number_format($points, 4, '.', '');
+        // Проверяем наличие bcmath
+        if (extension_loaded('bcmath')) {
+            // Работаем со строками для сохранения точности
+            $rounded = bcadd($pointsStr, '0', $precision);
+            return (float) $rounded;
+        }
+
+        // Fallback с улучшенной точностью
+        return round((float)$pointsStr, $precision);
     }
 
 
@@ -675,6 +685,15 @@ global $wpdb;
         if (!BfwRoles::isInvalve($user_id)) {
             return '';
         }
+
+        // Check if point deduction should be hidden for first order
+        if (BfwRoles::isPro() && BfwSetting::get('skip-points-deduction-first-order')) {
+            $order_count = (new BfwFunctions())->get_customer_order_count($user_id, [BfwSetting::get('write_points_order_status', 'completed')]);
+            if ($order_count === 0) {
+                return '';
+            }
+        }
+
         $computy_point = self::roundPoints(self::getPoints($user_id));
         $user_fast_points = self::getFastPoints($user_id);
         $cart_discount_name = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo');
@@ -1016,41 +1035,6 @@ global $wpdb;
     }
 
 
-    /**
-     * Clearing temporary points
-     * Очищение временных баллов
-     *
-     * @return void
-     * @version 5.3.3
-     */
-    /*public static function bfwoo_clean_fast_bonus(): void
-    {
-        // Получаем ID текущего пользователя
-        $userId = get_current_user_id();
-
-        // Обнуляем быстрые бонусные баллы
-        self::updateFastPoints($userId, 0);
-
-        // Проверяем, есть ли в опциях бонусные баллы в корзине
-        if (BfwSetting::get('bonus-points-on-cart')) {
-            $cartDiscount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
-            $woo = WC();
-
-            // Проверяем, есть ли корзина и примененные купоны
-            if (isset($woo->cart) && $woo->cart->get_applied_coupons()) {
-                foreach ($woo->cart->get_applied_coupons() as $code) {
-                    if (strtolower($code) === $cartDiscount) {
-                        $woo->cart->remove_coupon($code);
-                    }
-                }
-            }
-        }
-
-        // Проверяем, есть ли редирект в POST-запросе
-        if (isset($_POST['redirect'])) {
-            wp_send_json_success($_POST['redirect']);
-        }
-    } */
     public static function bfwoo_clean_fast_bonus_rest(WP_REST_Request $request): WP_REST_Response
     {
         $userId = get_current_user_id();
@@ -1835,6 +1819,16 @@ global $wpdb;
         }
 
         if ($computy_point_fast > 0) {
+            // Check if point deduction should be skipped for first order
+            if (BfwRoles::isPro() && BfwSetting::get('skip-points-deduction-first-order')) {
+                $order_count = (new BfwFunctions())->get_customer_order_count($customer_user, [BfwSetting::get('write_points_order_status', 'completed')], $order_id);
+                if ($order_count === 0) {
+                    // Skip point deduction for first order
+                    self::updateFastPoints($customer_user, 0);
+                    return;
+                }
+            }
+
             $count_point = $computy_point_old - $computy_point_fast;
             self::updatePoints($customer_user, $count_point);
 
@@ -2007,6 +2001,9 @@ global $wpdb;
     {
         $order = wc_get_order($order_id);
         $user_id = $order->get_customer_id();
+
+        // Инвалидируем кэш суммы заказов при начислении баллов за заказ
+        delete_user_meta($user_id, 'total_purchases_sum');
 
         $bfwRoles = new BfwRoles();
         $bfwHistory = new BfwHistory();
@@ -2872,5 +2869,259 @@ global $wpdb;
 
         /* translators: %1$d: processed count, %2$d: total count, %3$d: percentage */
         wp_send_json(sprintf(__('Processed %d of %d users (%d%%)...', 'bonus-for-woo'), $new_offset, $total_users, $percent));
+    }
+
+
+    /**
+     * Validate that products requiring points-only purchase have sufficient points
+     *
+     * @return void
+     * @version 8.3.0
+     */
+    public static function validatePointsOnlyProducts(): void
+    {
+        if (!BfwRoles::isPro()) {
+            return;
+        }
+
+        $points_only_products = BfwSetting::get('points-only-products', array());
+        $points_only_categories = BfwSetting::get('points-only-categories', array());
+
+        if (empty($points_only_products) && empty($points_only_categories)) {
+            return;
+        }
+
+        $cart = WC()->cart;
+        if (empty($cart)) {
+            return;
+        }
+
+        $user_id = get_current_user_id();
+        $user_points = self::getPoints($user_id);
+        $user_fast_points = self::getFastPoints($user_id);
+        $total_available_points = $user_points + $user_fast_points;
+
+        $points_only_in_cart = false;
+        $cart_total_for_points_only = 0;
+
+        foreach ($cart->get_cart() as $cart_item) {
+            $product_id = $cart_item['product_id'];
+            $variation_id = $cart_item['variation_id'];
+            $product = $cart_item['data'];
+
+            // Check if product is in points-only list
+            if (in_array($product_id, $points_only_products) || ($variation_id && in_array($variation_id, $points_only_products))) {
+                $points_only_in_cart = true;
+                $cart_total_for_points_only += $cart_item['line_total'];
+                continue;
+            }
+
+            // Check if product category is in points-only list
+            $product_categories = get_the_terms($product_id, 'product_cat');
+            if ($product_categories && !is_wp_error($product_categories)) {
+                foreach ($product_categories as $category) {
+                    if (in_array($category->term_id, $points_only_categories)) {
+                        $points_only_in_cart = true;
+                        $cart_total_for_points_only += $cart_item['line_total'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ($points_only_in_cart) {
+            // Check if user has enough points to cover the points-only products
+            $points_value = $cart_total_for_points_only * (BfwSetting::get('max-percent-bonuses', 100) / 100);
+
+            if ($total_available_points < $points_value) {
+                wc_add_notice(
+                    sprintf(
+                        __('Some products in your cart can only be purchased with points. You need %d points but have %d available.', 'bonus-for-woo'),
+                        self::roundPoints($points_value),
+                        self::roundPoints($total_available_points)
+                    ),
+                    'error'
+                );
+            } elseif ($user_fast_points == 0) {
+                // User has points but hasn't selected them for use
+                wc_add_notice(
+                    __('Some products in your cart can only be purchased with points. Please select points to use in checkout.', 'bonus-for-woo'),
+                    'error'
+                );
+            }
+        }
+    }
+
+
+    /**
+     * Add notice when points-only products are in cart
+     *
+     * @return void
+     * @version 8.3.0
+     */
+    public static function addPointsOnlyProductsNotice(): void
+    {
+        if (!BfwRoles::isPro()) {
+            return;
+        }
+
+        $points_only_products = BfwSetting::get('points-only-products', array());
+        $points_only_categories = BfwSetting::get('points-only-categories', array());
+
+        if (empty($points_only_products) && empty($points_only_categories)) {
+            return;
+        }
+
+        $cart = WC()->cart;
+        if (empty($cart)) {
+            return;
+        }
+
+        $points_only_in_cart = false;
+
+        foreach ($cart->get_cart() as $cart_item) {
+            $product_id = $cart_item['product_id'];
+            $variation_id = $cart_item['variation_id'];
+
+            // Check if product is in points-only list
+            if (in_array($product_id, $points_only_products) || ($variation_id && in_array($variation_id, $points_only_products))) {
+                $points_only_in_cart = true;
+                break;
+            }
+
+            // Check if product category is in points-only list
+            $product_categories = get_the_terms($product_id, 'product_cat');
+            if ($product_categories && !is_wp_error($product_categories)) {
+                foreach ($product_categories as $category) {
+                    if (in_array($category->term_id, $points_only_categories)) {
+                        $points_only_in_cart = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if ($points_only_in_cart) {
+            wc_print_notice(
+                __('Some products in your cart can only be purchased with bonus points. Make sure you have enough points and select them to use during checkout.', 'bonus-for-woo'),
+                'notice'
+            );
+        }
+    }
+
+
+    /**
+     * Block order creation if points-only products are purchased without points
+     *
+     * @param WC_Order $order
+     * @return void
+     * @version 8.3.0
+     */
+    public static function blockOrderForPointsOnlyProducts($order): void
+    {
+        if (!BfwRoles::isPro()) {
+            return;
+        }
+
+        $points_only_products = BfwSetting::get('points-only-products', array());
+        $points_only_categories = BfwSetting::get('points-only-categories', array());
+
+        if (empty($points_only_products) && empty($points_only_categories)) {
+            return;
+        }
+
+        $points_deducted = $order->get_meta('_bfw_points_deducted', true);
+        $points_only_in_order = false;
+
+        foreach ($order->get_items() as $item) {
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+
+            // Check if product is in points-only list
+            if (in_array($product_id, $points_only_products) || ($variation_id && in_array($variation_id, $points_only_products))) {
+                $points_only_in_order = true;
+                break;
+            }
+
+            // Check if product category is in points-only list
+            $product_categories = get_the_terms($product_id, 'product_cat');
+            if ($product_categories && !is_wp_error($product_categories)) {
+                foreach ($product_categories as $category) {
+                    if (in_array($category->term_id, $points_only_categories)) {
+                        $points_only_in_order = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if ($points_only_in_order && empty($points_deducted)) {
+            // Cancel the order if points-only products were purchased without using points
+            $order->update_status('cancelled', __('Order cancelled: Points-only products must be purchased with bonus points.', 'bonus-for-woo'));
+            wc_add_notice(
+                __('Your order has been cancelled because it contains products that can only be purchased with bonus points. Please select points to use during checkout.', 'bonus-for-woo'),
+                'error'
+            );
+        }
+    }
+
+
+    /**
+     * Disable payment gateways if points-only products are in cart without points selected
+     *
+     * @param array $available_gateways
+     * @return array
+     * @version 8.3.0
+     */
+    public static function disablePaymentGatewaysForPointsOnlyProducts($available_gateways): array
+    {
+        if (!BfwRoles::isPro()) {
+            return $available_gateways;
+        }
+
+        $points_only_products = BfwSetting::get('points-only-products', array());
+        $points_only_categories = BfwSetting::get('points-only-categories', array());
+
+        if (empty($points_only_products) && empty($points_only_categories)) {
+            return $available_gateways;
+        }
+
+        $cart = WC()->cart;
+        if (empty($cart)) {
+            return $available_gateways;
+        }
+
+        $user_id = get_current_user_id();
+        $user_fast_points = self::getFastPoints($user_id);
+        $points_only_in_cart = false;
+
+        foreach ($cart->get_cart() as $cart_item) {
+            $product_id = $cart_item['product_id'];
+            $variation_id = $cart_item['variation_id'];
+
+            // Check if product is in points-only list
+            if (in_array($product_id, $points_only_products) || ($variation_id && in_array($variation_id, $points_only_products))) {
+                $points_only_in_cart = true;
+                break;
+            }
+
+            // Check if product category is in points-only list
+            $product_categories = get_the_terms($product_id, 'product_cat');
+            if ($product_categories && !is_wp_error($product_categories)) {
+                foreach ($product_categories as $category) {
+                    if (in_array($category->term_id, $points_only_categories)) {
+                        $points_only_in_cart = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // If points-only products are in cart and no points are selected, disable all payment gateways
+        if ($points_only_in_cart && $user_fast_points == 0) {
+            return array();
+        }
+
+        return $available_gateways;
     }
 }

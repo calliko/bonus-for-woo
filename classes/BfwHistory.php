@@ -91,7 +91,14 @@ class BfwHistory
         }
 
         ob_start();
-        require_once BONUS_COMPUTY_PLUGIN_DIR . '/pages/datatable.php';
+        $datatable_path = BONUS_COMPUTY_PLUGIN_DIR . '/pages/datatable.php';
+        if (file_exists($datatable_path)) {
+            require_once $datatable_path;
+        } else {
+            error_log('Datatable file not found: ' . $datatable_path);
+            return '';
+        }
+
         ?>
         <div class="bfw-history-points-header">
             <h3><?php echo $history_title; ?></h3>

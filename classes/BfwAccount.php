@@ -121,7 +121,7 @@ class BfwAccount
         if ($shortcode['view'] === 'true') {
             return $output;
         } else {
-            echo $output;
+            echo wp_kses_post($output);
         }
     }
 
@@ -550,15 +550,15 @@ class BfwAccount
             update_user_meta($userId, 'bfw_points_referral_invite', 0);
         }
 
-        // Get direct referrals
-        $directReferrals = self::getDirectReferrals($userId);
-        $directReferralCount = count($directReferrals);
-
-        // Get second level referrals if enabled
-        $secondLevelReferralCount = 0;
-
+        // Get referrals - optimized with single query if level-two is enabled
         if (BfwSetting::get('level-two-referral')) {
-            $secondLevelReferralCount = self::getSecondLevelReferralCount($directReferrals);
+            $referralCounts = self::getAllReferralsCount($userId);
+            $directReferralCount = $referralCounts['level1'];
+            $secondLevelReferralCount = $referralCounts['level2'];
+        } else {
+            $directReferrals = self::getDirectReferrals($userId);
+            $directReferralCount = count($directReferrals);
+            $secondLevelReferralCount = 0;
         }
 
         // Check order total requirement
@@ -580,17 +580,17 @@ class BfwAccount
 
     private static function getDirectReferrals(int $userId): array
     {
-        return get_users([
-                'meta_query' => [
-                        [
-                                'key' => 'bfw_points_referral_invite',
-                                'value' => $userId,
-                                'compare' => '=',
-                                'type' => 'NUMERIC'
-                        ]
-                ],
-                'fields' => 'ID' // Only get what we need
-        ]);
+        global $wpdb;
+        
+        // Прямой SQL запрос для получения только ID - быстрее чем get_users
+        $ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT user_id FROM {$wpdb->usermeta} 
+             WHERE meta_key = 'bfw_points_referral_invite' 
+             AND meta_value = %d",
+            $userId
+        ));
+        
+        return $ids;
     }
 
     private static function getSecondLevelReferralCount(array $directReferrals): int
@@ -598,19 +598,61 @@ class BfwAccount
         if (empty($directReferrals)) {
             return 0;
         }
-        $directReferralIds = wp_list_pluck($directReferrals, 'ID');
+        
         global $wpdb;
-
-        if (empty($directReferralIds)) {
-            return 0; // Возвращаем 0, если список пуст
+        
+        // Проверяем, что это массив ID (если getDirectReferrals возвращает массив ID)
+        if (isset($directReferrals[0]) && is_object($directReferrals[0])) {
+            $directReferralIds = wp_list_pluck($directReferrals, 'ID');
+        } else {
+            $directReferralIds = $directReferrals;
         }
 
+        if (empty($directReferralIds)) {
+            return 0;
+        }
+
+        // Оптимизированный запрос с использованием IN и плейсхолдеров
+        $placeholders = implode(',', array_fill(0, count($directReferralIds), '%d'));
+        
         return (int)$wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->usermeta} 
-         WHERE meta_key = 'bfw_points_referral_invite' 
-         AND meta_value IN (" . implode(',', array_fill(0, count($directReferralIds), '%d')) . ")",
-                $directReferralIds
+            "SELECT COUNT(*) FROM {$wpdb->usermeta} 
+             WHERE meta_key = 'bfw_points_referral_invite' 
+             AND meta_value IN ($placeholders)",
+            ...$directReferralIds
         ));
+    }
+
+    private static function getAllReferralsCount(int $userId): array
+    {
+        global $wpdb;
+
+        // Получаем ID прямых рефералов (level 1)
+        $level1_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT user_id FROM {$wpdb->usermeta} 
+             WHERE meta_key = 'bfw_points_referral_invite' 
+             AND meta_value = %d",
+            $userId
+        ));
+
+        $level1_count = count($level1_ids);
+        $level2_count = 0;
+
+        // Если есть прямые рефералы, ищем рефералов второго уровня
+        if (!empty($level1_ids)) {
+            $placeholders = implode(',', array_fill(0, count($level1_ids), '%d'));
+            $level2_count = (int)$wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->usermeta} 
+                 WHERE meta_key = 'bfw_points_referral_invite' 
+                 AND meta_value IN ($placeholders)",
+                ...$level1_ids
+            ));
+        }
+
+        return [
+            'level1' => $level1_count,
+            'level2' => $level2_count
+        ];
     }
 
     private static function renderRemainingAmountMessage(float $remainingAmount): string

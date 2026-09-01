@@ -125,14 +125,14 @@ class BfwAdmin
 
             if ($cashback_status === 'received' && $cashback_amount) {
                 echo '<p><strong>' . __('Cashback received:',
-                                'bonus-for-woo') . '</strong> ' . esc_html($cashback_amount) . ' ' . BfwPoints::pointsLabel($cashback_amount) . '</p>';
+                                'bonus-for-woo') . '</strong> ' . esc_html($cashback_amount) . ' ' . esc_html(BfwPoints::pointsLabel($cashback_amount)) . '</p>';
             } elseif ($cashback_status === 'refunded') {
                 echo '<p><strong style="color: #a00;">' . __('Refund of bonus points', 'bonus-for-woo') . '</strong></p>';
             }
 
             if ($returned_points) {
                 echo '<p><strong>' . __('Returned spent points:',
-                                'bonus-for-woo') . '</strong> ' . $returned_points . ' ' . BfwPoints::pointsLabel($returned_points) . '</p>';
+                                'bonus-for-woo') . '</strong> ' . esc_html($returned_points) . ' ' . esc_html(BfwPoints::pointsLabel($returned_points)) . '</p>';
             }
 
             echo '</div>';
@@ -142,7 +142,7 @@ class BfwAdmin
             if ((int)$estimated > 0) {
                 echo '<div class="order-cashback-info"><h3>Bonus for woo</h3>
 <p><strong>' . __('Estimated cashback:',
-                                'bonus-for-woo') . '</strong> ' . $estimated . ' ' . BfwPoints::pointsLabel($estimated) . '</p>';
+                                'bonus-for-woo') . '</strong> ' . esc_html($estimated) . ' ' . esc_html(BfwPoints::pointsLabel($estimated)) . '</p>';
 
                 $pending = $order->get_meta('_bonus_cashback_pending', true);
 
@@ -629,7 +629,7 @@ class BfwAdmin
      *
      * @return void
      */
-    public static function load_scripts(): void
+    public static function load_scripts($hook = ''): void
     {
         wp_register_style('bonus-for-woo-computy-style-admin',
                 BONUS_COMPUTY_PLUGIN_URL . '_inc/bonus-for-woo-style-admin.css', array(), BONUS_COMPUTY_VERSION);
@@ -658,6 +658,17 @@ class BfwAdmin
                     array('jquery'), BONUS_COMPUTY_VERSION, true);
             wp_localize_script('custom-admin-script', 'bfw_order_points', [
                     'nonce' => wp_create_nonce('bfw_order_points_nonce')
+            ]);
+        }
+
+        // Load analytics script on statistic page
+        if (strpos($hook, 'bonus-for-woo/pages/statistic') !== false || strpos($hook, 'statistic') !== false) {
+            wp_register_script('bfw-analytics', BONUS_COMPUTY_PLUGIN_URL . '_inc/bfw-analytics.js',
+                    array('jquery'), BONUS_COMPUTY_VERSION, true);
+            wp_enqueue_script('bfw-analytics');
+            wp_localize_script('bfw-analytics', 'bfwAnalyticsData', [
+                    'nonce' => wp_create_nonce('bfw_analytics_nonce'),
+                    'ajaxurl' => admin_url('admin-ajax.php')
             ]);
         }
     }
@@ -786,6 +797,8 @@ class BfwAdmin
                     'bonus-for-woo'));
         }
         $cashback_for_first_order = __('Cashback for the first order', 'bonus-for-woo');
+        $skip_points_deduction_first_order = __('Do not deduct points for the first order', 'bonus-for-woo');
+        $points_only_products = __('Products/categories that can only be purchased with points', 'bonus-for-woo');
         $trans_soc2 = __('Show social media links on product page?', 'bonus-for-woo');
         $transclear = __('Remove plugin traces upon activation.',
                         'bonus-for-woo') . BfwFunctions::helpTip(__('Attention! This will remove all settings and all user bonus points.',
@@ -874,6 +887,10 @@ class BfwAdmin
                     'bonus_section_id');
             add_settings_field('cashback_for_first_order', $cashback_for_first_order,
                     array('BfwAdmin', 'cashback_for_first_order'), 'pro_page_bonus', 'bonus_section_id');
+            add_settings_field('skip_points_deduction_first_order', $skip_points_deduction_first_order,
+                    array('BfwAdmin', 'skip_points_deduction_first_order'), 'pro_page_bonus', 'bonus_section_id');
+            add_settings_field('points_only_products', $points_only_products,
+                    array('BfwAdmin', 'points_only_products'), 'pro_page_bonus', 'bonus_section_id');
 
             add_settings_field('my_checkbox_field16', $trans16, array('BfwAdmin', 'fill_primer_field16'),
                     'pro_page_bonus', 'bonus_section_id');
@@ -1968,7 +1985,7 @@ class BfwAdmin
 
         <input style="width: 60px" type="text" name="bonus_option_name[birthday]"
                value="<?php echo esc_attr($val1) ?>"/>
-        <small style="color:#999999"><?php echo BfwPoints::pointsLabel(esc_attr($val1)); ?>.</small>
+        <small style="color:#999999"><?php echo esc_html(BfwPoints::pointsLabel(esc_attr($val1))); ?>.</small>
         <small style="color:#999999"><?php echo __('Accrue for', 'bonus-for-woo') ?></small>
         <input style="width: 60px" type="number" name="bonus_option_name[how-many-birthday]"
                value="<?php echo esc_attr($hmb) ?>"/>
@@ -1988,7 +2005,7 @@ class BfwAdmin
 
         <input style="width: 60px" type="text" name="bonus_option_name[every_days]"
                value="<?php echo esc_attr($val) ?>"/>
-        <small style="color:#999999"><?php echo BfwPoints::pointsLabel(esc_attr($val)); ?></small>
+        <small style="color:#999999"><?php echo esc_html(BfwPoints::pointsLabel(esc_attr($val))); ?></small>
     <?php }
 
     /**
@@ -2003,6 +2020,68 @@ class BfwAdmin
         <input style="width: 60px" type="number" min="0" max="100" name="bonus_option_name[cashback_for_first_order]"
                value="<?php echo esc_attr($val) ?>">
         <small style="color:#999999">%</small>
+    <?php }
+
+
+    /**
+     * Skip point deduction for the first order
+     *
+     * @return void
+     */
+    public static function skip_points_deduction_first_order(): void
+    {
+        $checked = BfwSetting::get('skip-points-deduction-first-order') ? "checked" : "";
+        ?>
+        <input name="bonus_option_name[skip-points-deduction-first-order]" type="checkbox"
+               value="1" <?php echo esc_attr($checked); ?> >
+    <?php }
+
+
+    /**
+     * Products/categories that can only be purchased with points
+     *
+     * @return void
+     */
+    public static function points_only_products(): void
+    {
+        $selected_products = BfwSetting::get('points-only-products', array());
+        $selected_categories = BfwSetting::get('points-only-categories', array());
+        ?>
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 5px;"><?php echo __('Products:', 'bonus-for-woo'); ?></label>
+            <select multiple="multiple" id="points-only-products" name="bonus_option_name[points-only-products][]" style="width: 100%; ">
+                <?php
+                $args = array(
+                    'post_type' => 'product',
+                    'posts_per_page' => -1,
+                    'orderby' => 'title',
+                    'order' => 'ASC',
+                );
+                $products = get_posts($args);
+                foreach ($products as $product) {
+                    $selected = in_array($product->ID, $selected_products) ? ' selected="selected"' : '';
+                    echo "<option value='" . esc_attr($product->ID) . "'" . $selected . ">" . esc_html($product->post_title) . "</option>";
+                }
+                ?>
+            </select>
+        </div>
+        <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 5px;"><?php echo __('Categories:', 'bonus-for-woo'); ?></label>
+            <select multiple="multiple" id="points-only-categories" name="bonus_option_name[points-only-categories][]" style="width: 100%;">
+                <?php
+                $categories = get_terms(array(
+                    'taxonomy' => 'product_cat',
+                    'orderby' => 'name',
+                    'order' => 'ASC',
+                    'hide_empty' => false,
+                ));
+                foreach ($categories as $category) {
+                    $selected = in_array($category->term_id, $selected_categories) ? ' selected="selected"' : '';
+                    echo "<option value='" . esc_attr($category->term_id) . "'" . $selected . ">" . esc_html($category->name) . "</option>";
+                }
+                ?>
+            </select>
+        </div>
     <?php }
 
 
@@ -2546,7 +2625,7 @@ class BfwAdmin
         ?>
 
         <input style="width: 60px" type="number" min="0" step="any" name="bonus_option_name[bonus-for-otziv]"
-               value="<?php echo esc_attr($val) ?>"/> <?php echo BfwPoints::pointsLabel($val); ?>
+               value="<?php echo esc_attr($val) ?>"/> <?php echo esc_html(BfwPoints::pointsLabel($val)); ?>
     <?php }
 
 

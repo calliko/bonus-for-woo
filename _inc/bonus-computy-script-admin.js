@@ -57,6 +57,20 @@ document.addEventListener('DOMContentLoaded', function () {
 //перерасчет баллов за старые заказы
 
 
+
+    if (document.getElementById('points-only-products')) {
+        new SlimSelect({
+            select: '#points-only-products',
+        });
+    }
+    if (document.getElementById('points-only-categories')) {
+        new SlimSelect({
+            select: '#points-only-categories',
+        });
+    }
+
+
+
     if (document.getElementById('exclude-role')) {
         new SlimSelect({
             select: '#exclude-role',

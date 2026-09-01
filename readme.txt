@@ -2,11 +2,11 @@
 Contributors: calliko
 Donate link: https://yoomoney.ru/to/410011302808683
 Tags: loyalty, cashback, points, reward, referral
-Requires at least:  5.6
+Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.0
-WC tested up to: 11.0.0
-Stable tag: 8.2.9
+WC tested up to: 11.0.1
+Stable tag: 8.3.0
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -119,6 +119,15 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+= 8.3.0 - 2026-09-01 =
+* Added a "Do not deduct points for the first order" setting for the PRO version.
+* Added functionality to select products that can be purchased only with points.
+* Translation-related work.
+* Improved security.
+* Performance optimization.
+* Statistics updated: added point distribution, top clients by total points, statistics export, and coupon statistics.
+* Protecting the export file from external downloads.
+
 = 8.2.9 - 2026-08-20 =
 * Security enhanced.
 * WordPress 7.1 support.
@@ -184,5 +193,5 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Upgrade Notice ==
 
-= 8.0.0 =
+= 9.0.0 =
 * Super update.

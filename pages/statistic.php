@@ -148,6 +148,7 @@ defined( 'ABSPATH' ) || exit;
         border-radius: 12px;
         border: 1px solid var(--bfw-border);
         margin-top: 30px;
+        margin-bottom: 30px;
     }
 </style>
 
@@ -173,7 +174,13 @@ defined( 'ABSPATH' ) || exit;
                 <button id="bfw-recalc-start" class="button button-primary" style="height: auto; padding: 6px 20px;"><?php _e('Refresh Analytics', 'bonus-for-woo'); ?></button>
             </div>
         </div>
-
+        <div id="bfw-recalc-progress" style="display:none;">
+            <h3 style="margin-top: 0;"><?php _e('Deep Data Analysis', 'bonus-for-woo'); ?>...</h3>
+            <div style="background: #f0f0f1; height: 10px; border-radius: 5px; overflow: hidden; margin: 15px 0;">
+                <div id="bfw-progress-inner" style="width: 0%; background: var(--bfw-primary); height: 100%; transition: width 0.3s;"></div>
+            </div>
+            <p id="bfw-progress-text" style="font-weight: 600;"><?php _e('Processing...', 'bonus-for-woo'); ?></p>
+        </div>
         <!-- Ряд 1: Главные деньги -->
         <div class="bfw-dashboard-grid">
             <div class="bfw-card">
@@ -301,13 +308,157 @@ defined( 'ABSPATH' ) || exit;
             </div>
         </div>
 
-        <div class="bfw-section-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
-             <!-- Динамика баллов -->
+        <div class="bfw-section-grid" style=" ">
+             <!-- Распределение баллов -->
              <div class="bfw-card">
-                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Points Flow Dynamics', 'bonus-for-woo'); ?></h3>
-                 <div style="height: 350px;"><canvas id="bfwTrendChart"></canvas></div>
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Points Distribution', 'bonus-for-woo'); ?></h3>
+                 <div id="bfw-distribution-loading" style="text-align: center; padding: 20px;">
+                     <span class="dashicons dashicons-spinner is-active"></span>
+                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                 </div>
+                 <div id="bfw-distribution-content" style="display: none;">
+                     <div style="height: 350px;"><canvas id="bfwDistributionChart"></canvas></div>
+                 </div>
+             </div>
+            <!-- Топ клиентов -->
+            <div class="bfw-card">
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Top 5 VIP Customers', 'bonus-for-woo'); ?></h3>
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                    <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
+                        <th style="padding: 10px 5px;"><?php _e('User', 'bonus-for-woo'); ?></th>
+                        <th style="padding: 10px 5px;"><?php _e('Revenue', 'bonus-for-woo'); ?></th>
+                        <th style="padding: 10px 5px;"><?php _e('Orders', 'bonus-for-woo'); ?></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (!empty($stats['top_customers'])) : foreach ($stats['top_customers'] as $vip) :
+                        $u = get_userdata($vip['id']);
+                        $name = $u ? $u->display_name : 'User #'.$vip['id'];
+                        ?>
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px 5px; font-weight: 600;"><?php echo esc_html($name); ?></td>
+                            <td style="padding: 12px 5px; color: var(--bfw-success);"><?php echo wc_price($vip['revenue']); ?></td>
+                            <td style="padding: 12px 5px;"><?php echo $vip['orders']; ?></td>
+                        </tr>
+                    <?php endforeach; else: ?>
+                        <tr><td colspan="3" style="padding: 15px; text-align: center;"><?php _e('Not enough data.', 'bonus-for-woo'); ?></td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div class="bfw-section-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
+             <!-- Points Trend Analytics -->
+             <div class="bfw-card">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                     <h3 style="margin: 0;"><?php _e('Points Trend Analytics', 'bonus-for-woo'); ?></h3>
+                     <select id="bfw-trend-period" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--bfw-border);">
+                         <option value="7"><?php _e('Last 7 days', 'bonus-for-woo'); ?></option>
+                         <option value="30" selected><?php _e('Last 30 days', 'bonus-for-woo'); ?></option>
+                         <option value="90"><?php _e('Last 90 days', 'bonus-for-woo'); ?></option>
+                         <option value="365"><?php _e('Last year', 'bonus-for-woo'); ?></option>
+                     </select>
+                 </div>
+                 <div id="bfw-trend-loading" style="text-align: center; padding: 20px;">
+                     <span class="dashicons dashicons-spinner is-active"></span>
+                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                 </div>
+                 <div id="bfw-trend-content" style="display: none;">
+                     <div style="height: 350px;"><canvas id="bfwTrendAnalyticsChart"></canvas></div>
+                 </div>
              </div>
         </div>
+
+        <div class="bfw-section-grid">
+             <!-- Overall Stats -->
+             <div class="bfw-card">
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Overall System Statistics', 'bonus-for-woo'); ?></h3>
+                 <div id="bfw-overall-loading" style="text-align: center; padding: 20px;">
+                     <span class="dashicons dashicons-spinner is-active"></span>
+                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                 </div>
+                 <div id="bfw-overall-content" style="display: none;">
+                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Points', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 24px; font-weight: 700; color: var(--bfw-primary);" id="bfw-total-points">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Users with Points', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 24px; font-weight: 700; color: var(--bfw-primary);" id="bfw-users-with-points">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Earned', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 24px; font-weight: 700; color: var(--bfw-success);" id="bfw-total-earned">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Spent', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 24px; font-weight: 700; color: var(--bfw-warning);" id="bfw-total-spent">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; grid-column: span 2;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Active Users (30 days)', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 24px; font-weight: 700; color: var(--bfw-primary);" id="bfw-active-users">0</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+
+             <!-- Top Users -->
+             <div class="bfw-card">
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Top Users by Points', 'bonus-for-woo'); ?></h3>
+                 <div id="bfw-top-users-loading" style="text-align: center; padding: 20px;">
+                     <span class="dashicons dashicons-spinner is-active"></span>
+                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                 </div>
+                 <div id="bfw-top-users-content" style="display: none;">
+                     <table style="width: 100%; border-collapse: collapse;">
+                         <thead>
+                             <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
+                                 <th style="padding: 10px; text-align: left;"><?php _e('User', 'bonus-for-woo'); ?></th>
+                                 <th style="padding: 10px; text-align: right;"><?php _e('Points', 'bonus-for-woo'); ?></th>
+                             </tr>
+                         </thead>
+                         <tbody id="bfw-top-users-table"></tbody>
+                     </table>
+                 </div>
+             </div>
+        </div>
+
+        <div class="bfw-section-grid" style="grid-template-columns: 1fr;">
+             <!-- Coupon Stats -->
+             <div class="bfw-card">
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Coupon Statistics', 'bonus-for-woo'); ?></h3>
+                 <div id="bfw-coupon-loading" style="text-align: center; padding: 20px;">
+                     <span class="dashicons dashicons-spinner is-active"></span>
+                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                 </div>
+                 <div id="bfw-coupon-content" style="display: none;">
+                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Coupons', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);" id="bfw-total-coupons">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Active Coupons', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);" id="bfw-active-coupons">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Used Coupons', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 20px; font-weight: 700; color: var(--bfw-warning);" id="bfw-used-coupons">0</div>
+                         </div>
+                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Coupon Sum', 'bonus-for-woo'); ?></small>
+                             <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);" id="bfw-total-coupon-sum">0</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+
 
         <div class="bfw-section-grid">
              <!-- Сводка оборота -->
@@ -327,12 +478,14 @@ defined( 'ABSPATH' ) || exit;
                 <div style="padding-top: 15px; border-top: 1px solid var(--bfw-border);">
                      <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: 600;"><?php _e('AOV Increase', 'bonus-for-woo'); ?></span>
-                        <?php 
+                        <?php
                         $aov_no = $stats['aov_no_bonus'] ?? 0;
                         $aov_with = $stats['aov_with_bonus'] ?? 0;
                         $increase = ($aov_no > 0) ? (($aov_with - $aov_no) / $aov_no) * 100 : 0;
+                        $trend_class = $increase >= 0 ? 'bfw-trend-up' : 'bfw-trend-down';
+                        $trend_sign = $increase >= 0 ? '+' : '';
                         ?>
-                        <span class="bfw-trend bfw-trend-up" style="font-size: 14px;">+<?php echo round($increase, 1); ?>%</span>
+                        <span class="bfw-trend <?php echo $trend_class; ?>" style="font-size: 14px;"><?php echo $trend_sign . round($increase, 1); ?>%</span>
                      </div>
                      <p style="font-size: 12px; color: var(--bfw-text-muted); margin-top: 5px;">
                         <?php echo sprintf(__('Orders with bonuses are on average %s more expensive.', 'bonus-for-woo'), round($increase, 1) . '%'); ?>
@@ -344,18 +497,37 @@ defined( 'ABSPATH' ) || exit;
              <div class="bfw-card">
                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Viral Growth (Referrals)', 'bonus-for-woo'); ?></h3>
                 <?php if (BfwRoles::isPro() && BfwSetting::get('referal-system')) : ?>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <small style="color: var(--bfw-text-muted);"><?php _e('Ambassadors', 'bonus-for-woo'); ?></small>
-                            <div style="font-size: 20px; font-weight: 700;"><?php echo $stats['referrals_total'] ?? 0; ?></div>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);"><?php echo $stats['referrals_total'] ?? 0; ?></div>
                         </div>
-                        <div>
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <small style="color: var(--bfw-text-muted);"><?php _e('Friends Invited', 'bonus-for-woo'); ?></small>
-                            <div style="font-size: 20px; font-weight: 700;"><?php echo $stats['referrals_invited'] ?? 0; ?></div>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);"><?php echo $stats['referrals_invited'] ?? 0; ?></div>
+                        </div>
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <small style="color: var(--bfw-text-muted);"><?php _e('Users with Referral Link', 'bonus-for-woo'); ?></small>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);" id="bfw-referral-users">0</div>
+                        </div>
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <small style="color: var(--bfw-text-muted);"><?php _e('Referral Revenue', 'bonus-for-woo'); ?></small>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);"><?php echo wc_price($stats['referral_revenue'] ?? 0); ?></div>
                         </div>
                     </div>
-                    <div style="margin-top: 20px; background: #fdfaf2; padding: 12px; border-radius: 8px; border-left: 4px solid var(--bfw-warning); font-size: 13px;">
-                        <?php echo sprintf(__('Referral system has generated %s in sales.', 'bonus-for-woo'), '<strong>' . wc_price($stats['referral_revenue'] ?? 0) . '</strong>'); ?>
+                    <h4 style="margin-bottom: 10px;"><?php _e('Top Referrers', 'bonus-for-woo'); ?></h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
+                                <th style="padding: 10px; text-align: left;"><?php _e('User', 'bonus-for-woo'); ?></th>
+                                <th style="padding: 10px; text-align: right;"><?php _e('Invitations', 'bonus-for-woo'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bfw-top-referrers-table"></tbody>
+                    </table>
+                    <div id="bfw-referral-loading" style="text-align: center; padding: 20px; display: none;">
+                        <span class="dashicons dashicons-spinner is-active"></span>
+                        <?php _e('Loading...', 'bonus-for-woo'); ?>
                     </div>
                 <?php else: ?>
                     <p style="color: var(--bfw-text-muted); text-align: center; padding: 20px 0;">
@@ -364,35 +536,19 @@ defined( 'ABSPATH' ) || exit;
                 <?php endif; ?>
              </div>
              
-             <!-- Топ клиентов -->
-             <div class="bfw-card">
-                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Top 5 VIP Customers', 'bonus-for-woo'); ?></h3>
-                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                     <thead>
-                         <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
-                             <th style="padding: 10px 5px;"><?php _e('User', 'bonus-for-woo'); ?></th>
-                             <th style="padding: 10px 5px;"><?php _e('Revenue', 'bonus-for-woo'); ?></th>
-                             <th style="padding: 10px 5px;"><?php _e('Orders', 'bonus-for-woo'); ?></th>
-                         </tr>
-                     </thead>
-                     <tbody>
-                         <?php if (!empty($stats['top_customers'])) : foreach ($stats['top_customers'] as $vip) : 
-                               $u = get_userdata($vip['id']);
-                               $name = $u ? $u->display_name : 'User #'.$vip['id'];
-                         ?>
-                         <tr style="border-bottom: 1px solid #eee;">
-                             <td style="padding: 12px 5px; font-weight: 600;"><?php echo esc_html($name); ?></td>
-                             <td style="padding: 12px 5px; color: var(--bfw-success);"><?php echo wc_price($vip['revenue']); ?></td>
-                             <td style="padding: 12px 5px;"><?php echo $vip['orders']; ?></td>
-                         </tr>
-                         <?php endforeach; else: ?>
-                         <tr><td colspan="3" style="padding: 15px; text-align: center;"><?php _e('Not enough data.', 'bonus-for-woo'); ?></td></tr>
-                         <?php endif; ?>
-                     </tbody>
-                 </table>
-             </div>
-        </div>
 
+        </div>
+        <div class="bfw-section-grid" style="grid-template-columns: 1fr;">
+            <!-- Export Buttons -->
+            <div class="bfw-card">
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Export Analytics', 'bonus-for-woo'); ?></h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="button" id="bfw-export-distribution"><?php _e('Export Distribution', 'bonus-for-woo'); ?></button>
+                    <button class="button" id="bfw-export-trend"><?php _e('Export Trend', 'bonus-for-woo'); ?></button>
+                    <button class="button" id="bfw-export-overall"><?php _e('Export Overall Stats', 'bonus-for-woo'); ?></button>
+                </div>
+            </div>
+        </div>
         <script>
         jQuery(function($) {
             if (typeof Chart !== 'undefined' && document.getElementById('bfwMainChart')) {
@@ -414,48 +570,237 @@ defined( 'ABSPATH' ) || exit;
                 });
             }
 
-            // Trend Line Chart
-            if (typeof Chart !== 'undefined' && document.getElementById('bfwTrendChart')) {
-                new Chart($('#bfwTrendChart'), {
-                    type: 'line',
-                    data: {
-                        labels: <?php
-                        $rawLabels = $stats['chart_data']['labels'] ?? [];
-                        $formattedLabels = array_map(function($date) {
-                            return date('d.m.y', strtotime($date));
-                        }, $rawLabels);
-                        echo json_encode($formattedLabels);
-                        ?>,
-                        datasets: [
-                            {
-                                label: '<?php _e('Issued Points (+)', 'bonus-for-woo'); ?>',
-                                data: <?php echo json_encode($stats['chart_data']['issued'] ?? []); ?>,
-                                borderColor: '#00a65a',
-                                backgroundColor: 'rgba(0, 166, 90, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3
-                            },
-                            {
-                                label: '<?php _e('Spent Points (-)', 'bonus-for-woo'); ?>',
-                                data: <?php echo json_encode($stats['chart_data']['spent'] ?? []); ?>,
-                                borderColor: '#f0b849',
-                                backgroundColor: 'rgba(240, 184, 73, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3
+
+            // Wait for bfwAnalytics to be available
+            function waitForBfwAnalytics(callback, maxAttempts = 50) {
+                let attempts = 0;
+                const interval = setInterval(function() {
+                    attempts++;
+                    if (typeof window.bfwAnalytics !== 'undefined') {
+                        clearInterval(interval);
+                        callback();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        console.error('bfwAnalytics not available after ' + maxAttempts + ' attempts');
+                    }
+                }, 100);
+            }
+
+            // Load all analytics data
+            waitForBfwAnalytics(function() {
+                console.log('bfwAnalytics is now available, loading data...');
+
+                // Load Points Distribution Chart via AJAX
+                if (document.getElementById('bfwDistributionChart')) {
+                    console.log('Loading distribution data...');
+                    window.bfwAnalytics.getDistribution().done(function(response) {
+                        console.log('Distribution response:', response);
+                        if (response.success && response.data) {
+                            $('#bfw-distribution-loading').hide();
+                            $('#bfw-distribution-content').show();
+
+                            const labels = response.data.map(function(item) {
+                                return item.range;
+                            });
+                            const data = response.data.map(function(item) {
+                                return item.count;
+                            });
+
+                            new Chart($('#bfwDistributionChart'), {
+                                type: 'bar',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: '<?php _e('Number of Users', 'bonus-for-woo'); ?>',
+                                        data: data,
+                                        backgroundColor: '#2271b1',
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    maintainAspectRatio: false,
+                                    legend: { display: false },
+                                    scales: {
+                                        yAxes: [{ ticks: { beginAtZero: true } }]
+                                    }
+                                }
+                            });
+                        } else {
+                            $('#bfw-distribution-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                        }
+                    }).fail(function(xhr, status, error) {
+                        console.error('Distribution AJAX failed:', status, error);
+                        $('#bfw-distribution-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    });
+                }
+
+                // Load Points Trend Analytics Chart via AJAX
+                if (document.getElementById('bfwTrendAnalyticsChart')) {
+                    let trendChart = null;
+
+                    function loadTrendChart(days) {
+                        $('#bfw-trend-loading').show();
+                        $('#bfw-trend-content').hide();
+
+                        window.bfwAnalytics.getTrend(days).done(function(response) {
+                            if (response.success && response.data) {
+                                $('#bfw-trend-loading').hide();
+                                $('#bfw-trend-content').show();
+
+                                const labels = response.data.map(function(item) {
+                                    return item.date;
+                                });
+                                const issuedData = response.data.map(function(item) {
+                                    return item.issued || 0;
+                                });
+                                const spentData = response.data.map(function(item) {
+                                    return item.spent || 0;
+                                });
+
+                                if (trendChart) {
+                                    trendChart.destroy();
+                                }
+
+                                trendChart = new Chart($('#bfwTrendAnalyticsChart'), {
+                                    type: 'line',
+                                    data: {
+                                        labels: labels,
+                                        datasets: [
+                                            {
+                                                label: '<?php _e('Issued Points (+)', 'bonus-for-woo'); ?>',
+                                                data: issuedData,
+                                                borderColor: '#00a65a',
+                                                backgroundColor: 'rgba(0, 166, 90, 0.1)',
+                                                borderWidth: 2,
+                                                fill: true,
+                                                tension: 0.3
+                                            },
+                                            {
+                                                label: '<?php _e('Spent Points (-)', 'bonus-for-woo'); ?>',
+                                                data: spentData,
+                                                borderColor: '#f0b849',
+                                                backgroundColor: 'rgba(240, 184, 73, 0.1)',
+                                                borderWidth: 2,
+                                                fill: true,
+                                                tension: 0.3
+                                            }
+                                        ]
+                                    },
+                                    options: {
+                                        maintainAspectRatio: false,
+                                        legend: { position: 'top' },
+                                        scales: {
+                                            yAxes: [{ ticks: { beginAtZero: true } }]
+                                        }
+                                    }
+                                });
+                            } else {
+                                $('#bfw-trend-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
                             }
-                        ]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
-                        legend: { position: 'top' },
-                        scales: {
-                            yAxes: [{ ticks: { beginAtZero: true } }]
+                        }).fail(function() {
+                            $('#bfw-trend-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                        });
+                    }
+
+                    // Initial load with 30 days
+                    loadTrendChart(30);
+
+                    // Handle period change
+                    $('#bfw-trend-period').on('change', function() {
+                        const days = $(this).val();
+                        loadTrendChart(days);
+                    });
+                }
+
+                // Load Overall Stats
+                window.bfwAnalytics.getOverallStats().done(function(response) {
+                    if (response.success && response.data) {
+                        $('#bfw-overall-loading').hide();
+                        $('#bfw-overall-content').show();
+                        $('#bfw-total-points').text(response.data.total_points.toLocaleString());
+                        $('#bfw-users-with-points').text(response.data.users_with_points.toLocaleString());
+                        $('#bfw-total-earned').text(response.data.total_earned.toLocaleString());
+                        $('#bfw-total-spent').text(response.data.total_spent.toLocaleString());
+                        $('#bfw-active-users').text(response.data.active_users.toLocaleString());
+                    } else {
+                        $('#bfw-overall-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    }
+                }).fail(function() {
+                    $('#bfw-overall-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                });
+
+                // Load Top Users
+                window.bfwAnalytics.getTopUsers(10).done(function(response) {
+                    if (response.success && response.data) {
+                        $('#bfw-top-users-loading').hide();
+                        $('#bfw-top-users-content').show();
+                        const tbody = $('#bfw-top-users-table');
+                        tbody.empty();
+                        response.data.forEach(function(user) {
+                            const userName = user.display_name || user.user_login;
+                            tbody.append('<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px 10px;">' + userName + '</td><td style="padding: 12px 10px; text-align: right; font-weight: 600;">' + parseFloat(user.points).toLocaleString() + '</td></tr>');
+                        });
+                    } else {
+                        $('#bfw-top-users-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    }
+                }).fail(function() {
+                    $('#bfw-top-users-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                });
+
+
+                // Load Referral Stats (only top referrers table)
+                window.bfwAnalytics.getReferralStats().done(function(response) {
+                    if (response.success && response.data) {
+                        $('#bfw-referral-users').text(response.data.users_with_referral.toLocaleString());
+                        $('#bfw-invited-users').text(response.data.invited_users.toLocaleString());
+
+                        const tbody = $('#bfw-top-referrers-table');
+                        tbody.empty();
+                        if (response.data.top_referrers && response.data.top_referrers.length > 0) {
+                            response.data.top_referrers.forEach(function(referrer) {
+                                const userName = referrer.display_name || referrer.user_login;
+                                tbody.append('<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px 10px;">' + userName + '</td><td style="padding: 12px 10px; text-align: right; font-weight: 600;">' + referrer.invite_count + '</td></tr>');
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="2" style="padding: 15px; text-align: center;"><?php _e('No data', 'bonus-for-woo'); ?></td></tr>');
                         }
                     }
+                }).fail(function() {
+                    $('#bfw-top-referrers-table').append('<tr><td colspan="2" style="padding: 15px; text-align: center;"><?php _e('Failed to load data', 'bonus-for-woo'); ?></td></tr>');
                 });
-            }
+
+                // Load Coupon Stats
+                window.bfwAnalytics.getCouponStats().done(function(response) {
+                    if (response.success && response.data) {
+                        $('#bfw-coupon-loading').hide();
+                        $('#bfw-coupon-content').show();
+                        $('#bfw-total-coupons').text(response.data.total_coupons.toLocaleString());
+                        $('#bfw-active-coupons').text(response.data.active_coupons.toLocaleString());
+                        $('#bfw-used-coupons').text(response.data.used_coupons.toLocaleString());
+                        $('#bfw-total-coupon-sum').text(response.data.total_coupon_sum.toLocaleString());
+                    } else {
+                        $('#bfw-coupon-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    }
+                }).fail(function() {
+                    $('#bfw-coupon-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                });
+
+                // Export handlers
+                $('#bfw-export-distribution').on('click', function() {
+                    const nonce = '<?php echo wp_create_nonce('bfw_analytics_nonce'); ?>';
+                    window.location.href = window.location.href.split('?')[0] + '?bfw_analytics_export=1&type=distribution&_wpnonce=' + nonce;
+                });
+
+                $('#bfw-export-trend').on('click', function() {
+                    const nonce = '<?php echo wp_create_nonce('bfw_analytics_nonce'); ?>';
+                    window.location.href = window.location.href.split('?')[0] + '?bfw_analytics_export=1&type=trend&_wpnonce=' + nonce;
+                });
+
+                $('#bfw-export-overall').on('click', function() {
+                    const nonce = '<?php echo wp_create_nonce('bfw_analytics_nonce'); ?>';
+                    window.location.href = window.location.href.split('?')[0] + '?bfw_analytics_export=1&type=overall&_wpnonce=' + nonce;
+                });
+            });
         });
         </script>
 
@@ -468,13 +813,7 @@ defined( 'ABSPATH' ) || exit;
         </div>
     <?php endif; ?>
 
-    <div id="bfw-recalc-progress" style="display:none;">
-        <h3 style="margin-top: 0;"><?php _e('Deep Data Analysis', 'bonus-for-woo'); ?>...</h3>
-        <div style="background: #f0f0f1; height: 10px; border-radius: 5px; overflow: hidden; margin: 15px 0;">
-            <div id="bfw-progress-inner" style="width: 0%; background: var(--bfw-primary); height: 100%; transition: width 0.3s;"></div>
-        </div>
-        <p id="bfw-progress-text" style="font-weight: 600;"><?php _e('Processing...', 'bonus-for-woo'); ?></p>
-    </div>
+
 </div>
 
 <?php

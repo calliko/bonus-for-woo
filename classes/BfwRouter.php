@@ -15,6 +15,7 @@ class BfwRouter
     public static function init()
     {
         self::initStatistics();
+        self::initAnalytics();
         self::initExport();
         self::initUserProfile();
 
@@ -44,7 +45,24 @@ class BfwRouter
     private static function initStatistics()
     {
         BfwStatistic::init();
-        add_action('wp_ajax_bfw_get_stats_timestamp', ['BfwStatistic', 'ajax_get_stats_timestamp']);
+    }
+
+    /**
+     * Аналитика и отчеты
+     */
+    private static function initAnalytics()
+    {
+        // AJAX handlers для аналитики
+        add_action('wp_ajax_bfw_analytics_distribution', ['BfwAnalytics', 'ajaxGetPointsDistribution']);
+        add_action('wp_ajax_bfw_analytics_trend', ['BfwAnalytics', 'ajaxGetPointsTrend']);
+        add_action('wp_ajax_bfw_analytics_overall', ['BfwAnalytics', 'ajaxGetOverallStats']);
+        add_action('wp_ajax_bfw_analytics_top_users', ['BfwAnalytics', 'ajaxGetTopUsersByPoints']);
+        add_action('wp_ajax_bfw_analytics_status', ['BfwAnalytics', 'ajaxGetStatusDistribution']);
+        add_action('wp_ajax_bfw_analytics_referral', ['BfwAnalytics', 'ajaxGetReferralStats']);
+        add_action('wp_ajax_bfw_analytics_coupon', ['BfwAnalytics', 'ajaxGetCouponStats']);
+
+        // Экспорт аналитики через GET
+        add_action('admin_init', ['BfwRouter', 'handleAnalyticsExport']);
     }
 
     /**
@@ -176,6 +194,23 @@ class BfwRouter
         if (file_exists($file_path)) {
             wp_delete_file($file_path);
         }
+    }
+
+    /**
+     * Обработка экспорта аналитики через GET
+     */
+    public static function handleAnalyticsExport()
+    {
+        if (!isset($_GET['bfw_analytics_export']) || !current_user_can('manage_options')) {
+            return;
+        }
+
+        if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'bfw_analytics_nonce')) {
+            wp_die('Security check failed');
+        }
+
+        $type = isset($_GET['type']) ? sanitize_text_field($_GET['type']) : 'overall';
+        BfwAnalytics::exportToCSV($type);
     }
 
 }

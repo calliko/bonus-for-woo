@@ -82,8 +82,7 @@ class BfwAjaxHandlers
      */
     private static function initAdminAjaxHandlers()
     {
-        /*Статистика и аналитика*/
-        add_action('wp_ajax_bfw_get_stats_timestamp', ['BfwStatistic', 'ajax_get_stats_timestamp']);
+        // Statistics AJAX handlers are registered in BfwStatistic::init()
     }
 
     /**

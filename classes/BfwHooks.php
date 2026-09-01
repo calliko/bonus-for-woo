@@ -193,6 +193,12 @@ class BfwHooks
         add_action('woocommerce_before_cart', array('BfwPoints', 'bfwoo_spisaniebonusov_in_cart'), 9);
         add_action('woocommerce_before_checkout_form', array('BfwPoints', 'bfwoo_spisaniebonusov_in_checkout'), 9);
 
+        /*-------Проверка товаров только за баллы-------*/
+        add_action('woocommerce_checkout_process', array('BfwPoints', 'validatePointsOnlyProducts'), 10);
+        add_action('woocommerce_before_checkout_form', array('BfwPoints', 'addPointsOnlyProductsNotice'), 20);
+        add_action('woocommerce_before_cart', array('BfwPoints', 'addPointsOnlyProductsNotice'), 20);
+        add_filter('woocommerce_available_payment_gateways', array('BfwPoints', 'disablePaymentGatewaysForPointsOnlyProducts'), 10, 1);
+
         /*-------Добавляем скидку-------*/
       //  add_action('woocommerce_cart_calculate_fees', array('BfwPoints', 'bfwoo_add_fee'), 1, 1);
 

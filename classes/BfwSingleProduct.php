@@ -71,6 +71,7 @@ class BfwSingleProduct
         $isExcluded = in_array($id, $tovars) || has_term($categoriexs, 'product_cat', $id);
 
         if (BfwSetting::get('addkeshback-exclude') || !$isExcluded) {
+            /* translators: %1$s: "up to" text, %2$s: points amount, %3$s: points label */
             $price_width_bonuses .= '<div class="how_mach_bonus"><span class="how_mach_bonus_title">' . $hmb_title . '</span> ' . sprintf(__('%1$s %2$s %3$s',
                     'bonus-for-woo'), $upto, $ball, BfwPoints::howLabel($upto, $ball)) . '</div>';
         }
@@ -104,14 +105,14 @@ class BfwSingleProduct
     public static function typeProduct($product): array
     {
         $upto = '';
-        $type = $product->get_type();
+       // $type = $product->get_type();
         $price = 0;
 
         $constant_cashback = get_post_meta($product->get_id(), '_constant_cashback_percentage', true);
 
-        if ($type === 'simple') {
+        if ($product->is_type('simple')) {
             $price = $product->get_sale_price() ?: $product->get_price();
-        } elseif ($type === 'variable') {
+        } elseif ($product->is_type('variable')) {
             $maxPrice = $product->get_variation_sale_price('max', true);
             $minPrice = $product->get_variation_sale_price('min', true);
 

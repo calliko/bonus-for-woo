@@ -96,12 +96,17 @@ class BfwEmail
      * Шаблон подвала письма
      *
      * @return string
-     * @version 5.8.7
+     * @version 8.3.0
      */
     public static function getFooterMail(): string
     {
-        $site_title = get_bloginfo('name');
-        $site_url = $_SERVER['SERVER_NAME'];
+        $site_title = esc_html(get_bloginfo('name'));
+        $site_url = wp_parse_url(home_url(), PHP_URL_HOST);
+        if (empty($site_url)) {
+            $site_url = $_SERVER['SERVER_NAME'] ?? '';
+        }
+        $site_url = esc_html($site_url);
+
         $footer_text = get_option('woocommerce_email_footer_text');
         $description = strtr($footer_text,
             ['{site_title}' => $site_title, '{site_url}' => $site_url, '{WooCommerce}' => 'WooCommerce']);

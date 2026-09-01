@@ -135,9 +135,26 @@ class BfwStatistic
                 $data['prr'] = $data['issued_total_life'] > 0 ? ($data['spent_total_life'] / $data['issued_total_life']) * 100 : 0;
 
                 // Pending-баллы: сумма ожидающих начисления по всем пользователям
-                $data['pending_points_total'] = (float)$wpdb->get_var(
-                    "SELECT SUM(CAST(meta_value AS DECIMAL(12,2))) FROM {$wpdb->prefix}usermeta WHERE meta_key = 'computy_point_pending' AND meta_value > 0"
-                );
+                $pending_total = 0;
+
+                $pending_order_ids = wc_get_orders([
+                    'status' => ['processing', 'on-hold'],
+                    'limit'  => -1,
+                    'return' => 'ids',
+                ]);
+
+                foreach ($pending_order_ids as $order_id) {
+                    $order = wc_get_order($order_id);
+                    if (!$order) {
+                        continue;
+                    }
+                    if ($order->get_meta('cashback_receipt') === 'received') {
+                        continue;
+                    }
+                    $pending_total += BfwPoints::howMatchCashbackInOrder($order_id);
+                }
+
+                $data['pending_points_total'] = (float) $pending_total;
 
                 update_option(self::PARTIAL_OPTION, $data);
                 wp_send_json_success(['paged' => 0]);
@@ -172,15 +189,16 @@ class BfwStatistic
 
                 if ($ctx['hpos']) {
                     $data['referral_revenue'] = (float)$wpdb->get_var($wpdb->prepare("
-                        SELECT SUM({$ctx['total']}) FROM {$ctx['table']} 
+                        SELECT SUM({$ctx['total']}) FROM {$ctx['table']}
                         WHERE {$ctx['status']} IN (%s, %s) AND {$ctx['type']} = 'shop_order' {$date_sql}
-                        AND {$ctx['customer']} IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = 'bfw_points_referral_invite')
+                        AND {$ctx['customer']} IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = 'bfw_points_referral_invite' AND meta_value != '' AND CAST(meta_value AS SIGNED) > 0)
                     ", ...$full_args_ref));
-                    
+
                     $top_users = $wpdb->get_results($wpdb->prepare("
                         SELECT {$ctx['customer']} as id, SUM({$ctx['total']}) as revenue, COUNT({$ctx['id']}) as orders
                         FROM {$ctx['table']}
                         WHERE {$ctx['status']} IN (%s, %s) AND {$ctx['type']} = 'shop_order' {$date_sql}
+                        AND {$ctx['customer']} IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = 'bfw_points_referral_invite' AND meta_value != '' AND CAST(meta_value AS SIGNED) > 0)
                         GROUP BY {$ctx['customer']}
                         ORDER BY revenue DESC LIMIT 5
                     ", ...$full_args_ref), ARRAY_A);
@@ -189,15 +207,17 @@ class BfwStatistic
                         SELECT SUM(pm.meta_value) FROM {$wpdb->prefix}postmeta pm
                         JOIN {$wpdb->prefix}posts p ON pm.post_id = p.ID
                         WHERE pm.meta_key = '_order_total' AND p.post_type = 'shop_order' AND p.post_status IN (%s, %s) {$date_sql_p}
-                        AND p.post_author IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = 'bfw_points_referral_invite')
+                        AND p.ID IN (SELECT post_id FROM {$wpdb->prefix}postmeta WHERE meta_key = '_customer_user' AND meta_value IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = 'bfw_points_referral_invite' AND meta_value != '' AND CAST(meta_value AS SIGNED) > 0))
                     ", ...$full_args_ref));
-                    
+
                      $top_users = $wpdb->get_results($wpdb->prepare("
-                        SELECT p.post_author as id, SUM(CAST(pm.meta_value AS DECIMAL(12,2))) as revenue, COUNT(p.ID) as orders
+                        SELECT pm2.meta_value as id, SUM(CAST(pm.meta_value AS DECIMAL(12,2))) as revenue, COUNT(p.ID) as orders
                         FROM {$wpdb->prefix}posts p
                         JOIN {$wpdb->prefix}postmeta pm ON p.ID = pm.post_id
+                        JOIN {$wpdb->prefix}postmeta pm2 ON p.ID = pm2.post_id AND pm2.meta_key = '_customer_user'
                         WHERE pm.meta_key = '_order_total' AND p.post_type = 'shop_order' AND p.post_status IN (%s, %s) {$date_sql_p}
-                        GROUP BY p.post_author
+                        AND pm2.meta_value IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = 'bfw_points_referral_invite' AND meta_value != '' AND CAST(meta_value AS SIGNED) > 0)
+                        GROUP BY pm2.meta_value
                         ORDER BY revenue DESC LIMIT 5
                     ", ...$full_args_ref), ARRAY_A);
                 }
@@ -239,6 +259,29 @@ class BfwStatistic
 
                 $data['orders_total'] = (int)$order_stats->count;
                 $data['total_revenue'] = (float)$order_stats->revenue;
+
+                // Топ клиентов по выручке
+                if ($ctx['hpos']) {
+                    $top_customers = $wpdb->get_results($wpdb->prepare("
+                        SELECT {$ctx['customer']} as id, SUM({$ctx['total']}) as revenue, COUNT({$ctx['id']}) as orders
+                        FROM {$ctx['table']}
+                        WHERE {$ctx['status']} IN (%s, %s) AND {$ctx['type']} = 'shop_order' {$date_sql}
+                        GROUP BY {$ctx['customer']}
+                        ORDER BY revenue DESC LIMIT 5
+                    ", ...$full_args), ARRAY_A);
+                } else {
+                    $top_customers = $wpdb->get_results($wpdb->prepare("
+                        SELECT pm2.meta_value as id, SUM(CAST(pm.meta_value AS DECIMAL(12,2))) as revenue, COUNT(p.ID) as orders
+                        FROM {$wpdb->prefix}posts p
+                        JOIN {$wpdb->prefix}postmeta pm ON p.ID = pm.post_id
+                        JOIN {$wpdb->prefix}postmeta pm2 ON p.ID = pm2.post_id AND pm2.meta_key = '_customer_user'
+                        WHERE pm.meta_key = '_order_total' AND p.post_type = 'shop_order' AND p.post_status IN (%s, %s) {$date_sql_p}
+                        GROUP BY pm2.meta_value
+                        ORDER BY revenue DESC LIMIT 5
+                    ", ...$full_args), ARRAY_A);
+                }
+
+                $data['top_customers'] = array_filter((array)$top_customers, function($u) { return !empty($u['id']) && $u['id'] > 0; });
 
                 // Заказы с бонусами и сумма списания
                 $bonus_stats_args = $date_start ? array_merge([$cart_discount, $st], $date_args) : [$cart_discount, $st];

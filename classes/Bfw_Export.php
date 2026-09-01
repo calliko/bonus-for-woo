@@ -75,7 +75,7 @@ class Bfw_Export
         }
         if (!empty($_GET['date_finish']) && strtotime($_GET['date_finish'])) {
             $date_finish = sanitize_text_field($_GET['date_finish']);
-            $where .= $wpdb->prepare(" AND date <= %s", $_GET['$date_finish'] . ' 23:59:59');
+            $where .= $wpdb->prepare(" AND date <= %s", $_GET['date_finish'] . ' 23:59:59');
         }
 
         $results = $wpdb->get_results("SELECT id, user, symbol, points, comment_admin, date, orderz FROM {$table_name}{$where} ORDER BY id DESC", ARRAY_A);

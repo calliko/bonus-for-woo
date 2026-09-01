@@ -96,18 +96,19 @@ class BfwCashback
             $total_all = BfwPoints::getSumUserOrders($user_id);
             $sumbudet = $total_all + $total_order;
 
-            $all_role = $wpdb->get_results("SELECT summa_start FROM " . $wpdb->prefix . "bfw_computy");
+            // Кэшируем статусы для оптимизации
+            static $roles_cache = null;
+            if ($roles_cache === null) {
+                $roles_cache = BfwRoles::getRoles();
+            }
 
-            $all_role = json_decode(wp_json_encode($all_role), true);
-            $all_role = $bfwFunctions::arrayMultisortValue($all_role, 'summa_start', SORT_ASC);
             $summa = 0;
-            foreach ($all_role as $a) {
-                if ($sumbudet >= $a['summa_start']) {
-                    $summa = $a['summa_start'];
+            foreach ($roles_cache as $role) {
+                if ($sumbudet >= (float)$role->summa_start) {
+                    $summa = (float)$role->summa_start;
                 }
             }
-          /*  $you_next_role = $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM " . $wpdb->prefix . "bfw_computy WHERE summa_start=%s",
-                $summa));*/
+
             $this_percent = BfwRoles::getRole($user_id);
             $percent = $this_percent['percent'] ?? 0;
             $percent = apply_filters('bfw-filter-percent-in-cart', $percent, $total_order);
@@ -537,25 +538,43 @@ class BfwCashback
     ");
 
         /*
-         * 4. История (опционально)
+         * 4. История (опционально) - с пагинацией для предотвращения утечки памяти
          */
 
         if (class_exists('BfwHistory')) {
+            $batch_size = 500;
+            $offset = 0;
 
-            $user_ids = $wpdb->get_col("
-            SELECT user_id
-            FROM {$wpdb->usermeta}
-            WHERE meta_key = 'f14'
-        ");
+            while (true) {
+                $user_ids = $wpdb->get_col($wpdb->prepare(
+                    "SELECT user_id
+                     FROM {$wpdb->usermeta}
+                     WHERE meta_key = 'f14'
+                     LIMIT %d OFFSET %d",
+                    $batch_size,
+                    $offset
+                ));
 
-            foreach ($user_ids as $user_id) {
-                BfwHistory::add_history(
-                    $user_id,
-                    '+',
-                    $points,
-                    '0',
-                    $text
-                );
+                if (empty($user_ids)) {
+                    break;
+                }
+
+                foreach ($user_ids as $user_id) {
+                    BfwHistory::add_history(
+                        $user_id,
+                        '+',
+                        $points,
+                        '0',
+                        $text
+                    );
+                }
+
+                $offset += $batch_size;
+
+                // Освобождаем память между батчами
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
             }
         }
 
