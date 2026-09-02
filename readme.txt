@@ -6,7 +6,7 @@ Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.0
 WC tested up to: 11.0.1
-Stable tag: 8.3.1
+Stable tag: 8.3.2
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -46,6 +46,7 @@ Cashback is accumulated in the client's virtual wallet.
 * Coupons.
 * Points accrual delay.
 * Accrual of points for previous orders.
+* Purchasing goods using only points.
 
 == Addons for Bonus for Woo plugin ==
 
@@ -65,6 +66,8 @@ Transfers of bonus points between users. [more details](https://computy.ru/blog/
 You can test the plugin on [**this page**](https://demo.tastewp.com/bonus-for-woo)
 
 == Compatibility ==
+* Support for the classic shopping cart and checkout process
+* Support for WooCommerce Blocks cart and checkout
 * With the WPML plugin
 * With the Elementor plugin
 * With the Yandex.Delivery (Boxberry) plugin for WooCommerce
@@ -119,6 +122,13 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.3.2 - 2026-09-02 =
+* Fixed the loading of the point redemption form for guests.
+* Fixed the point redemption form in the block cart.
+* Added a notification regarding payment made entirely with points in the block cart and during checkout.
+
+
 = 8.3.1 - 2026-09-01 =
 * Added a "Do not deduct points for the first order" setting for the PRO version.
 * Added functionality to select products that can be purchased only with points.

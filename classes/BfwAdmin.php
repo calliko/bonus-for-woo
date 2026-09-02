@@ -3352,7 +3352,13 @@ class BfwAdmin
                                     <li><span class="dashicons dashicons-admin-users"></span> <?php _e('Role Exclusions', 'bonus-for-woo'); ?></li>
                                     <li><span class="dashicons dashicons-admin-generic"></span> <?php _e('Advanced settings', 'bonus-for-woo'); ?></li>
 
+                                    <li><span class="dashicons dashicons-money-alt"></span> <?php _e('Purchase only for bonuses', 'bonus-for-woo'); ?></li>
+
                                 </ul>
+                                <a href="https://computy.ru/blog/bonus-for-woo-wordpress/#h-версия-pro" class="bfw-btn bfw-btn-primary" target="_blank">
+                                    <span class="link-text"><?php _e('Learn more about the PRO version', 'bonus-for-woo'); ?></span>
+                                    <span class="dashicons dashicons-arrow-right-alt2"></span>
+                                </a>
                             </div>
 
                             <div style="background: white; border: 1px solid var(--bfw-border); padding: 30px; border-radius: 15px; text-align: left;">

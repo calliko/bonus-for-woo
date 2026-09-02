@@ -331,16 +331,60 @@ window.bfwUpdateBlocks = function() {
             setTimeout(() => { isUpdating = false; }, 100);
         };
 
+        const loadPointsOnlyNotice = async () => {
+            try {
+                const response = await fetch(`${API_BASE}/check-points-only-products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
+                    body: JSON.stringify({})
+                });
+                const data = await response.json();
+
+                let $existing = $('.bfw-points-only-notice');
+
+                if (data.has_points_only && data.notice_text) {
+                    if ($existing.length) {
+                        // Просто обновляем текст, если уведомление уже стоит
+                        $existing.find('.bfw-points-only-notice__text').text(data.notice_text);
+                        return;
+                    }
+
+                    const $notice = $(`
+                <div class="bfw-points-only-notice wc-block-components-notice-banner is-error" role="alert">
+                    <div class="wc-block-components-notice-banner__content bfw-points-only-notice__text">${data.notice_text}</div>
+                </div>
+            `);
+
+                    // Вставляем ПЕРЕД блоком целиком — вне зоны, которой управляет React
+                    const $blockContainer = $('.wc-block-cart, .wc-block-checkout').first();
+                    if ($blockContainer.length) {
+                        $blockContainer.before($notice);
+                    }
+                } else {
+                    $existing.remove();
+                }
+            } catch (e) {
+                console.error('Error loading points-only notice:', e);
+            }
+        };
+
         const isCartOrCheckout = () => {
-            return $('body').hasClass('woocommerce-cart') || $('body').hasClass('woocommerce-checkout');
+            return $('body').hasClass('woocommerce-cart') ||
+                $('body').hasClass('woocommerce-checkout') ||
+                $('.wc-block-cart').length > 0 ||
+                $('.wc-block-checkout').length > 0 ||
+                $('.wc-block-cart__totals-title').length > 0;
         };
 
         const initBlocks = debounce(() => {
             if (isUpdating) return;
 
             if (isCartOrCheckout()) {
-                loadSpisanieBlock();
+                if (typeof wpApiSettings !== 'undefined' && wpApiSettings.isLoggedIn) {
+                    loadSpisanieBlock();
+                }
                 loadCashbackBlock();
+                loadPointsOnlyNotice();
             }
         }, 500); // Debounce 500ms для баланса между нагрузкой и отзывчивостью
 
@@ -399,34 +443,7 @@ window.bfwUpdateBlocks = function() {
             }
         }
 
-      /*  const observeDOM = () => {
-            const container = document.querySelector('.wc-block-cart, .wc-block-checkout');
-            if (!container) return;
 
-            observer = new MutationObserver((mutations) => {
-                if (isUpdating) return;
-
-                let shouldUpdate = false;
-                for (let mutation of mutations) {
-                    // Игнорируем изменения, если они произошли ВНУТРИ наших блоков
-                    if (mutation.target.closest('.bfw-spisanie-blocks, .bfw-order-cashback-blocks')) {
-                        continue;
-                    }
-
-                    // Реагируем только если изменился состав элементов (добавились/удалились блоки корзины)
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                        shouldUpdate = true;
-                        break;
-                    }
-                }
-
-                if (shouldUpdate) initBlocks();
-            });
-
-            observer.observe(container, { childList: true, subtree: true });
-        };
-
-        observeDOM(); */
         
         // Простое обновление кешбэка при смене вариации на основе данных с сервера
         const initVariationCashback = () => {

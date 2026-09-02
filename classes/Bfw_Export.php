@@ -7,8 +7,41 @@ class Bfw_Export
     public static function init()
     {
         add_action('admin_init', [__CLASS__, 'handle_export_requests']);
+        add_action('admin_post_bfw_download_export', [__CLASS__,'bfw_handle_download_export']);
     }
 
+    public static function bfw_handle_download_export() {
+        // Проверяем права доступа
+        if (!current_user_can('manage_options')) {
+            wp_die('У вас нет прав для скачивания этого файла.');
+        }
+
+        // Проверяем nonce для безопасности (рекомендуется)
+        // if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_download_export')) {
+        //     wp_die('Неверный запрос.');
+        // }
+
+        // Путь к файлу
+        $file_path = WP_PLUGIN_DIR . '/bonus-for-woo/export_bfw.csv';
+
+        // Проверяем существование файла
+        if (!file_exists($file_path)) {
+            wp_die('Файл export_bfw.csv не найден.');
+        }
+
+        // Отправляем заголовки для скачивания
+        header('Content-Description: File Transfer');
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file_path));
+
+        // Читаем файл и отправляем в браузер
+        readfile($file_path);
+        exit; // Обязательно завершаем выполнение
+    }
     public static function handle_export_requests()
     {
         if (!is_admin() || !current_user_can('manage_options')) {

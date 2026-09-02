@@ -43,7 +43,8 @@ class BfwFunctions
         );
         wp_enqueue_script('bonus-computy-script');
         wp_localize_script('bonus-computy-script', 'wpApiSettings', [
-                'nonce' => wp_create_nonce('wp_rest')
+                'nonce' => wp_create_nonce('wp_rest'),
+                 'isLoggedIn' => is_user_logged_in(),
         ]);
     }
 

@@ -314,7 +314,7 @@ defined( 'ABSPATH' ) || exit;
                         <a class="bfw-btn bfw-btn-outline" href="<?php echo wp_nonce_url('?page=bonus-for-woo%2Fpages%2Ftools.php&export_bfw_points=true', 'bfw_export_points'); ?>">
                             <span class="dashicons dashicons-update"></span> <?php _e('Refresh CSV', 'bonus-for-woo'); ?>
                         </a>
-                        <a class="bfw-btn bfw-btn-outline" href="<?php echo BONUS_COMPUTY_PLUGIN_URL . 'export_bfw.csv'; ?>" download>
+                        <a class="bfw-btn bfw-btn-outline" href="<?php echo admin_url('admin-post.php?action=bfw_download_export'); ?>" download>
                             <span class="dashicons dashicons-download"></span> <?php _e('Download CSV', 'bonus-for-woo'); ?>
                         </a>
                         <a title="<?php _e('Delete export file', 'bonus-for-woo'); ?>" class="bfw-btn bfw-btn-danger" style="padding: 10px;" href="<?php echo wp_nonce_url('?page=bonus-for-woo%2Fpages%2Ftools.php&remove_export_bfw_points=true', 'bfw_remove_export'); ?>">

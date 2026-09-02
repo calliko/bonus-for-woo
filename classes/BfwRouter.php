@@ -185,9 +185,10 @@ class BfwRouter
             wp_die('Security check failed');
         }
 
-        $file_path = wp_normalize_path(BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv');
+        $file_path = BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv';
+        $file_path = wp_normalize_path($file_path);
 
-        if (strpos($file_path, BONUS_COMPUTY_PLUGIN_DIR) !== 0) {
+        if (!is_file($file_path)) {
             wp_die('Invalid file path');
         }
 

@@ -1038,6 +1038,82 @@ global $wpdb;
     }
 
 
+    /**
+     * Check if cart has points-only products for WooCommerce Blocks
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response
+     * @version 8.3.1
+     */
+    public static function rest_check_points_only_products(WP_REST_Request $request): WP_REST_Response
+    {
+        if (!BfwRoles::isPro()) {
+            return new WP_REST_Response(['has_points_only' => false], 200);
+        }
+
+        // Initialize WC components for REST API context
+        if (null === WC()->session) {
+            $session_class = apply_filters('woocommerce_session_handler', 'WC_Session_Handler');
+            WC()->session = new $session_class();
+            WC()->session->init();
+        }
+
+        if (null === WC()->customer) {
+            WC()->customer = new WC_Customer(get_current_user_id(), true);
+        }
+
+        if (null === WC()->cart) {
+            WC()->cart = new WC_Cart();
+            WC()->cart->get_cart();
+        }
+
+        $points_only_products = BfwSetting::get('points-only-products', array());
+        $points_only_categories = BfwSetting::get('points-only-categories', array());
+
+        if (empty($points_only_products) && empty($points_only_categories)) {
+            return new WP_REST_Response(['has_points_only' => false], 200);
+        }
+
+        $cart = WC()->cart;
+        if (empty($cart)) {
+            return new WP_REST_Response(['has_points_only' => false], 200);
+        }
+
+        $points_only_in_cart = false;
+
+        foreach ($cart->get_cart() as $cart_item) {
+            $product_id = $cart_item['product_id'];
+            $variation_id = $cart_item['variation_id'];
+
+            // Check if product is in points-only list
+            if (in_array($product_id, $points_only_products) || ($variation_id && in_array($variation_id, $points_only_products))) {
+                $points_only_in_cart = true;
+                break;
+            }
+
+            // Check if product category is in points-only list
+            $product_categories = get_the_terms($product_id, 'product_cat');
+            if ($product_categories && !is_wp_error($product_categories)) {
+                foreach ($product_categories as $category) {
+                    if (in_array($category->term_id, $points_only_categories)) {
+                        $points_only_in_cart = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        $notice_text = '';
+        if ($points_only_in_cart) {
+            $notice_text = __('Some products in your cart can only be purchased with bonus points. Make sure you have enough points and select them to use during checkout.', 'bonus-for-woo');
+        }
+
+        return new WP_REST_Response([
+            'has_points_only' => $points_only_in_cart,
+            'notice_text' => $notice_text
+        ], 200);
+    }
+
     public static function bfwoo_clean_fast_bonus_rest(WP_REST_Request $request): WP_REST_Response
     {
         $userId = get_current_user_id();
@@ -1695,14 +1771,14 @@ global $wpdb;
 
         $offset = (int) ($_POST['offset'] ?? 0);
 
-
-        $search_by = in_array($_POST['search_by'] ?? 'by_id', ['by_id', 'by_email', 'by_phone'])
-            ? sanitize_text_field($_POST['search_by'])
-            : 'by_id';
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Access denied');
             return;
         }
+        $search_by = in_array($_POST['search_by'] ?? 'by_id', ['by_id', 'by_email', 'by_phone'])
+            ? sanitize_text_field($_POST['search_by'])
+            : 'by_id';
+
 
         $array = json_decode(stripslashes($_POST['response']), true);
         if (!$array || empty($array['data']['url'])) {
@@ -1711,6 +1787,8 @@ global $wpdb;
 
         $url = $array['data']['url'];
         $file_path = wp_normalize_path(ABSPATH . str_replace(site_url(), '', $url));
+
+
 
         if (!file_exists($file_path)) {
             wp_send_json_error('Файл не найден');
@@ -1757,7 +1835,7 @@ global $wpdb;
 
             // Обновление баллов
             $point = (float) $currRow[4];
-            $comment = (string) ($currRow[5] ?? '');
+            $comment = (string) ($currRow[6] ?? '');
             $user_point = (float) get_user_meta($id, 'computy_point', true);
 
             $issetUser = get_userdata($id);
