@@ -226,6 +226,9 @@ class BfwRoles
      */
     public static function updateRole(int $userId, bool $sendEmail = true, $nocache = false): void
     {
+        if ($userId <= 0) {
+            return;
+        }
         $total_all = BfwPoints::getSumUserOrders($userId,$nocache);
         global $wpdb;
 
@@ -289,6 +292,10 @@ class BfwRoles
      */
     public static function getNextRole(int $userId): array
     {
+        if ($userId <= 0) {
+            return ['status' => 'no'];
+        }
+
         global $wpdb;
 
         static $statuses_cache = null;

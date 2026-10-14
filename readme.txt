@@ -6,7 +6,7 @@ Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.0
 WC tested up to: 11.0.1
-Stable tag: 8.3.2
+Stable tag: 8.3.3
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -122,6 +122,12 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.3.3 - 2026-10-14 =
+* Fixed the button style.
+* Fixed the recalculation of points for previous orders.
+* Removed point recalculation for guests.
+* Code optimization
 
 = 8.3.2 - 2026-09-02 =
 * Fixed the loading of the point redemption form for guests.

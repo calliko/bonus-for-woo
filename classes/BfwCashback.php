@@ -352,6 +352,58 @@ class BfwCashback
     }
 
 
+    /** Сбрасываем pending у заказов с нужным статусом и возвращаем массив ID
+     *
+     * @return array
+     */
+    private static function resetCashbackReceiptForPendingOrders()
+    {
+        $order_status = BfwSetting::get('add_points_order_status', 'completed');
+        $order_status = apply_filters('bfw_add_points_order_status_filter', $order_status);
+        
+        if (!is_array($order_status)) {
+            $order_status = [$order_status];
+        }
+        
+        // Add 'wc-' prefix
+        $order_statuses = array_map(function($status) {
+            return 'wc-' . $status;
+        }, $order_status);
+        
+        // Ищем заказы с pending (любые, независимо от cashback_receipt)
+        $args = [
+            'type' => 'shop_order',
+            'status' => $order_statuses,
+            'limit' => -1,
+            'return' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => '_bonus_cashback_pending',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ];
+        
+        $order_ids = wc_get_orders($args);
+        
+        BfwLogs::addLog('debug', 0, 'BfwCashback: Resetting pending for ' . count($order_ids) . ' orders');
+        
+        foreach ($order_ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if ($order) {
+                $order->delete_meta_data('_bonus_cashback_pending');
+                // Если есть cashback_receipt, тоже удаляем для перерасчета
+                if ($order->get_meta('cashback_receipt')) {
+                    $order->delete_meta_data('cashback_receipt');
+                    $order->delete_meta_data('cashback_amount');
+                }
+                $order->save();
+            }
+        }
+        
+        return $order_ids;
+    }
+
     /** Находим все заказы на которые не начислен кешбэк
      *
      * @return void
@@ -364,25 +416,49 @@ class BfwCashback
             wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
             return;
         }
+        
+        // Сначала сбрасываем pending у заказов с нужным статусом и получаем их ID
+        $pending_order_ids = self::resetCashbackReceiptForPendingOrders();
+        
         $order_status = BfwSetting::get('add_points_order_status', 'completed');
+        $order_status = apply_filters('bfw_add_points_order_status_filter', $order_status);
+        
+        if (!is_array($order_status)) {
+            $order_status = [$order_status];
+        }
+        
+        // Add 'wc-' prefix
+        $order_statuses = array_map(function($status) {
+            return 'wc-' . $status;
+        }, $order_status);
+        
         $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
         
-        // Сначала ищем все заказы нужного статуса без дополнительных условий
+        // Сначала ищем все заказы нужного статуса исключая гостей
         $args_all = [
             'type' => 'shop_order',
-            'status' => ['wc-' . $order_status],
+            'status' => $order_statuses,
             'limit' => -1,
             'return' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => '_customer_user',
+                    'value' => 0,
+                    'compare' => '>',
+                    'type' => 'NUMERIC'
+                ]
+            ],
         ];
         
         $all_ids = wc_get_orders($args_all);
         
+
         // Теперь ищем заказы с уже начисленным кешбэком
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
         // Justified: need to find orders with specific meta key
         $args_with_cashback = [
             'type' => 'shop_order',
-            'status' => ['wc-' . $order_status],
+            'status' => $order_statuses,
             'limit' => -1,
             'return' => 'ids',
             'meta_query' => [
@@ -395,11 +471,16 @@ class BfwCashback
         
         $with_cashback_ids = wc_get_orders($args_with_cashback);
         
+
         // Получаем заказы без кешбэка
         $ids = array_diff($all_ids, $with_cashback_ids);
         
+
         // Дополнительно фильтруем заказы с бонусными купонами и исключаем гостевые
         $filtered_ids = [];
+        $guest_count = 0;
+        $coupon_count = 0;
+        
         foreach ($ids as $order_id) {
             $order = wc_get_order($order_id);
             if ($order) {
@@ -407,6 +488,7 @@ class BfwCashback
                 
                 // Исключаем гостевые заказы (user_id = 0)
                 if ($user_id === 0) {
+                    $guest_count++;
                     continue;
                 }
                 
@@ -414,6 +496,7 @@ class BfwCashback
                 if (!empty($cart_discount)) {
                     $used_coupons = $order->get_coupon_codes();
                     if (in_array($cart_discount, $used_coupons)) {
+                        $coupon_count++;
                         continue;
                     }
                 }
@@ -421,7 +504,13 @@ class BfwCashback
                 $filtered_ids[] = $order_id;
             }
         }
+        
+
         $ids = $filtered_ids;
+        
+        // Объединяем с заказами из pending (исключаем дубликаты)
+        $ids = array_unique(array_merge($ids, $pending_order_ids));
+        
         update_option('cashback_orders_to_recount', $ids);
 
         wp_send_json([
@@ -445,6 +534,8 @@ class BfwCashback
 
         $order_ids = get_option('cashback_orders_to_recount', []);
         $offset = intval($_POST['offset'] ?? 0);
+        
+        BfwLogs::addLog('debug', 0, 'BfwCashback: Starting recount with offset ' . $offset . ', total orders in queue: ' . count($order_ids));
 
         $ids = array_slice($order_ids, $offset, $batch);
 
@@ -454,6 +545,10 @@ class BfwCashback
             if ($order->get_meta('cashback_receipt')) {
                 continue;
             }
+
+            // Очищаем отложенные начисления перед начислением для прошлых заказов
+            $order->delete_meta_data('_bonus_cashback_pending');
+            $order->save();
 
             BfwPoints::addPointsForOrder($order_id, false);
         }

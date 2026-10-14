@@ -257,6 +257,9 @@ defined( 'ABSPATH' ) || exit;
                             <?php _e('Recalculation', 'bonus-for-woo'); ?>
                         </button>
                         <div id="progress" style="font-weight: 600; color: var(--bfw-success); font-size: 13px;"></div>
+                        <div class="bfw-progress-container">
+                            <div class="bfw-progress-bar"></div>
+                        </div>
                     </div>
                 <?php else : ?>
                     <span class="bfw-badge-pro"><?php _e('Available in PRO version.', 'bonus-for-woo'); ?></span>

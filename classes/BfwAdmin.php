@@ -652,6 +652,8 @@ class BfwAdmin
                 'done' => __('Done! Orders processed:', 'bonus-for-woo'),
                 'recount_nonce' => wp_create_nonce('bfw_cashback_recount_nonce'),
                 'send_points_nonce' => wp_create_nonce('bfw_send_points_from_order_nonce'),
+                'reset_confirm' => __('This will reset cashback_receipt for orders with pending and restart accrual. Continue?', 'bonus-for-woo'),
+                'resetting' => __('Resetting...', 'bonus-for-woo'),
         ]);
         if (BfwRoles::isPro()) {
             wp_enqueue_script('custom-admin-script', BONUS_COMPUTY_PLUGIN_URL . '_inc/write-points-in-order-admin.js',
@@ -3035,7 +3037,8 @@ class BfwAdmin
 
         <div class="bfw-admin-dashboard">
             <!-- Header -->
-            <header class="bfw-dashboard-header">
+            <header class="bfw-dashboard-header flex-header">
+                <div class="header-left">
                 <h1><img width="36" height="36" src="<?php echo plugins_url('bonus-for-woo/img/coin.svg'); ?>" >
                     <?php _e('Bonus for Woo', 'bonus-for-woo'); ?>
                     <?php echo '<small>V'. BONUS_COMPUTY_VERSION . '</small>'; ?>
@@ -3047,7 +3050,156 @@ class BfwAdmin
                     <a href="https://computy.ru/blog/docs/bonus-for-woo/" target="_blank"><span class="dashicons dashicons-book-alt"></span> <?php _e('Documentation', 'bonus-for-woo'); ?></a>
                     <a href="https://wordpress.org/plugins/bonus-for-woo/#reviews" target="_blank"><span class="dashicons dashicons-star-filled"></span>  <?php echo __('Thank you for rating', 'bonus-for-woo'); ?></a>
                     <a href="https://computy.ru/blog/kakie-novye-funkczii-vam-nuzhny/" target="_blank"><span class="dashicons dashicons-heart"></span> <?php echo _e('Vote for new features!', 'bonus-for-woo'); ?></a>
+              <a style="    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 26px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #1e3a8a;
+    background: #ffd400;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;" target="_blank" href="https://computy.ru/contacts?theme=Проблема с плагином Bonus for Woo"><?php echo _e('Report a problem', 'bonus-for-woo'); ?></a>
                 </div>
+                </div>
+
+                <aside class="bfw-sidebar-col">
+                    <div class="bfw-sidebar-card bfw-articles-card">
+                        <div class="bfw-sidebar-card-title">
+                            <span class="bfw-article-icon">📄</span> Последние статьи по теме
+                        </div>
+
+<?php
+/**
+ * Парсит страницу https://computy.ru/blog/tag/sajty/
+ * Возвращает массив с заголовками и датами последних 5 постов.
+ */
+function computy_parse_tag_page() {
+    $url = 'https://computy.ru/blog/tag/bfw/';
+    $cache_key = 'computy_tag_posts_parsed3';
+    $cached = get_transient($cache_key);
+
+    // Если данные есть в кеше, возвращаем их
+    if ($cached !== false) {
+        return $cached;
+    }
+
+    // Загружаем страницу
+    $response = wp_remote_get($url, array(
+            'timeout' => 15,
+            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    ));
+
+    if (is_wp_error($response)) {
+        return array('error' => 'Не удалось загрузить страницу: ' . $response->get_error_message());
+    }
+
+    $html = wp_remote_retrieve_body($response);
+    if (empty($html)) {
+        return array('error' => 'Страница пуста');
+    }
+
+    // Парсим HTML
+    $posts = array();
+
+    // Используем DOMDocument для парсинга
+    $dom = new DOMDocument();
+    // Подавляем ошибки из-за невалидного HTML
+    libxml_use_internal_errors(true);
+    // Конвертируем в UTF-8, чтобы избежать проблем с кодировкой
+    $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+    libxml_clear_errors();
+
+    $xpath = new DOMXPath($dom);
+
+    // Находим все элементы article с классом 'loop'
+    $articles = $xpath->query("//article[contains(@class, 'loop')]");
+
+    $count = 0;
+    foreach ($articles as $article) {
+        if ($count >= 5) break;
+
+        // Ищем заголовок внутри .kakh3 > a
+        $title_node = $xpath->query(".//div[contains(@class, 'kakh3')]/a", $article);
+        $title = $title_node->length > 0 ? trim($title_node->item(0)->nodeValue) : '';
+
+        // Ищем дату внутри .bottom-loop > ul > li с датой
+        // Дата находится в span[itemprop='datePublished']
+        $date_node = $xpath->query(".//span[@itemprop='datePublished']", $article);
+        $date = $date_node->length > 0 ? trim($date_node->item(0)->nodeValue) : '';
+
+        // Если дата не нашлась, пробуем другой вариант
+        if (empty($date)) {
+            // Ищем паттерн даты вида "02.09.2026г."
+            preg_match('/\d{2}\.\d{2}\.\d{4}г\./', $article->textContent, $matches);
+            $date = !empty($matches) ? trim($matches[0]) : '';
+        }
+
+        if (!empty($title) && !empty($date)) {
+            $posts[] = array(
+                    'title' => $title,
+                    'date' => $date,
+                    'link' => $title_node->length > 0 ? $title_node->item(0)->getAttribute('href') : ''
+            );
+            $count++;
+        }
+    }
+
+    // Сохраняем в кеш на 1 час
+    set_transient($cache_key, $posts, HOUR_IN_SECONDS);
+
+    return $posts;
+}
+/**
+ * Вывод виджета
+ */
+function computy_dashboard_widget_render() {
+    $posts = computy_parse_tag_page();
+
+    if (isset($posts['error'])) {
+        echo '<p style="color: #d63638;">⚠️ ' . esc_html($posts['error']) . '</p>';
+        return;
+    }
+
+    if (empty($posts)) {
+        echo '<p>Статей не найдено.</p>';
+        return;
+    }
+
+    echo '<ul style="list-style: auto; margin: 0; padding: 0;">';
+    foreach ($posts as $post) {
+        $title = esc_html($post['title']);
+        $date = esc_html($post['date']);
+        $link = esc_url($post['link']);
+
+        echo '<li>';
+        if (!empty($link)) {
+            echo '<a href="' . $link . '" target="_blank" >';
+            echo $title;
+            echo '</a>';
+        } else {
+            echo '<strong>' . $title . '</strong>';
+        }
+        echo ' <span style="color: #fff; font-size: 12px;">📅 ' . $date . '</span>';
+        echo '</li>';
+    }
+    echo '</ul>';
+}
+
+echo computy_dashboard_widget_render();
+
+?>
+
+                        <div class="bfw-sidebar-footer">
+                            <a href="https://computy.ru/blog/tag/bfw/" target="_blank" class="bfw-sidebar-more">Читать все статьи →</a>
+                        </div>
+                    </div>
+                </aside>
+
             </header>
 
             <!-- Quick Info Cards -->

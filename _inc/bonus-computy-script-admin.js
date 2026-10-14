@@ -17,16 +17,20 @@ document.addEventListener('DOMContentLoaded', function () {
             let percent = Math.min(100, Math.round(processedTotal / total * 100));
 
             jQuery('#progress').text(percent + '%');
+            jQuery('.bfw-progress-bar').css('width', percent + '%');
+            jQuery('.bfw-progress-container').show();
 
             if (offset < total) {
                 step();
             } else {
                 jQuery('#progress').text(bfwScriptAdmin.done + ' ' + processedTotal);
+                jQuery('.bfw-progress-bar').css('width', '100%');
                 jQuery('#startRecalculation').prop('disabled', false);
                 jQuery('#startRecalculation').css('opacity', '1');
                 // Можно также добавить курсор "недоступно" для наглядности
                 jQuery('#startRecalculation').css('cursor', 'default');
                 jQuery('#startRecalculation').removeClass('loading_button');
+                jQuery('#resetAndRecalculation').prop('disabled', false);
             }
         });
     }
@@ -35,6 +39,8 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         jQuery(this).addClass('loading_button');
         jQuery('#progress').text('');
+        jQuery('.bfw-progress-bar').css('width', '0%');
+        jQuery('.bfw-progress-container').hide();
         // Блокируем кнопку на время запроса
         jQuery(this).prop('disabled', true);
         // Устанавливаем opacity 0.5

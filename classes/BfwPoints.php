@@ -2084,14 +2084,12 @@ global $wpdb;
         $user_id = $order->get_customer_id();
 
         // Инвалидируем кэш суммы заказов при начислении баллов за заказ
+        //todo вроде можно удалить
         delete_user_meta($user_id, 'total_purchases_sum');
 
         $bfwRoles = new BfwRoles();
         $bfwHistory = new BfwHistory();
         $bfwEmail = new BfwEmail();
-
-        // обновляем роль пользователя
-        $bfwRoles::updateRole($user_id, true, true);
 
         $cashback_for_user = self::howMatchCashbackInOrder($order_id);
 
