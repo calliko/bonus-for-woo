@@ -29,6 +29,11 @@ class BfwCashback
         $woocommerce = WC();
         $user_id = get_current_user_id();
 
+        // Return null if cart is not available (e.g., in admin/block editor)
+        if (null === $woocommerce->cart) {
+            return null;
+        }
+
         $bfwFunctions = new BfwFunctions();
         $Role = new BfwRoles();
         $bfwSingleProduct = new BfwSingleProduct();
@@ -60,10 +65,11 @@ class BfwCashback
             $variation_id = $cart_item['variation_id'] ?? null;
 
             $product_cashback_info = $bfwSingleProduct->cashbackFromOneProduct($product_id, $user_id, $variation_id);
-
-            $cashback_this_order += $product_cashback_info['amount'] * $cart_item['quantity'];
-
             $product_percent = $product_cashback_info['percent'] ?? $user_percent;
+
+            // Используем line_subtotal (полная стоимость товара до скидок)
+            $line_subtotal = $cart_item['line_subtotal'];
+            $cashback_this_order += $line_subtotal * $product_percent / 100;
         }
 
         $coupon_deduction = self::calculate_coupon_deduction_with_product_percents(
@@ -84,15 +90,6 @@ class BfwCashback
 
         // Calculate user's role and cashback percentage
         if (is_user_logged_in()) {
-            //учитываем в кешбэке баллы, которые хочет списать
-            $use_points = BfwPoints::getFastPoints($user_id);
-
-            if ($user_percent != 0) {
-                // вычитаем использованные баллы из кешбэка
-                $cash_fast = $use_points * $user_percent / 100;
-                $cashback_this_order = $cashback_this_order - $cash_fast;
-            }
-
             $total_all = BfwPoints::getSumUserOrders($user_id);
             $sumbudet = $total_all + $total_order;
 
@@ -118,16 +115,16 @@ class BfwCashback
             if (BfwSetting::get('cashback_for_first_order') && (new BfwFunctions())->get_customer_order_count($user_id) === 0) {
                 $percent = BfwSetting::get('cashback_for_first_order');
             }
-            $percentUp = ' ' . $percent . '%';
+            $percentUp = ' ' . BfwPoints::formatNumber((float) $percent) . '%';
 
             //если используются баллы, то не начисляем кешбэк
-            if (BfwSetting::get('yous_balls_no_cashback') && $use_points > 0) {
+            if (BfwSetting::get('yous_balls_no_cashback') && BfwPoints::getFastPoints($user_id) > 0) {
                 $cashback_this_order = 0;
             }
 
             // Не начисляем кешбэк если применился сторонний купон
             if ($woocommerce->cart->applied_coupons && BfwSetting::get('yous_coupon_no_cashback')) {
-                $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+                $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo'));
                 if (!in_array($cart_discount, $woocommerce->cart->get_applied_coupons()) or in_array($cart_discount,
                         $woocommerce->cart->get_applied_coupons()) && count($woocommerce->cart->get_applied_coupons()) > 1) {
                     $cashback_this_order = 0;
@@ -169,11 +166,6 @@ class BfwCashback
     {
         $return = self::bfw_get_cashback_in_cart();
 
-        // Отладочная информация - временно
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            echo '<!-- DEBUG: Cashback data: ' . print_r($return, true) . ' -->';
-        }
-
         if ($return) {
             $cashback_title = esc_html($return['cashback_title']);
             $percent_up = esc_html($return['percentUp']);
@@ -185,7 +177,7 @@ class BfwCashback
             echo '<tr class="order-cashback">'
                 . '<th><span class="order-cashback-title">' . $cashback_title . ' ' . $percent_up . '</span></th>'
                 . '<td data-title="' . $cashback_title . ' ' . $percent_up . '">'
-                . '<span class="order-cashback-value">' . $return['cashback_this_order'] . ' ' . $upto_label . '</span>'
+                . '<span class="order-cashback-value">' . BfwPoints::formatNumber($return['cashback_this_order']) . ' ' . $upto_label . '</span>'
                 . '</td>'
                 . '</tr>';
         }
@@ -200,6 +192,11 @@ class BfwCashback
      */
     public static function rest_get_cashback_html(): WP_REST_Response
     {
+        // Проверяем включена ли настройка вывода кешбэка в корзине
+        if (!BfwSetting::get('cashback-in-cart')) {
+            return new WP_REST_Response(['html' => ''], 200);
+        }
+
         // 1. Принудительная инициализация сессии
         if (null === WC()->session) {
             $session_class = apply_filters('woocommerce_session_handler', 'WC_Session_Handler');
@@ -230,7 +227,7 @@ class BfwCashback
             );
 
             $html = '<div class="bfw-order-cashback-title-blocks">' . $cashback_title . $percent_up . '</div>'
-                . '<div class="bfw-order-cashback-value-blocks">' . $return['cashback_this_order'] . ' ' . $upto_label . '</div>';
+                . '<div class="bfw-order-cashback-value-blocks">' . BfwPoints::formatNumber($return['cashback_this_order']) . ' ' . $upto_label . '</div>';
         }
 
         return new WP_REST_Response(['html' => $html], 200);
@@ -255,7 +252,7 @@ class BfwCashback
             );
 
             echo '<div class="bfw-order-cashback-title-blocks">' . $cashback_title . $percent_up . '</div>'
-                . '<div class="bfw-order-cashback-value-blocks">' . $return['cashback_this_order'] . ' ' . $upto_label . '</div>';
+                . '<div class="bfw-order-cashback-value-blocks">' . BfwPoints::formatNumber($return['cashback_this_order']) . ' ' . $upto_label . '</div>';
             exit();
         }
         exit();
@@ -277,7 +274,7 @@ class BfwCashback
                  <span class="order-cashback-title">' . $return['cashback_title']
                 . $return['percentUp'] . '</span>
             <span class="order-cashback-value">' .
-                $return['cashback_this_order'] . ' ' . BfwPoints::howLabel(
+                BfwPoints::formatNumber($return['cashback_this_order']) . ' ' . BfwPoints::howLabel(
                     $return['upto'],
                     $return['cashback_this_order']
                 ) . '
@@ -298,12 +295,12 @@ class BfwCashback
     {
         $woo = WC();
         $coupons_total = 0;
-        $excluded_coupon = BfwSetting::get('bonus-points-on-cart'); // Купон, который нужно исключить
+        $bonus_coupon = BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo'); // Бонусный купон
 
-        // Получаем все примененные купоны
+        // Получаем все примененные купоны, кроме бонусного
         if (isset($woo->cart) && $woo->cart->get_applied_coupons()) {
             foreach ($woo->cart->get_applied_coupons() as $code) {
-                if (mb_strtolower($code) !== mb_strtolower($excluded_coupon)) {
+                if (mb_strtolower($code) !== mb_strtolower($bonus_coupon)) {
                     $discount = $woo->cart->get_coupon_discount_amount($code);
                     $coupons_total += $discount;
                 }
@@ -330,7 +327,7 @@ class BfwCashback
         foreach ($cart_items as $cart_item) {
             $product_id = $cart_item['product_id'];
             $variation_id = $cart_item['variation_id'] ?? null;
-            $line_total = $cart_item['line_total']; // стоимость товара после скидок
+            $line_subtotal = $cart_item['line_subtotal']; // полная стоимость товара до скидок
 
             // Получаем процент кешбэка для этого товара
             $product_cashback_info = $bfwSingleProduct->cashbackFromOneProduct($product_id, $user_id, $variation_id);
@@ -340,8 +337,8 @@ class BfwCashback
             $product_percent = $product_cashback_info['percent'];
 
 
-            // Распределяем скидки пропорционально стоимости товара
-            $product_ratio = $line_total / $cart_subtotal;
+            // Распределяем скидки пропорционально полной стоимости товара
+            $product_ratio = $line_subtotal / $cart_subtotal;
             $product_discount_share = $total_discounts * $product_ratio;
 
             // Вычисляем вычет для этого товара
@@ -432,7 +429,7 @@ class BfwCashback
             return 'wc-' . $status;
         }, $order_status);
         
-        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo'));
         
         // Сначала ищем все заказы нужного статуса исключая гостей
         $args_all = [
@@ -530,7 +527,7 @@ class BfwCashback
             wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
             return;
         }
-        $batch = 20; // количество заказов за шаг
+        $batch = BFW_COUNT_STEPS_FOR_REQUESTS; // количество заказов за шаг
 
         $order_ids = get_option('cashback_orders_to_recount', []);
         $offset = intval($_POST['offset'] ?? 0);
@@ -564,30 +561,38 @@ class BfwCashback
 
     public static function computyMassAddPoints(): void
     {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Access denied');
+            return;
+        }
+
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'bfw_mass_add')) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+
         ob_start();
         global $wpdb;
         $wpdb->hide_errors();
         $wpdb->suppress_errors(true);
 
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access denied');
-        }
-
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'bfw_mass_add')) {
-            wp_send_json_error('Security check failed');
-        }
-
         $points = isset($_POST['points']) ? (int) $_POST['points'] : 0;
-        $text   = isset($_POST['text']) ? sanitize_text_field($_POST['text']) : '';
+        $text   = isset($_POST['text']) ? sanitize_text_field(wp_unslash($_POST['text'])) : '';
 
         if ($points <= 0 || $points > 10000) {
             wp_send_json_error('Invalid points amount');
+            return;
+        }
+
+        // Второй шаг: без явного подтверждения массовое начисление не запускаем
+        if (empty($_POST['confirm_mass']) || $_POST['confirm_mass'] !== 'yes') {
+            wp_send_json_error(__('Mass accrual requires explicit confirmation.', 'bonus-for-woo'));
+            return;
         }
 
         /*
          * 1. Создаем meta computy_point если её нет
          */
-
         $wpdb->query("
         INSERT INTO {$wpdb->usermeta} (user_id, meta_key, meta_value)
         SELECT ID, 'computy_point', 0
@@ -603,7 +608,6 @@ class BfwCashback
          * 2. Начисляем баллы всем пользователям,
          * которым ещё не начисляли (нет f14)
          */
-
         $wpdb->query(
             $wpdb->prepare("
             UPDATE {$wpdb->usermeta} p
@@ -619,7 +623,6 @@ class BfwCashback
         /*
          * 3. Помечаем что начислили
          */
-
         $wpdb->query("
         INSERT INTO {$wpdb->usermeta} (user_id, meta_key, meta_value)
         SELECT user_id, 'f14', 'yes'
@@ -633,43 +636,71 @@ class BfwCashback
     ");
 
         /*
-         * 4. История (опционально) - с пагинацией для предотвращения утечки памяти
+         * 4. История (опционально) - с пагинацией для предотвращения утечки памяти.
+         * Пишем через журнал, чтобы операция была идемпотентной и видимой в аудите.
          */
+        $batch_size = (int) BFW_HISTORY_LIMIT;
+        $offset = 0;
+        $affected = 0;
 
-        if (class_exists('BfwHistory')) {
-            $batch_size = 500;
-            $offset = 0;
+        while (true) {
+            $user_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT user_id
+                 FROM {$wpdb->usermeta}
+                 WHERE meta_key = 'f14'
+                 LIMIT %d OFFSET %d",
+                $batch_size,
+                $offset
+            ));
 
-            while (true) {
-                $user_ids = $wpdb->get_col($wpdb->prepare(
-                    "SELECT user_id
-                     FROM {$wpdb->usermeta}
-                     WHERE meta_key = 'f14'
-                     LIMIT %d OFFSET %d",
-                    $batch_size,
-                    $offset
-                ));
+            if (empty($user_ids)) {
+                break;
+            }
 
-                if (empty($user_ids)) {
-                    break;
+            foreach ($user_ids as $user_id) {
+                $user_id = (int) $user_id;
+
+                /*
+                 * Баланс уже увеличен запросом п.2, поэтому в журнал пишем
+                 * запись-маркер с delta = points и выравниваем meta,
+                 * чтобы сумма журнала совпадала с балансом.
+                 */
+                $already = BfwLedger::isDuplicate(
+                    $user_id,
+                    BfwLedger::REASON_MASS,
+                    'mass',
+                    (int) gmdate('Ymd')
+                );
+
+                if ($already) {
+                    continue;
                 }
 
-                foreach ($user_ids as $user_id) {
-                    BfwHistory::add_history(
-                        $user_id,
-                        '+',
-                        $points,
-                        '0',
-                        $text
-                    );
-                }
+                $inserted = $wpdb->insert(
+                    $wpdb->prefix . 'bfw_ledger',
+                    array(
+                        'user_id'       => $user_id,
+                        'delta'         => $points,
+                        'balance_after' => (float) get_user_meta($user_id, 'computy_point', true),
+                        'reason'        => BfwLedger::REASON_MASS,
+                        'ref_type'      => 'mass',
+                        'ref_id'        => (int) gmdate('Ymd'),
+                        'note'          => mb_substr($text, 0, 255),
+                        'created'       => current_time('mysql'),
+                    ),
+                    array('%d', '%f', '%f', '%s', '%s', '%d', '%s', '%s')
+                );
 
-                $offset += $batch_size;
-
-                // Освобождаем память между батчами
-                if (function_exists('gc_collect_cycles')) {
-                    gc_collect_cycles();
+                if ($inserted) {
+                    BfwHistory::add_history($user_id, '+', $points, '0', $text);
+                    $affected++;
                 }
+            }
+
+            $offset += $batch_size;
+
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
             }
         }
 
@@ -679,12 +710,21 @@ class BfwCashback
     WHERE meta_key = 'f14'
 ");
 
+        // Аудит: кто, сколько и на какую сумму
+        BfwLogs::addLog('mass_add_points', get_current_user_id(), sprintf(
+            'Mass accrual: %d points to %d users. Note: %s',
+            $points,
+            $affected,
+            $text
+        ));
+
         while (ob_get_level()) {
             ob_end_clean();
         }
 
         wp_send_json_success([
-            'done' => true
+            'done'     => true,
+            'affected' => $affected,
         ]);
     }
 

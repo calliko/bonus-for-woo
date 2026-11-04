@@ -95,7 +95,9 @@ class BfwHistory
         if (file_exists($datatable_path)) {
             require_once $datatable_path;
         } else {
-            error_log('Datatable file not found: ' . $datatable_path);
+            BfwLogs::addLog('error', get_current_user_id(), 'Datatable template not found: ' . $datatable_path);
+            ob_end_clean();
+
             return '';
         }
 
@@ -177,7 +179,7 @@ class BfwHistory
                     <td><?php echo esc_html($index + 1); ?></td>
                     <td><?php echo esc_html(gmdate('d.m.Y H:i', strtotime($item->date))); ?></td>
                     <td>
-                        <span style="color: <?php echo esc_attr($color); ?>"><?php echo esc_html($item->symbol . BfwPoints::roundPoints($item->points)); ?></span>
+                        <span style="color: <?php echo esc_attr($color); ?>"><?php echo esc_html($item->symbol . BfwPoints::formatNumber((float) $item->points)); ?></span>
                     </td>
                     <td><?php echo $order_link . wp_kses_post($item->comment_admin); ?></td>
                     <?php if (current_user_can('manage_options')): ?>
@@ -290,7 +292,7 @@ class BfwHistory
                     $edit_user_url = admin_url('user-edit.php?user_id=' . $bfw->user);
 
                     echo '<td><a href="'.esc_url($edit_user_url).'" target="_blank">' . esc_html($nameuser) . '</a></td><td>' .esc_html($role['name']) . '</td>
-<td><span style="color:' . $color . ' ">' . $bfw->symbol . BfwPoints::roundPoints($bfw->points) . '</span></td>
+<td><span style="color:' . esc_attr($color) . ' ">' . esc_html($bfw->symbol . BfwPoints::formatNumber((float) $bfw->points)) . '</span></td>
 <td>' . $getorderz . wp_kses_post($bfw->comment_admin) . '</td>';
                     if (current_user_can('manage_options')) {
                         echo '<td><form method="post" action="" class="list_role_computy">
@@ -314,36 +316,106 @@ class BfwHistory
 
 
     /**
-     * Delete all history of a specific client
      * Удаление всей истории определенного клиента
      *
-     * @param int $user_id
+     * @param int  $user_id
+     * @param bool $sync_balance Пересчитать баланс по оставшимся операциям журнала
      *
      * @return void
-     * @version 6.4.0
+     * @version 8.3.4
      */
-    public static function clearAllHistoryUser(int $user_id): void
+    public static function clearAllHistoryUser(int $user_id, bool $sync_balance = false): void
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_history_computy';
         $wpdb->query($wpdb->prepare("DELETE FROM {$table_name} WHERE `user` = %d", $user_id));
+
+        if ($sync_balance) {
+            self::syncBalanceWithLedger($user_id);
+        }
     }
 
 
     /**
-     * Deleting one entry in history
      * Удаление одной записи в истории
      *
-     * @param int $id
+     * @param int  $id
+     * @param bool $sync_balance Пересчитать баланс после удаления
      *
      * @return void
-     * @version 2.5.1
+     * @version 8.3.4
      */
-    public static function deleteHistoryId(int $id): void
+    public static function deleteHistoryId(int $id, bool $sync_balance = false): void
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_history_computy';
+
+        $user_id = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT `user` FROM {$table_name} WHERE `id` = %d",
+            $id
+        ));
+
         $wpdb->query($wpdb->prepare("DELETE FROM {$table_name} WHERE `id` = %d", $id));
+
+        if ($sync_balance && $user_id > 0) {
+            self::syncBalanceWithLedger($user_id);
+        }
+    }
+
+
+    /**
+     * Приводит баланс пользователя в соответствие с журналом операций.
+     *
+     * ВАЖНО: журнал считается полным только если для пользователя выполнена
+     * миграция истории. Если операций за прошлое нет (аккаунт старше журнала),
+     * сумма журнала заведомо меньше реального баланса, и «синхронизация»
+     * обнулила бы клиенту баллы. В этом случае баланс НЕ трогаем.
+     *
+     * @param int $user_id
+     *
+     * @return void
+     * @version 8.3.4
+     */
+    public static function syncBalanceWithLedger(int $user_id): void
+    {
+        if ($user_id <= 0 || !BfwLedger::isAvailable()) {
+            return;
+        }
+
+        $ledger_balance = BfwLedger::balanceFromLedger($user_id);
+        $current = BfwPoints::getPoints($user_id);
+
+        if (abs($ledger_balance - $current) < 0.005) {
+            return;
+        }
+
+        /*
+         * Предохранитель: если журнал меньше текущего баланса и у пользователя
+         * есть операции в старой истории, значит журнал неполный (миграция не
+         * сделана) — править баланс нельзя. Разницу фиксируем в логах,
+         * разбирается через отчёт «аудит балансов».
+         */
+        $has_legacy_history = (bool) $GLOBALS['wpdb']->get_var($GLOBALS['wpdb']->prepare(
+            "SELECT id FROM {$GLOBALS['wpdb']->prefix}bfw_history_computy WHERE `user` = %d LIMIT 1",
+            $user_id
+        ));
+
+        if ($ledger_balance < $current && ($has_legacy_history || $ledger_balance <= 0)) {
+            BfwLogs::addLog('debug', $user_id, sprintf(
+                'Синхронизация пропущена: журнал (%.2f) меньше баланса (%.2f), журнал неполный — запустите импорт истории',
+                $ledger_balance,
+                $current
+            ));
+            return;
+        }
+
+        update_user_meta($user_id, 'computy_point', BfwPoints::roundPoints(max(0, $ledger_balance)));
+
+        BfwLogs::addLog('debug', $user_id, sprintf(
+            'История изменена: баланс синхронизирован с журналом (%.2f -> %.2f)',
+            $current,
+            $ledger_balance
+        ));
     }
 
 

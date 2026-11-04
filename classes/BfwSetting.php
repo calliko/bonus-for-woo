@@ -51,8 +51,28 @@ class BfwSetting
         // Проверка и загрузка настроек
         if (is_null($this->options)) {
             $this->options = get_option(self::OPTION_NAME, []);
+            if (!is_array($this->options)) {
+                $this->options = [];
+            }
         }
         return $this->options;
+    }
+
+    /**
+     * Сбрасывает закэшированные настройки.
+     *
+     * Кэш жил весь запрос: после сохранения формы (update_option идёт через
+     * sanitize_callback) любой последующий BfwSetting::get() в том же запросе
+     * возвращал СТАРОЕ значение. Из-за этого решались неверные ветки — например
+     * премодерация отзывов оставалась включённой сразу после её отключения.
+     *
+     * @return void
+     * @version 8.5.0
+     */
+    public static function flush()
+    {
+        $instance = self::get_instance();
+        $instance->options = null;
     }
 
     /**

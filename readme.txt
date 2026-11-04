@@ -1,4 +1,4 @@
-﻿=== Bonus for Woo ===
+=== Bonus for Woo ===
 Contributors: calliko
 Donate link: https://yoomoney.ru/to/410011302808683
 Tags: loyalty, cashback, points, reward, referral
@@ -6,7 +6,7 @@ Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.0
 WC tested up to: 11.0.1
-Stable tag: 8.3.3
+Stable tag: 8.5.0
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -122,6 +122,20 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.5.0 - 2026-11-04 =
+* Cashback percent, points and sums now follow the WooCommerce "Number of decimals" setting: 0 decimals shows 3%, 250; 2 decimals shows 3.50%, 250.75. Rounding of points uses the same setting.
+* Points export file moved from the plugin directory to uploads — a plugin installed from the admin screen could not write there. Download link is now nonce-protected.
+* Import accepts the export file from uploads.
+* Fixed duplication of cron events.
+* Added status caching.
+* Implemented more precise rounding for point deductions and accruals.
+* Fixed the display of cashback in the block-based cart.
+* Removed the `woocommerce_new_order` hook.
+* Improved security.
+* Performance optimization.
+* Added checks for the presence of WooCommerce.
+
 
 = 8.3.3 - 2026-10-14 =
 * Fixed the button style.

@@ -4,3 +4,39 @@
 /.github
 /.gitignore
 /.distignore
+
+
+# IDE / редакторы
+.idea/
+.vscode/
+*.iml
+nbproject/
+.project/
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ОС
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PHP
+*.log
+*.cache
+.phpunit.result.cache
+composer.lock.bak
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Временные файлы плагина
+export_bfw.csv
+bfw_points_export.csv
+*.sql
+*.bak
+*.orig
+*.rej
+*~

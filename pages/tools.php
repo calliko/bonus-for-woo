@@ -312,12 +312,12 @@ defined( 'ABSPATH' ) || exit;
 
             <div class="bfw-tool-form">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-                    <?php $filename = BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv'; ?>
-                    <?php if (file_exists($filename)) : ?>
+                    <?php $filename = BfwFunctions::getExportFilePath(); ?>
+                    <?php if (is_file($filename)) : ?>
                         <a class="bfw-btn bfw-btn-outline" href="<?php echo wp_nonce_url('?page=bonus-for-woo%2Fpages%2Ftools.php&export_bfw_points=true', 'bfw_export_points'); ?>">
                             <span class="dashicons dashicons-update"></span> <?php _e('Refresh CSV', 'bonus-for-woo'); ?>
                         </a>
-                        <a class="bfw-btn bfw-btn-outline" href="<?php echo admin_url('admin-post.php?action=bfw_download_export'); ?>" download>
+                        <a class="bfw-btn bfw-btn-outline" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=bfw_download_export'), 'bfw_download_export')); ?>" download>
                             <span class="dashicons dashicons-download"></span> <?php _e('Download CSV', 'bonus-for-woo'); ?>
                         </a>
                         <a title="<?php _e('Delete export file', 'bonus-for-woo'); ?>" class="bfw-btn bfw-btn-danger" style="padding: 10px;" href="<?php echo wp_nonce_url('?page=bonus-for-woo%2Fpages%2Ftools.php&remove_export_bfw_points=true', 'bfw_remove_export'); ?>">
@@ -386,7 +386,107 @@ defined( 'ABSPATH' ) || exit;
             </div>
         </div>
 
-        <!-- Карточка 5: Служебные -->
+        <!-- Карточка 5: Журнал операций -->
+        <div class="bfw-tool-card">
+            <div class="bfw-tool-header">
+                <div class="bfw-tool-icon"><span class="dashicons dashicons-list-view"></span></div>
+                <h2 class="bfw-tool-title"><?php _e('Transaction ledger', 'bonus-for-woo'); ?></h2>
+            </div>
+            <div class="bfw-tool-desc">
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size:13px; margin-bottom:12px;">
+                        <?php _e('The ledger records every operation on a balance and makes repeated accrual impossible. Run the migration once after upgrading, then use the audit to find balances that disagree with the ledger.', 'bonus-for-woo'); ?>
+                    </p>
+
+                    <form method="post" action="" style="margin-bottom:12px;">
+                        <?php wp_nonce_field('bfw_ledger_migrate_action', 'bfw_ledger_migrate_nonce'); ?>
+                        <input type="hidden" name="bfw_ledger_migrate" value="1">
+                        <button type="submit" class="bfw-btn bfw-btn-outline">
+                            <span class="dashicons dashicons-database-import"></span>
+                            <?php _e('Import history into ledger', 'bonus-for-woo'); ?>
+                        </button>
+                    </form>
+
+                    <form method="post" action="" style="margin-bottom:12px;">
+                        <?php wp_nonce_field('bfw_ledger_audit_action', 'bfw_ledger_audit_nonce'); ?>
+                        <input type="hidden" name="bfw_ledger_audit" value="1">
+                        <button type="submit" class="bfw-btn bfw-btn-outline">
+                            <span class="dashicons dashicons-search"></span>
+                            <?php _e('Audit balances against ledger', 'bonus-for-woo'); ?>
+                        </button>
+                    </form>
+
+                    <?php
+                    if (!empty($_POST['bfw_ledger_migrate'])) {
+                        if (empty($_POST['bfw_ledger_migrate_nonce'])
+                            || !wp_verify_nonce($_POST['bfw_ledger_migrate_nonce'], 'bfw_ledger_migrate_action')) {
+                            wp_die('Security Error');
+                        }
+
+                        $migrated = 0;
+                        // Переносим пачками, пока есть что переносить
+                        for ($i = 0; $i < 200; $i++) {
+                            $chunk = BfwLedger::migrateFromHistory(500);
+                            if ($chunk <= 0) {
+                                break;
+                            }
+                            $migrated += $chunk;
+                        }
+
+                        echo '<div class="bfw-alert bfw-alert-success" style="margin-top:10px;">'
+                            . '<span class="dashicons dashicons-yes-alt"></span> '
+                            . sprintf(__('Migrated %d history records.', 'bonus-for-woo'), $migrated)
+                            . '</div>';
+                    }
+
+                    if (!empty($_POST['bfw_ledger_audit'])) {
+                        if (empty($_POST['bfw_ledger_audit_nonce'])
+                            || !wp_verify_nonce($_POST['bfw_ledger_audit_nonce'], 'bfw_ledger_audit_action')) {
+                            wp_die('Security Error');
+                        }
+
+                        if (!BfwLedger::isAvailable()) {
+                            echo '<div class="bfw-alert bfw-alert-warning" style="margin-top:10px;">'
+                                . esc_html__('Ledger table is missing. Deactivate and reactivate the plugin.', 'bonus-for-woo')
+                                . '</div>';
+                        } else {
+                            $mismatches = BfwLedger::findMismatches(100);
+
+                            if (empty($mismatches)) {
+                                echo '<div class="bfw-alert bfw-alert-success" style="margin-top:10px;">'
+                                    . '<span class="dashicons dashicons-yes-alt"></span> '
+                                    . esc_html__('No discrepancies found.', 'bonus-for-woo')
+                                    . '</div>';
+                            } else {
+                                echo '<p style="font-weight:600; margin-top:10px;">'
+                                    . sprintf(__('Found %d accounts with a mismatch (showing up to 100):', 'bonus-for-woo'), count($mismatches))
+                                    . '</p>';
+                                echo '<table class="table-bfw" style="width:100%; font-size:13px;"><thead><tr>'
+                                    . '<th>ID</th><th>' . esc_html__('Balance', 'bonus-for-woo') . '</th>'
+                                    . '<th>' . esc_html__('Ledger', 'bonus-for-woo') . '</th>'
+                                    . '<th>' . esc_html__('Difference', 'bonus-for-woo') . '</th>'
+                                    . '</tr></thead><tbody>';
+                                foreach ($mismatches as $m) {
+                                    echo '<tr><td><a href="' . esc_url(admin_url('user-edit.php?user_id=' . $m['user_id'])) . '">'
+                                        . (int) $m['user_id'] . '</a></td>'
+                                        . '<td>' . esc_html(BfwPoints::formatNumber((float) $m['meta'])) . '</td>'
+                                        . '<td>' . esc_html(BfwPoints::formatNumber((float) $m['ledger'])) . '</td>'
+                                        . '<td style="color:' . ($m['diff'] > 0 ? '#23CE48' : '#FF001D') . ';">'
+                                        . esc_html(BfwPoints::formatNumber((float) $m['diff'])) . '</td></tr>';
+                                }
+                                echo '</tbody></table>';
+                                echo '<p style="font-size:12px; color:var(--bfw-text-muted); margin-top:8px;">'
+                                    . esc_html__('Difference = balance minus ledger. Accounts created before the ledger existed will show a positive difference until the migration fills their history.', 'bonus-for-woo')
+                                    . '</p>';
+                            }
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Карточка 6: Служебные -->
         <div class="bfw-tool-card">
             <div class="bfw-tool-header">
                 <div class="bfw-tool-icon"><span class="dashicons dashicons-editor-paragraph"></span></div>
@@ -420,6 +520,7 @@ jQuery(function ($) {
             data: {
                 action: 'computy_mass_add_points',
                 nonce: '<?php echo wp_create_nonce("bfw_mass_add"); ?>',
+                confirm_mass: 'yes',
                 paged: massPage,
                 points: $('#mass_points').val(),
                 text: $('#mass_text').val()

@@ -13,20 +13,16 @@ class Bfw_Export
     public static function bfw_handle_download_export() {
         // Проверяем права доступа
         if (!current_user_can('manage_options')) {
-            wp_die('У вас нет прав для скачивания этого файла.');
+            wp_die(__('You do not have permission to download this file.', 'bonus-for-woo'));
         }
 
-        // Проверяем nonce для безопасности (рекомендуется)
-        // if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_download_export')) {
-        //     wp_die('Неверный запрос.');
-        // }
+        check_admin_referer('bfw_download_export');
 
-        // Путь к файлу
-        $file_path = WP_PLUGIN_DIR . '/bonus-for-woo/export_bfw.csv';
+        $file_path = BfwFunctions::getExportFilePath();
 
         // Проверяем существование файла
-        if (!file_exists($file_path)) {
-            wp_die('Файл export_bfw.csv не найден.');
+        if (!is_file($file_path)) {
+            wp_die(__('The export file was not found. Generate it first.', 'bonus-for-woo'));
         }
 
         // Отправляем заголовки для скачивания
@@ -74,8 +70,12 @@ class Bfw_Export
 
         $where = '';
         if (!empty($_REQUEST['s'])) {
-            $search = esc_sql($_REQUEST['s']);
-            $where = $wpdb->prepare(" WHERE code LIKE %s OR comment_admin LIKE %s", '%' . $search . '%', '%' . $search . '%');
+            $search = sanitize_text_field(wp_unslash($_REQUEST['s']));
+            $where = $wpdb->prepare(
+                " WHERE code LIKE %s OR comment_admin LIKE %s",
+                '%' . $wpdb->esc_like($search) . '%',
+                '%' . $wpdb->esc_like($search) . '%'
+            );
         }
 
         $results = $wpdb->get_results("SELECT id, code, sum, created, comment_admin, status, user, date_use, reusable FROM {$table_name}{$where} ORDER BY id DESC", ARRAY_A);
@@ -103,12 +103,13 @@ class Bfw_Export
 
         $where = ' WHERE 1=1';
         if (!empty($_GET['date_start']) && strtotime($_GET['date_start'])) {
-            $date_start = sanitize_text_field($_GET['date_start']);
+            $date_start = sanitize_text_field(wp_unslash($_GET['date_start']));
             $where .= $wpdb->prepare(" AND date >= %s", $date_start . ' 00:00:00');
         }
         if (!empty($_GET['date_finish']) && strtotime($_GET['date_finish'])) {
-            $date_finish = sanitize_text_field($_GET['date_finish']);
-            $where .= $wpdb->prepare(" AND date <= %s", $_GET['date_finish'] . ' 23:59:59');
+            /* раньше здесь интерполировался сырой $_GET — исправлено на плейсхолдер */
+            $date_finish = sanitize_text_field(wp_unslash($_GET['date_finish']));
+            $where .= $wpdb->prepare(" AND date <= %s", $date_finish . ' 23:59:59');
         }
 
         $results = $wpdb->get_results("SELECT id, user, symbol, points, comment_admin, date, orderz FROM {$table_name}{$where} ORDER BY id DESC", ARRAY_A);

@@ -315,7 +315,7 @@ window.bfwUpdateBlocks = function() {
         };
 
         const loadCashbackBlock = async () => {
-            console.log('считаем кешбэк');
+            // debug removed
             isUpdating = true;
             const html = await fetchBlockData('/get-cashback-html');
             if (html) {

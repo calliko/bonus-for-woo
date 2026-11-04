@@ -55,16 +55,22 @@ class BfwLogs
      */
     public static function getListLog(string $date_start = '', string $date_finish = ''): void
     {
+        global $wpdb;
+
         $where = '';
-        $limit = ' LIMIT '.BFW_HISTORY_LIMIT;
+        $args = array();
+        $limit = ' LIMIT ' . (int) BFW_HISTORY_LIMIT;
         if (!empty($date_start)) {
             $limit = '';
-            $endDate = $date_finish ?? gmdate('Y-m-d');
-            $where = " WHERE created BETWEEN '" . $date_start . "' AND '" . $endDate . "'";
-
+            $endDate = $date_finish ?: gmdate('Y-m-d');
+            /* Раньше значения вклеивались в строку — исправлено на плейсхолдеры */
+            $where = " WHERE created BETWEEN %s AND %s";
+            $args[] = $date_start . ' 00:00:00';
+            $args[] = $endDate . ' 23:59:59';
         }
-        global $wpdb;
-        $table_bfw = $wpdb->get_results("SELECT id,event,message,status,created,user FROM {$wpdb->prefix}bfw_logs_computy {$where}  ORDER BY created DESC {$limit}");
+
+        $sql = "SELECT id,event,message,status,created,user FROM {$wpdb->prefix}bfw_logs_computy {$where} ORDER BY created DESC {$limit}";
+        $table_bfw = $args ? $wpdb->get_results($wpdb->prepare($sql, ...$args)) : $wpdb->get_results($sql);
         if ($table_bfw) { ?>
 
             <table class="table-bfw table-bfw-history-points"
@@ -88,8 +94,8 @@ class BfwLogs
                 $i = 1;
                 foreach ($table_bfw as $bfw) {
                     echo '<tr><td>' . $i++ . '</td>
-<td>' . $bfw->event . '</td>
-<td>' . date_format(date_create($bfw->created), 'd.m.Y H:i') . '</td>';
+<td>' . esc_html($bfw->event) . '</td>
+<td>' . esc_html(date_format(date_create($bfw->created), 'd.m.Y H:i')) . '</td>';
 
                     if ($bfw->user === 0) {
                         echo '<td> </td>';
@@ -106,7 +112,7 @@ class BfwLogs
                     }
 
 
-                    echo ' <td>' . $bfw->message . '</td> </tr>';
+                    echo ' <td>' . esc_html($bfw->message) . '</td> </tr>';
                 }
                 ?>
                 </tbody>

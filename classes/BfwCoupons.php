@@ -150,7 +150,7 @@ class BfwCoupons
                             ?>
                         </td>
                         <td><b><?php
-                                echo BfwPoints::roundPoints($bfw->sum); ?></b></td>
+                                echo esc_html(BfwPoints::formatNumber((float) $bfw->sum)); ?></b></td>
                         <td><?php echo date_format(date_create($bfw->created), 'd.m.Y H:i'); ?></td>
                         <td><?php echo esc_html($bfw->comment_admin); ?> </td>
                         <?php
@@ -346,59 +346,96 @@ class BfwCoupons
      */
     public static function enterCoupon(int $userid, string $code_coupon): string
     {
+        $code_coupon = trim($code_coupon);
         $coupon = self::getCoupon($code_coupon);
 
-        if (isset($coupon->code) && $coupon->status === 'active') {
-            $daily_coupon = get_user_meta($userid, 'daily_coupon', true);
-            $count_limit_day = 1;
-
-            if (!empty($daily_coupon)) {
-                $qca = BfwSetting::get('quantity-coupon-applied', 1);
-
-                $count_limit_day = $daily_coupon[1] + 1;
-
-                if ($daily_coupon[0] === gmdate('d.m.y') && $daily_coupon[1] >= $qca) {
-                    return 'limit';
-                }
-            }
-
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'bfw_coupons_computy';
-            $table_usagees = $wpdb->prefix . 'bfw_coupon_usages';
-            if ($coupon->reusable == 1) {
-                //применяется многоразовый купон
-                if (self::bfwCanUseCoupon($userid, $coupon->id)) {
-
-                    self::addReusableCoupon($userid, $coupon->id);
-                } else {
-
-                    // Купон уже использован этим пользователем
-                    return 'limit';
-                }
-
-            } else {
-                //Применяется одноразовый купон
-
-                $wpdb->update($table_name,
-                        array('status' => 'used', 'user' => $userid, 'date_use' => gmdate('Y-m-d H:i:s')),
-                        array('id' => $coupon->id));
-            }
-
-
-            $old_points = BfwPoints::getPoints($userid);
-            $coupon_sum = $coupon->sum;
-            $new_ball = $old_points + $coupon_sum;
-            BfwPoints::updatePoints($userid, $new_ball);
-
-            update_user_meta($userid, 'daily_coupon', array(gmdate('d.m.y'), $count_limit_day));
-
-            $pricina = __('Coupon usage', 'bonus-for-woo') . ' ' . $code_coupon;
-            BfwHistory::add_history($userid, '+', $coupon_sum, '0', $pricina);
-
-            return 'good';
+        if (!isset($coupon->code) || $coupon->status !== 'active') {
+            return 'not_coupon';
         }
 
-        return 'not_coupon';
+        // Лимит попыток в день
+        $daily_coupon = get_user_meta($userid, 'daily_coupon', true);
+        $count_limit_day = 1;
+        $today = gmdate('d.m.y');
+
+        if (!empty($daily_coupon) && is_array($daily_coupon) && isset($daily_coupon[1])) {
+            $qca = (int) BfwSetting::get('quantity-coupon-applied', 1);
+            $count_limit_day = (int) $daily_coupon[1] + 1;
+
+            if (($daily_coupon[0] ?? '') === $today && (int) $daily_coupon[1] >= $qca) {
+                return 'limit';
+            }
+        }
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bfw_coupons_computy';
+
+        /*
+         * Атомарное «занятие» купона. Раньше между SELECT ... status='active'
+         * и UPDATE ... status='used' не было ни блокировки, ни проверки
+         * affected_rows: два параллельных запроса оба проходили проверку и
+         * оба начисляли сумму. Теперь право на начисление получает только
+         * тот, кто реально перевёл статус.
+         */
+        if ((int) $coupon->reusable === 1) {
+            if (!self::bfwCanUseCoupon($userid, $coupon->id)) {
+                return 'limit';
+            }
+
+            // Для многоразового: атомарно вставляем использование и полагаемся
+            // на уникальность (code, user) ниже
+            $inserted = $wpdb->query($wpdb->prepare(
+                "INSERT IGNORE INTO {$wpdb->prefix}bfw_coupon_usages (code, user, date_use)
+                 SELECT %s, %d, %s FROM DUAL
+                 WHERE NOT EXISTS (
+                     SELECT 1 FROM {$wpdb->prefix}bfw_coupon_usages WHERE code = %s AND user = %d
+                 )",
+                (string) $coupon->id,
+                $userid,
+                current_time('mysql'),
+                (string) $coupon->id,
+                $userid
+            ));
+
+            if (!$inserted) {
+                return 'limit';
+            }
+        } else {
+            $claimed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$table_name}
+                 SET status = 'used', user = %d, date_use = %s
+                 WHERE id = %d AND status = 'active'",
+                $userid,
+                current_time('mysql'),
+                (int) $coupon->id
+            ));
+
+            // 0 строк — купон уже забрал кто-то другой
+            if ((int) $claimed !== 1) {
+                return 'limit';
+            }
+        }
+
+        $coupon_sum = (float) $coupon->sum;
+        $pricina = __('Coupon usage', 'bonus-for-woo') . ' ' . $code_coupon;
+
+        // Начисление через журнал: идемпотентно по (coupon, coupon_id, user)
+        $applied = BfwLedger::apply(
+            $userid,
+            $coupon_sum,
+            BfwLedger::REASON_COUPON,
+            'coupon',
+            (int) $coupon->id,
+            $pricina
+        );
+
+        if (!$applied) {
+            return 'limit';
+        }
+
+        update_user_meta($userid, 'daily_coupon', array($today, $count_limit_day));
+
+        return 'good';
     }
 
     /**
@@ -412,7 +449,7 @@ class BfwCoupons
      */
     public static function trueRedirectOnCouponRemoval(string $coupon_code): void
     {
-        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo'));
         if (strtolower($coupon_code) === strtolower($cart_discount)) {
             BfwPoints::updateFastPoints(get_current_user_id(), 0);
         }

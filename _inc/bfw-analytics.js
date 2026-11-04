@@ -110,5 +110,4 @@ jQuery(function($) {
 
     // Make available globally
     window.bfwAnalytics = bfwAnalytics;
-    console.log('bfwAnalytics initialized');
 });

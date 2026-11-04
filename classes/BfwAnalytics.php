@@ -53,9 +53,9 @@ class BfwAnalytics
         try {
             $data = self::getPointsDistribution();
             wp_send_json_success($data);
-        } catch (Exception $e) {
-            error_log('BfwAnalytics: Distribution error: ' . $e->getMessage());
-            wp_send_json_error($e->getMessage());
+        } catch (Throwable $e) {
+            BfwLogs::addLog('error', get_current_user_id(), 'BfwAnalytics: ' . $e->getMessage());
+            wp_send_json_error(__('Could not build the report.', 'bonus-for-woo'));
         }
     }
 

@@ -84,16 +84,18 @@ class BfwHooks
      */
     private static function initOrderHooks()
     {
-        /*------------Действие когда клиент подтверждает заказ - списание баллов------------*/
-        $order_status_write = BfwSetting::get('write_points_order_status', 'processed');
-        if ($order_status_write == 'processed') {
-            $order_status_write_action = 'woocommerce_new_order';
-        } else {
-            $order_status_write_action = 'woocommerce_order_status_' . $order_status_write;
-       
-        }
+        /*
+         * Списание баллов выполняется ПОСЛЕ формирования заказа и применения скидки.
+         *
+         */
+        add_action('woocommerce_checkout_order_processed', array('BfwPoints', 'commitDeduction'), 10, 1);
 
-        add_action($order_status_write_action, array('BfwPoints', 'newOrder'), 5, 1);
+        // Store API / Blocks — отдельный хук той же семантики
+        add_action('woocommerce_store_api_checkout_order_processed', array('BfwPoints', 'commitDeduction'), 10, 1);
+
+        // Заказ не оплачен / отменён — освобождаем заявленные баллы
+        add_action('woocommerce_order_status_failed', array('BfwPoints', 'releaseDeduction'), 10, 1);
+        add_action('woocommerce_order_status_cancelled', array('BfwPoints', 'releaseDeduction'), 10, 1);
 
         /*------------Действие когда статус заказа выполнен - начисление баллов------------*/
         $order_status = BfwSetting::get('add_points_order_status', 'completed');
@@ -158,6 +160,9 @@ class BfwHooks
         //Если отзыв о товаре отклонен удаляет баллы
         add_action('comment_approved_to_unapproved', array('BfwReview', 'bfwoo_unapproved_comment_callback'));
 
+        /*-------Премодерация отзывов о товарах (точечно, без comment_moderation)-------*/
+        add_filter('pre_comment_approved', array('BfwReview', 'moderateProductReviews'), 10, 2);
+
         add_action(
             'woocommerce_checkout_create_order_line_item',
             array('BfwFunctions', 'saveSaleStatusToOrderItemMeta'),
@@ -173,6 +178,32 @@ class BfwHooks
                 delete_user_meta($user_id, 'total_purchases_sum');
             }
         });
+
+        /*
+         * Сброс закэшированных настроек сразу после сохранения формы:
+         * BfwSetting кэширует опцию на весь запрос, и без сброса остаток
+         * запроса видел СТАРЫЕ значения (премодерация отзывов, cron и т.д.).
+         */
+        add_action('update_option_bonus_option_name', array('BfwSetting', 'flush'), 1, 0);
+        add_action('add_option_bonus_option_name', array('BfwSetting', 'flush'), 1, 0);
+
+        /*
+         * Одноразовая уборка: снять глобальный comment_moderation, который
+         * включали прошлые версии. Выполняется при первом заходе в админку
+         * после обновления, без участия админа.
+         */
+        add_action('admin_init', function () {
+            if (get_option('bfw_set_comment_moderation') === false) {
+                BfwAdmin::cleanupLegacyCommentModeration();
+            }
+        });
+
+        /*
+         * Периодическая перепроверка лицензии (не чаще раза в 7 дней).
+         * BfwLicense::maybeRemoteCheck() сам решает, нужен ли запрос,
+         * и никогда не отключает PRO из-за сетевой ошибки.
+         */
+        add_action('admin_init', array('BfwLicense', 'maybeRemoteCheck'));
 
         /*------------Сохраняем баллы для списания в метазаписи заказа------------*/
         add_action('woocommerce_checkout_create_order', array('BfwPoints', 'savePointsToDeductInOrder'), 10, 1);
@@ -199,8 +230,6 @@ class BfwHooks
         add_action('woocommerce_before_cart', array('BfwPoints', 'addPointsOnlyProductsNotice'), 20);
         add_filter('woocommerce_available_payment_gateways', array('BfwPoints', 'disablePaymentGatewaysForPointsOnlyProducts'), 10, 1);
 
-        /*-------Добавляем скидку-------*/
-      //  add_action('woocommerce_cart_calculate_fees', array('BfwPoints', 'bfwoo_add_fee'), 1, 1);
 
         /*-------Дополнительный хук для применения купона после расчета-------*/
         add_action('woocommerce_after_calculate_totals', array('BfwPoints', 'ensure_coupon_applied'), 10, 1);
@@ -262,6 +291,13 @@ class BfwHooks
 
         /*Cron Удаление баллов за бездействие. Находим старых клиентов*/
         add_action('bfw_clear_old_cashback', array('BfwPoints', 'deleteBallsOldClients'), 10, 3);
+
+        /*Одноразовая миграция: снимаем права администратора у shop_manager, выданные старыми версиями*/
+        add_action('admin_init', function () {
+            if (get_option('bfw_caps_reconciled') !== BONUS_COMPUTY_VERSION) {
+                BfwFunctions::revokeLegacyElevatedCaps();
+            }
+        });
 
         /*cron Начисление баллов в день рождение*/
         add_action('bfw_search_birthday', array('BfwPoints', 'addBallsForBirthday'), 10, 3);

@@ -50,6 +50,24 @@ class BfwFunctions
 
 
     /**
+     * Path to the points export CSV.
+     *
+     * The file used to live inside the plugin directory. A plugin installed from
+     * the admin screen cannot write there (and on nginx the bundled .htaccess
+     * does nothing), so the export silently failed. Uploads are writable and,
+     * with the default flat structure, not web-readable.
+     *
+     * @return string
+     * @since 8.5.1
+     */
+    public static function getExportFilePath(): string
+    {
+        $upload_dir = wp_upload_dir(null, false);
+
+        return wp_normalize_path(trailingslashit($upload_dir['basedir']) . 'bfw_points_export.csv');
+    }
+
+    /**
      * Launched when the plugin is activated
      * Запускается при активации плагина
      *
@@ -58,28 +76,156 @@ class BfwFunctions
      */
     public static function bfwActivate(): void
     {
-        // Возможность менеджерам настраивать плагин
-        $shop_manager = get_role('shop_manager');
-        $shop_manager->add_cap('manage_options');
-        $shop_manager->add_cap('edit_users');
-        $shop_manager->add_cap('edit_user');
-
+        /*
+         * ВАЖНО: плагин НЕ должен выдавать роли shop_manager права администратора.
+         * Раздача manage_options / edit_users при активации превращала любого
+         * менеджера магазина в полного администратора сайта (и не откатывалась
+         * при деактивации). Доступ к страницам настроек плагина менеджеру не нужен.
+         */
         delete_option('rewrite_rules');
         //Проверка бд
         BfwDB::checkDb();
         BfwAdmin::bfw_search_pro();
+        // Проверяем, не остались ли права от предыдущих версий плагина
+        self::revokeLegacyElevatedCaps();
     }
+
+    /**
+     * Снимает права manage_options / edit_users, выданные роли shop_manager
+     * предыдущими версиями плагина (<= 8.3.3).
+     *
+     * Вызывается на activation/upgrade и один раз на admin_init, чтобы
+     * уже существующие сайты избавились от эскалации без ручных действий.
+     * edit_user НЕ трогаем — это штатное право WooCommerce для менеджеров.
+     *
+     * @return void
+     * @version 8.3.4
+     */
+    public static function revokeLegacyElevatedCaps(): void
+    {
+        $shop_manager = get_role('shop_manager');
+        if (!$shop_manager) {
+            return;
+        }
+
+        $removed = array();
+        foreach (array('manage_options', 'edit_users') as $cap) {
+            if (!empty($shop_manager->capabilities[$cap])) {
+                $shop_manager->remove_cap($cap);
+                $removed[] = $cap;
+            }
+        }
+
+        if ($removed) {
+            BfwLogs::addLog(
+                'security',
+                get_current_user_id(),
+                'Removed elevated capabilities from shop_manager: ' . implode(', ', $removed)
+            );
+        }
+
+        update_option('bfw_caps_reconciled', BONUS_COMPUTY_VERSION, false);
+    }
+
 
     /**
      * Runs when the plugin is deactivated
      * Запускается при деактивации плагина
      *
+     * Снимаем все cron-события: иначе WordPress продолжает дёргать их
+     * ежедневно, а обработчики уже не зарегистрированы — холостые вызовы
+     * навсегда остаются в расписании.
+     *
      * @return void
-     * @version 6.4.0
+     * @version 8.5.0
      */
     public static function bfwDeactivate(): void
     {
+        self::unscheduleCronEvents();
         delete_option('rewrite_rules');
+    }
+
+    /**
+     * Снимает все cron-события плагина.
+     *
+     * @param int|null $site_id Сайт, для которого снимаем (мультисайт)
+     * @return void
+     * @version 8.5.0
+     */
+    public static function unscheduleCronEvents(?int $site_id = null): void
+    {
+        $hooks = array('bfw_clear_old_cashback', 'bfw_search_birthday', 'bfw_daily_cashback_check');
+
+        if ($site_id !== null && is_multisite()) {
+            switch_to_blog($site_id);
+        }
+
+        foreach ($hooks as $hook) {
+            wp_clear_scheduled_hook($hook);
+        }
+
+        if ($site_id !== null && is_multisite()) {
+            restore_current_blog();
+        }
+    }
+
+    /**
+     * Активация плагина, в том числе на сети сайтов.
+     *
+     * register_activation_hook передаёт $network_wide: при активации на уровне
+     * сети таблицы и опции нужны КАЖДОМУ сайту, иначе первый же запрос к
+     * wp_2_bfw_* упадёт с «таблица не существует».
+     *
+     * @param bool $network_wide
+     * @return void
+     * @version 8.5.0
+     */
+    public static function bfwActivatePlugin(bool $network_wide = false): void
+    {
+        if (!is_multisite() || !$network_wide) {
+            self::bfwActivate();
+            return;
+        }
+
+        $site_ids = get_sites(array(
+            'fields'                => 'ids',
+            'number'                => 0,
+            'update_site_cache'     => false,
+            'update_site_meta_cache' => false,
+        ));
+
+        foreach ($site_ids as $site_id) {
+            switch_to_blog((int) $site_id);
+            self::bfwActivate();
+            restore_current_blog();
+        }
+    }
+
+    /**
+     * Деактивация плагина, в том числе на сети сайтов.
+     *
+     * @param bool $network_wide
+     * @return void
+     * @version 8.5.0
+     */
+    public static function bfwDeactivatePlugin(bool $network_wide = false): void
+    {
+        if (!is_multisite() || !$network_wide) {
+            self::bfwDeactivate();
+            return;
+        }
+
+        $site_ids = get_sites(array(
+            'fields'            => 'ids',
+            'number'            => 0,
+            'update_site_cache' => false,
+        ));
+
+        foreach ($site_ids as $site_id) {
+            self::unscheduleCronEvents((int) $site_id);
+        }
+
+        delete_network_option(null, 'bfw_network_activated');
     }
 
     /**
@@ -94,16 +240,20 @@ class BfwFunctions
      */
     public static function bfwUpdateCompleted($upgrader_object, $options): void
     {
-        if (!empty($options['action']) &&
-                $options['action'] === 'update' &&
-                $options['type'] === 'plugin' &&
-                !empty($options['plugins'])) {
-            $our_plugin = 'bonus-for-woo/index.php';
-            foreach ($options['plugins'] as $plugin) {
-                if ($plugin === $our_plugin) {
-                    set_transient('bfw_pro_updated', 1);
-                    break; // Прерываем цикл после нахождения плагина
-                }
+        if (empty($options['action'])
+            || $options['action'] !== 'update'
+            || empty($options['type'])
+            || $options['type'] !== 'plugin'
+            || empty($options['plugins'])) {
+            return;
+        }
+
+        $our_plugin = 'bonus-for-woo/index.php';
+
+        foreach ($options['plugins'] as $plugin) {
+            if ($plugin === $our_plugin) {
+                set_transient('bfw_pro_updated', 1);
+                break; // Прерываем цикл после нахождения плагина
             }
         }
     }
@@ -122,7 +272,7 @@ class BfwFunctions
     {
         $fee_total = 0;
 
-        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+        $cart_discount = mb_strtolower(BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo'));
         // Получаем данные о купонах
         $coupons = $order->get_coupons();
         // Массив для хранения информации о скидках
@@ -166,44 +316,38 @@ class BfwFunctions
      */
     public static function checkingKey(string $key, int $alternate_server): void
     {
-        $get = array('key' => sanitize_text_field($key), 'site' => get_site_url());
-        $response = wp_remote_get(base64_decode('aHR0cHM6Ly9jb21wdXR5LnJ1L0FQSS9hcGkucGhwPw==') . http_build_query($get));
-        if ($alternate_server === 1) {
-            //todo переделать
-            //  $response = wp_remote_get(base64_decode('aHR0cHM6Ly9jb21wdXR5LmFsd2F5c2RhdGEubmV0L0FQSS9hcGkucGhwPw==') . http_build_query($get));
+        /*
+         * Ключ передаётся на сервер лицензий, который возвращает ПОДПИСАННЫЙ
+         * токен. Плагин проверяет подпись вшитым публичным ключом и только
+         * затем сохраняет токен. Ответ сервера без валидной подписи
+         * игнорируется — подделать его нельзя без приватного ключа.
+         */
+        $result = BfwLicense::activate($key);
+
+        if ($result['ok']) {
+            wp_safe_redirect(admin_url('admin.php?page=bonus_for_woo-plugin-options&bfw_license=ok'));
+            exit;
         }
 
+        $messages = array(
+            'empty_key'                 => __('Enter your activation key.', 'bonus-for-woo'),
+            'invalid_key'               => __('This key is not valid for this site. Check that the key and the domain match.', 'bonus-for-woo'),
+            'wrong_domain'              => __('This key was issued for a different site.', 'bonus-for-woo'),
+            'limit_reached'             => __('The activation limit for this key has been reached.', 'bonus-for-woo'),
+            'unavailable'               => __('The license server is temporarily unavailable. Please try again later.', 'bonus-for-woo'),
+            'network'                   => __('Could not reach the license server. Check your connection and try again.', 'bonus-for-woo'),
+            'unexpected_response'       => __('The license server returned an unexpected response. Please try again later.', 'bonus-for-woo'),
+            'bad_token_bad_signature'   => __('The license response could not be verified. Please contact support.', 'bonus-for-woo'),
+            'bad_token_domain_mismatch' => __('This key was issued for a different site.', 'bonus-for-woo'),
+            'bad_token_expired'         => __('This license has expired.', 'bonus-for-woo'),
+        );
 
-        if (!is_wp_error($response)) {
-            $json = wp_remote_retrieve_body($response);
-            $data = json_decode($json, true);
+        $message = $messages[$result['reason']] ?? __('The key is not correct! Contact info@computy.ru', 'bonus-for-woo');
 
-            if (isset($data['status']) && $data['status'] === 'OK') {
-                if (isset($data['response']) && $data['response']) {
-                    /*Yes, that's it.☺ If you have any questions or suggestions, write to https://t.me/tokmakov_alex , let's chat.*/
-                    /*Да, вот так просто.☺ Есть вопросы и предложения пиши https://t.me/tokmakov_alex , пообщаемся.*/
-                    update_option(base64_decode('Ym9udXMtZm9yLXdvby1wcm8='), base64_decode('YWN0aXZl'));
-                    wp_safe_redirect(admin_url('admin.php?page=bonus_for_woo-plugin-options'));
-                    exit;
-                } else {
-                    echo '<div class="notice notice-error is-dismissible">' . __('The key is not correct! Contact info@computy.ru',
-                                    'bonus-for-woo') . '</div>';
-                }
-            } elseif (isset($data['error'])) {
-                $dataError = '';
-                if ($data['error'] == '2') {
-                    $dataError = __('The key is not correct.', 'bonus-for-woo');
-                }
-                echo '<div class="notice notice-error is-dismissible">' . __('Error code:',
-                                'bonus-for-woo') . $data['error'] . ' ' . $dataError . '</div>';
-            } else {
-                echo '<div class="notice notice-error is-dismissible">' . __('Error while receiving data.',
-                                'bonus-for-woo') . '</div>';
-            }
-        } else {
-            echo '<div class="notice notice-error is-dismissible">' . __('Error connecting to key verification server.',
-                            'bonus-for-woo') . '</div>';
-        }
+        printf(
+            '<div class="notice notice-error is-dismissible"><p>%s</p></div>',
+            esc_html($message)
+        );
     }
 
     /**

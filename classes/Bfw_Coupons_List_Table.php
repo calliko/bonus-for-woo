@@ -139,7 +139,7 @@ class Bfw_Coupons_List_Table extends WP_List_Table
      */
     public function column_sum($item): string
     {
-        return '<strong>' . BfwPoints::roundPoints($item->sum) . '</strong>';
+        return '<strong>' . esc_html(BfwPoints::formatNumber((float) $item->sum)) . '</strong>';
     }
 
     /**

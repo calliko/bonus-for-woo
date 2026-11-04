@@ -36,15 +36,25 @@ class BfwStatistic
         global $wpdb;
         $is_hpos = false;
 
-        // Основной способ WC 8.0+
-        if (class_exists('Automattic\WooCommerce\Utilities\OrderUtil') && 
-            method_exists('Automattic\WooCommerce\Utilities\OrderUtil', 'is_custom_order_tables_usage_enabled')) {
+        /*
+         * Основной способ. Ранее здесь вызывался несуществующий метод
+         * is_custom_order_tables_usage_enabled — правильное имя
+         * custom_orders_table_usage_is_enabled (проверено на WC 11.2.1).
+         * Живучесть держалась только на fallback через опцию, то есть
+         * при любом изменении в WooCommerce статистика молча ушла бы в ветку posts.
+         */
+        if (class_exists('Automattic\WooCommerce\Utilities\OrderUtil')
+            && method_exists('Automattic\WooCommerce\Utilities\OrderUtil', 'custom_orders_table_usage_is_enabled')) {
+            $is_hpos = \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+        } elseif (class_exists('Automattic\WooCommerce\Utilities\OrderUtil')
+            && method_exists('Automattic\WooCommerce\Utilities\OrderUtil', 'is_custom_order_tables_usage_enabled')) {
+            // На случай очень старых сборок WC
             $is_hpos = \Automattic\WooCommerce\Utilities\OrderUtil::is_custom_order_tables_usage_enabled();
         }
 
-        // Запасной способ через опции (если класс еще не подгружен)
-        if (!$is_hpos) {
-            $is_hpos = (get_option('woocommerce_custom_orders_table_enabled') === 'yes');
+        // Запасной способ через опцию (если класс ещё не подгружен)
+        if (!$is_hpos && get_option('woocommerce_custom_orders_table_enabled') === 'yes') {
+            $is_hpos = true;
         }
 
         if ($is_hpos) {

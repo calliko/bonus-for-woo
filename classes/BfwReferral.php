@@ -180,40 +180,22 @@ class BfwReferral
     ): void {
         $BfwPoints = new BfwPoints();
         $points = $BfwPoints->roundPoints($points);
-        $old_point_referral = $BfwPoints->getPoints($get_referral_invite);
-        $referral_points = $old_point_referral + $points;
 
-        if ((int)$points === 0) {
+        if ((int) $points === 0) {
             return;
         }
 
         // Проверка минимальной суммы заказа для начисления реферального кешбэка
-        $min_sum = (float)BfwSetting::get('sum-orders-for-referral', 0);
+        $min_sum = (float) BfwSetting::get('sum-orders-for-referral', 0);
         if ($min_sum > 0 && $order_id > 0) {
             $order = wc_get_order($order_id);
-            if ($order && (float)$order->get_total() < $min_sum) {
+            if ($order && (float) $order->get_total() < $min_sum) {
                 return; // Сумма заказа меньше минимальной — не начисляем
             }
         }
-        $twolevel='';
-    if($level===2){
-        $twolevel = __('(second level)', 'bonus-for-woo');
-    }
-        $pricinaref = __('Points for referral', 'bonus-for-woo').$twolevel;
-        $text_email = BfwSetting::get('email-when-order-change-referal-text', '');
-        $title_email = BfwSetting::get('email-when-order-change-referal-title',
-            __('Points accrual', 'bonus-for-woo'));
 
-        $user = get_userdata($get_referral_invite);
-        $get_referral = get_user_meta($get_referral_invite, 'bfw_points_referral', true);
-        $text_email_array = array(
-            '[referral-link]' => esc_url(site_url() . '?bfwkey=' . $get_referral),
-            '[user]' => $user->display_name,
-            '[cause]' => $pricinaref,
-            '[points]' => $points,
-            '[total]' => $referral_points
-        );
-        $message_email = BfwEmail::template($text_email, $text_email_array);
+        $twolevel = ($level === 2) ? __('(second level)', 'bonus-for-woo') : '';
+        $pricinaref = __('Points for referral', 'bonus-for-woo') . $twolevel;
 
         // Применяем фильтр для проверки необходимости проверки первого заказа
         $check_first_order = apply_filters('bfw_check_first_order_referral_filter', true, $customer_user, $get_referral_invite);
@@ -221,21 +203,52 @@ class BfwReferral
         if ($check_first_order && BfwSetting::get('first-order-referal')) {
             $numorders = wc_get_customer_order_count($customer_user);
             if ($numorders > 1) {
-               return;
+                return;
             }
         }
 
+        /*
+         * Начисление через журнал. Ключ (order, id, reason) + user_id реферера
+         * гарантирует, что за один заказ реферальные баллы начислятся один раз
+         * даже если хук начисления сработал повторно (смена статуса, 1С, ретрай).
+         */
+        $reason_key = ($level === 2) ? BfwLedger::REASON_REFERRAL_L2 : BfwLedger::REASON_REFERRAL;
 
-            $BfwPoints->updatePoints($get_referral_invite, $referral_points);
-            BfwHistory::add_history($get_referral_invite, '+', $points, $order_id, $pricinaref, $customer_user);
+        $applied = BfwLedger::apply(
+            $get_referral_invite,
+            $points,
+            $reason_key,
+            'order',
+            $order_id,
+            $pricinaref,
+            array('history' => true, 'log' => true)
+        );
 
-            // Добавляем лог
-            BfwLogs::addLog('add_points', $get_referral_invite, $pricinaref . ' (' . __('Referral', 'bonus-for-woo') . ' #' . $customer_user . ')');
+        if (!$applied) {
+            return;
+        }
 
-            if (BfwSetting::get('email-when-order-change')) {
+        $referral_points = BfwPoints::getPoints($get_referral_invite);
+
+        if (BfwSetting::get('email-when-order-change')) {
+            $text_email = BfwSetting::get('email-when-order-change-referal-text', '');
+            $title_email = BfwSetting::get('email-when-order-change-referal-title',
+                __('Points accrual', 'bonus-for-woo'));
+
+            $user = get_userdata($get_referral_invite);
+            if ($user) {
+                $get_referral = get_user_meta($get_referral_invite, 'bfw_points_referral', true);
+                $text_email_array = array(
+                    '[referral-link]' => esc_url(site_url() . '?bfwkey=' . $get_referral),
+                    '[user]' => $user->display_name,
+                    '[cause]' => $pricinaref,
+                    '[points]' => BfwPoints::formatNumber((float) $points),
+                    '[total]' => $referral_points
+                );
+                $message_email = BfwEmail::template($text_email, $text_email_array);
                 (new BfwEmail())->getMail($get_referral_invite, '', $title_email, $message_email);
             }
-
+        }
     }
 
 

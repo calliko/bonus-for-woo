@@ -187,8 +187,19 @@ class BfwAdmin
      */
     public static function saveConstantProductCashback($post_id)
     {
+        // Ранее проверок не было: значение можно было записать прямым POST
+        if (!isset($_POST['woocommerce_meta_nonce'])
+            || !wp_verify_nonce($_POST['woocommerce_meta_nonce'], 'woocommerce_save_data')) {
+            return;
+        }
+        if (!current_user_can('edit_product', $post_id)) {
+            return;
+        }
+
         // Получаем значение поля
-        $custom_field_value = isset($_POST['_constant_cashback_percentage']) ? sanitize_text_field($_POST['_constant_cashback_percentage']) : 0;
+        $custom_field_value = isset($_POST['_constant_cashback_percentage'])
+            ? sanitize_text_field(wp_unslash($_POST['_constant_cashback_percentage']))
+            : 0;
         if (!empty($custom_field_value) && ($custom_field_value < 0 || $custom_field_value > 100)) {
             wp_die(__('Invalid percentage value', 'bonus-for-woo'));
         }
@@ -225,8 +236,18 @@ class BfwAdmin
      */
     public static function saveConstantVariationPrCash($variation_id, $i)
     {
+        if (!isset($_POST['woocommerce_meta_nonce'])
+            || !wp_verify_nonce($_POST['woocommerce_meta_nonce'], 'woocommerce_save_data')) {
+            return;
+        }
+        if (!current_user_can('edit_product', $variation_id)) {
+            return;
+        }
+
         // Получаем значение поля
-        $custom_field_value = isset($_POST['_constant_cashback_percentage_variation'][$variation_id]) ? sanitize_text_field($_POST['_constant_cashback_percentage_variation'][$variation_id]) : '';
+        $custom_field_value = isset($_POST['_constant_cashback_percentage_variation'][$variation_id])
+            ? sanitize_text_field(wp_unslash($_POST['_constant_cashback_percentage_variation'][$variation_id]))
+            : '';
         if (!empty($custom_field_value) && ($custom_field_value < 0 || $custom_field_value > 100)) {
             wp_die(__('Invalid percentage value', 'bonus-for-woo'));
         }
@@ -277,7 +298,7 @@ class BfwAdmin
                     if (!isset($_POST['bfw_nonce_history']) || !wp_verify_nonce($_POST['bfw_nonce_history'], 'bfw_action_history')) {
                         wp_die('Ошибка безопасности!');
                     }
-                    BfwHistory::deleteHistoryId(sanitize_text_field($_POST['bfw_delete_post_history_points']));
+                    BfwHistory::deleteHistoryId((int) $_POST['bfw_delete_post_history_points'], true);
                     echo '<div id="message" class="notice notice-warning is-dismissible">
 	<p>' . esc_html__('deleted', 'bonus-for-woo') . '.</p></div>';
                 }
@@ -687,8 +708,8 @@ class BfwAdmin
             if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_delete_all_history')) {
                 wp_die('Ошибка безопасности!');
             }
-            $delete_history_points = sanitize_text_field($_GET['bfw_delete_all_post_history_points']);
-            BfwHistory::clearAllHistoryUser($delete_history_points);
+            $delete_history_points = (int) $_GET['bfw_delete_all_post_history_points'];
+            BfwHistory::clearAllHistoryUser($delete_history_points, true);
 
             // Remove delete parameter and add cleared parameter
             $redirect_url = remove_query_arg(array('bfw_delete_all_post_history_points', '_wpnonce'));
@@ -706,6 +727,124 @@ class BfwAdmin
         }
     }
 
+
+    /**
+     * Одноразовая уборка глобальной опции comment_moderation.
+     *
+     * Предыдущие версии включали её для премодерации отзывов и не выключали.
+     * Возвращаем значение, которое было до плагина: если плагин её включил
+     * (метка bfw_set_comment_moderation), а баллы за отзывы больше не нужны —
+     * опцию снимаем. Метка не даёт затереть осознанную настройку админа.
+     *
+     * @return void
+     * @version 8.5.0
+     */
+    public static function cleanupLegacyCommentModeration(): void
+    {
+        $was_set_by_plugin = get_option('bfw_set_comment_moderation');
+
+        /*
+         * Первый запуск после обновления. Предыдущие версии включали
+         * comment_moderation глобально — снимаем, иначе премодерация
+         * продолжает действовать на ВСЕ комментарии сайта, а не только
+         * на отзывы, которые теперь обрабатывает фильтр.
+         */
+        if (!$was_set_by_plugin) {
+            if (get_option('comment_moderation')) {
+                update_option('comment_moderation', '');
+                BfwLogs::addLog(
+                    'security',
+                    get_current_user_id(),
+                    'Отключена глобальная премодерация комментариев (включалась прошлыми версиями плагина)'
+                );
+            }
+            update_option('bfw_set_comment_moderation', 'done', false);
+            return;
+        }
+
+        // Уже обработано — повторно не трогаем, даже если админ включил сам
+    }
+
+    /**
+     * Возвращает массив полей-массивов настроек (для санитайзера).
+     *
+     * @return array
+     * @version 8.5.0
+     */
+    private static function arrayOptionFields(): array
+    {
+        return array(
+            'points-only-products',
+            'points-only-categories',
+            'exclude-category-cashback',
+            'exclude-payment-method',
+            'exclude-role',
+            'refunded_points_order_status',
+        );
+    }
+
+    /**
+     * Санитизация настроек по ключу.
+     *
+     * Ранее sanitize_callback только сливал массивы и НЕ санитизировал значения,
+     * хотя контракт register_setting этого требует: любой HTML/URL/мусор
+     * сохранялся как есть.
+     *
+     * @param mixed  $value Значение
+     * @param string $key   Ключ настройки
+     * @return mixed
+     * @version 8.5.0
+     */
+    private static function sanitizeOptionValue($value, string $key)
+    {
+        // Массивы
+        if (in_array($key, self::arrayOptionFields(), true) || is_array($value)) {
+            if (!is_array($value)) {
+                return array();
+            }
+
+            $clean = array();
+            foreach ($value as $item) {
+                $clean[] = is_scalar($item) ? sanitize_text_field((string) $item) : '';
+            }
+            return array_values(array_filter($clean, static function ($v) {
+                return $v !== '';
+            }));
+        }
+
+        // Булевы (чекбоксы)
+        $boolean_keys = array(
+            'cashback-in-cart', 'bonus-in-price', 'bonus-in-price-loop', 'bonus-in-price-upto',
+            'spisanie-in-checkout', 'balls-and-coupon', 'yous_coupon_no_cashback',
+            'yous_balls_no_cashback', 'referal-system', 'level-two-referral',
+            'email-when-order-change', 'email-when-order-confirm', 'email-when-register',
+            'email-when-review', 'email-when-status-chenge', 'email-when-birthday',
+            'email-when-everyday-login', 'email-when-inactive-notice', 'email-change-admin',
+            'cashback-for-shipping', 'cashback-on-sale-products', 'skip-points-deduction-first-order',
+            'clear-fast-bonus-were-qty-cart', 'hystory-hide', 'coupon-system', 'birthday',
+            'register-points-only-referal', 'first-order-referal', 'addkeshback-exclude',
+            'minimal-amount-cashback', 'exclude-fees-coupons', 'round_points',
+            'cashback_for_first_order', 'exclude-fees-coupons',
+        );
+
+        if (in_array($key, $boolean_keys, true)) {
+            return empty($value) ? '' : '1';
+        }
+
+        // URL
+        if (in_array($key, array('rulles_url', 'ref-links-on-single-page'), true)) {
+            return esc_url_raw((string) $value);
+        }
+
+        // Тексты писем и описания — разрешаем базовую разметку
+        if (preg_match('/(?:text|template|description|value)$/', $key)
+            || strpos($key, 'email-') === 0) {
+            return wp_kses_post((string) $value);
+        }
+
+        // Остальное — обычный текст
+        return sanitize_text_field((string) $value);
+    }
 
     /**
      * Вывод настроек в меню
@@ -1190,25 +1329,21 @@ class BfwAdmin
      * Проверка на про
      *
      * @return void
+     * @version 8.5.0
      */
     public static function bfw_search_pro(): void
     {
-        $p0 = BfwRoles::isPro() ? base64_decode('cHJv') : base64_decode('bmVwcm8=');
-        $c1 = array(
-                base64_decode('a2V5') => base64_decode('Y2hlY2twcm8='),
-                base64_decode('c2l0ZQ==') => get_site_url(),
-                base64_decode('cHJv') => $p0
-        );
-        $k2 = wp_remote_get(base64_decode('aHR0cHM6Ly9jb21wdXR5LnJ1L0FQSS9hcGkucGhwPw==') . http_build_query($c1));
-        if (is_wp_error($k2)) {
-            return;
-        }
-        $l3 = wp_remote_retrieve_body($k2);
-        $x4 = json_decode($l3, true);
-        if (isset($x4[base64_decode('c3RhdHVz')]) && $x4[base64_decode('c3RhdHVz')] !== base64_decode('T0s=')) {
-            add_action(base64_decode('YWRtaW5fbm90aWNlcw=='),
-                    array(base64_decode('QmZ3QWRtaW4='), base64_decode('YXV0aG9yX2FkbWluX25vdGljZV9iZndwcm8=')));
-            update_option(base64_decode('Ym9udXMtZm9yLXdvby1wcm8='), base64_decode('bm9hY3RpdmU='));
+        /*
+         * Периодическая перепроверка подписанного токена (раз в 7 дней).
+         * При любой сетевой проблеме PRO НЕ отключается — работает на
+         * последнем валидном токене до истечения grace-периода (30 дней).
+         * Так у клиентов с плохим интернетом ничего не отваливается.
+         */
+        BfwLicense::maybeRemoteCheck();
+
+        // Лицензия недействительна — показываем уведомление
+        if (!BfwLicense::isActive()) {
+            add_action('admin_notices', array('BfwAdmin', 'author_admin_notice_bfwpro'));
         }
     }
 
@@ -1314,7 +1449,7 @@ class BfwAdmin
     {
         $checked = BfwSetting::get('ref-links-on-single-page') ? "checked" : "";
         ?>
-        <input name="bonus_option_name[ref-links-on-single-page]" type="checkbox" value="1" <?php echo $checked; ?> >
+        <input name="bonus_option_name[ref-links-on-single-page]" type="checkbox" value="1" <?php echo  $checked; ?> >
 
     <?php }
 
@@ -2907,14 +3042,7 @@ class BfwAdmin
         }
 
         // Список полей-массивов, которые должны быть очищены, если не переданы
-        $array_fields = [
-                'points-only-products',
-                'points-only-categories',
-                'exclude-category-cashback',
-                'exclude-payment-method',
-                'exclude-role',
-                'refunded_points_order_status'
-        ];
+        $array_fields = self::arrayOptionFields();
 
         foreach ($array_fields as $field) {
             if (!isset($options[$field]) || !is_array($options[$field])) {
@@ -2922,20 +3050,46 @@ class BfwAdmin
             }
         }
 
+        /*
+         * Санитизируем КАЖДОЕ переданное значение. Раньше здесь был только
+         * array_merge: любой HTML, невалидный URL или мусор в числовом поле
+         * попадал в опцию как есть.
+         */
         if (is_array($options)) {
-            $options = array_merge($existing, $options);
+            $sanitized = array();
+            foreach ($options as $key => $value) {
+                $key = sanitize_key((string) $key);
+                if ($key === '') {
+                    continue;
+                }
+                $sanitized[$key] = self::sanitizeOptionValue($value, $key);
+            }
+            $options = array_merge($existing, $sanitized);
         } else {
             $options = $existing;
         }
 
-        if (BfwSetting::get('bonus-for-otziv')) {
-            update_option('comment_moderation', '1');/*баллы утверждаются вручную*/
-        }
+        /*
+         * Премодерация отзывов больше НЕ включается через глобальную опцию
+         * WordPress `comment_moderation`: она действует на ВСЕ комментарии
+         * сайта (статьи, страницы), а не только на отзывы о товарах, и
+         * раньше включалась без обратной ветки — выключение начисления за
+         * отзывы оставляло модерацию включённой навсегда.
+         *
+         * Теперь это делает точечный фильтр pre_comment_approved
+         * (см. BfwReview::moderateProductReviews) — только для отзывов
+         * на товары и только пока включены баллы за отзывы.
+         */
+        self::cleanupLegacyCommentModeration();
 
         /*CRON*/
         if (BfwSetting::get('day-inactive') && (int)BfwSetting::get('day-inactive') > 1) {
+            /*Очистка возможных дубликатов перед регистрацией*/
+            wp_clear_scheduled_hook('bfw_clear_old_cashback');
             /*Запись в крон (Проверка каждый день)*/
-            wp_schedule_event(time(), 'daily', 'bfw_clear_old_cashback');
+            if (!wp_next_scheduled('bfw_clear_old_cashback')) {
+                wp_schedule_event(time(), 'daily', 'bfw_clear_old_cashback');
+            }
         } else {
             /*Убрать крон*/
             wp_clear_scheduled_hook('bfw_clear_old_cashback');

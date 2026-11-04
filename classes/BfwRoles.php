@@ -87,6 +87,13 @@ class BfwRoles
             $message = __('The accumulated amount cannot be less than 0', 'bonus-for-woo');
         } elseif (empty($name) || empty($slug)) {
             $message = __('The status name cannot be empty.', 'bonus-for-woo');
+        } elseif ($percent <= 0 || $percent > 100) {
+            /*
+             * Процент кешбэка вне 0–100 ломает расчёт списания:
+             * maxPossiblePointsInOrder() умножает сумму корзины на percent/100,
+             * и при 150 клиент «списывал» больше, чем стоит заказ.
+             */
+            $message = __('The cashback percentage must be greater than 0 and not more than 100.', 'bonus-for-woo');
         } elseif ($existing_sumaStart) {
             /* translators: %s: status name */
             $message = sprintf(__('This amount of orders is in the <b>%s</b> status, change it to another amount.',
@@ -99,6 +106,7 @@ class BfwRoles
                 $message_type = 'bfw-notice-error';
                 $message = __('Error adding status. Please try again.', 'bonus-for-woo');
             }else{
+                wp_cache_delete('bfw_computy_roles_all');
                 $message_type = 'bfw-notice-success';
                 $message = __('Status', 'bonus-for-woo') . ' «' . esc_html($name) . '» ' . __('added', 'bonus-for-woo') . '.';
             }
@@ -121,6 +129,23 @@ class BfwRoles
      */
     public static function updateStatus(string $name, float $percent, float $summaStart, int $id): string
     {
+        // Те же границы, что и при создании статуса
+        if ($percent <= 0 || $percent > 100) {
+            return '<div class="bfw-notice bfw-notice-error"><p>'
+                . __('The cashback percentage must be greater than 0 and not more than 100.', 'bonus-for-woo')
+                . '</p></div>';
+        }
+        if ($summaStart < 0) {
+            return '<div class="bfw-notice bfw-notice-error"><p>'
+                . __('The accumulated amount cannot be less than 0', 'bonus-for-woo')
+                . '</p></div>';
+        }
+        if ($name === '') {
+            return '<div class="bfw-notice bfw-notice-error"><p>'
+                . __('The status name cannot be empty.', 'bonus-for-woo')
+                . '</p></div>';
+        }
+
         global $wpdb;
         $updated = $wpdb->update($wpdb->prefix . "bfw_computy",
             array('name'=>$name, 'percent' => $percent, 'summa_start' => $summaStart), array('id' => $id));
@@ -130,8 +155,9 @@ class BfwRoles
                     'bonus-for-woo') . '</p></div>';
         }
 
+        wp_cache_delete('bfw_computy_roles_all');
         return '<div class="bfw-notice bfw-notice-success"><span class="dashicons dashicons-yes-alt"></span> '. __('Status',
-                'bonus-for-woo') . ' «' . esc_html($_POST['name_role']) . '» ' . __('updated','bonus-for-woo').'</div>';
+                'bonus-for-woo') . ' «' . esc_html($name) . '» ' . __('updated','bonus-for-woo').'</div>';
     }
 
 
@@ -148,6 +174,7 @@ class BfwRoles
         global $wpdb;
         $table_name = $wpdb->prefix . 'bfw_computy';
         $wpdb->query($wpdb->prepare("DELETE FROM {$table_name} WHERE id = %d", $id));
+        wp_cache_delete('bfw_computy_roles_all');
     }
 
     /**
@@ -159,9 +186,17 @@ class BfwRoles
      */
     public static function getRoles()
     {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'bfw_computy';
-        return $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM %i ORDER BY summa_start + 0 ASC", $table_name));
+        $cache_key = 'bfw_computy_roles_all';
+        $roles = wp_cache_get($cache_key);
+        
+        if (false === $roles) {
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'bfw_computy';
+            $roles = $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM %i ORDER BY summa_start ASC", $table_name));
+            wp_cache_set($cache_key, $roles, '', HOUR_IN_SECONDS);
+        }
+        
+        return $roles;
     }
 
 
@@ -233,7 +268,7 @@ class BfwRoles
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'bfw_computy';
-        $allrole =  $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM %i ORDER BY summa_start + 0 ASC", $table_name));
+        $allrole =  $wpdb->get_results($wpdb->prepare("SELECT id,name,slug,percent,summa_start FROM %i ORDER BY summa_start ASC", $table_name));
 
         if (!empty($allrole)) {
             $status_id = null;
@@ -303,7 +338,7 @@ class BfwRoles
         // Кэшируем статусы в статической переменной для всех вызовов
         if ($statuses_cache === null) {
             $table_name = $wpdb->prefix . 'bfw_computy';
-            $statuses_cache =  $wpdb->get_results($wpdb->prepare("SELECT name, percent, summa_start FROM %i  ORDER BY CAST(summa_start AS DECIMAL) ASC", $table_name),  ARRAY_A);
+            $statuses_cache =  $wpdb->get_results($wpdb->prepare("SELECT name, percent, summa_start FROM %i  ORDER BY summa_start ASC", $table_name),  ARRAY_A);
         }
 
         // Быстрая проверка на пустые данные
@@ -390,12 +425,18 @@ class BfwRoles
      * Check for pro
      * Проверка на про
      *
+     * Решение принимается по криптографической подписи сервера лицензий
+     * (BfwLicense), а НЕ по значению в wp_options. Раньше здесь было
+     * сравнение get_option('bonus-for-woo-pro') === 'active' — достаточно
+     * было одного UPDATE/SQL-запроса или любого плагина, чтобы включить
+     * платный режим без ключа.
+     *
      * @return bool
-     * @version 6.3.4
+     * @version 8.5.0
      */
     public static function isPro(): bool
     {
-        return get_option(base64_decode('Ym9udXMtZm9yLXdvby1wcm8=')) === base64_decode('YWN0aXZl');
+        return BfwLicense::isActive();
     }
 
 
@@ -427,7 +468,7 @@ class BfwRoles
     public static function bfwManagerRoleEditCapabilities($roles): array
     {
         global $wpdb;
-        $table_bfw = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}bfw_computy ORDER BY summa_start + 0 ASC");
+        $table_bfw = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}bfw_computy ORDER BY summa_start ASC");
 
         foreach ($table_bfw as $bfw) {
             $roles[] = $bfw->slug;

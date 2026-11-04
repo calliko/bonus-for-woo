@@ -53,10 +53,19 @@ class Bfw_History_List_Table extends WP_List_Table
 
         $where = !empty($where_clauses) ? ' WHERE ' . implode(' AND ', $where_clauses) : '';
 
-        $orderby = (!empty($_GET['orderby'])) ? esc_sql($_GET['orderby']) : 'date';
-        $order = (!empty($_GET['order'])) ? esc_sql($_GET['order']) : 'DESC';
+        /*
+         * orderby / order приходят из $_GET. esc_sql() НЕ защищает идентификаторы:
+         * значение вклеивается в строку до prepare(), поэтому "ORDER BY {$orderby}"
+         * был инъектируемым. Используем белый список, как в Bfw_Coupons_List_Table.
+         */
+        $allowed_orderby = array('id', 'user', 'date', 'points', 'orderz', 'symbol');
+        $orderby = (!empty($_GET['orderby']) && in_array($_GET['orderby'], $allowed_orderby, true))
+                ? $_GET['orderby']
+                : 'date';
 
-        $total_items = $wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->prefix}bfw_history_computy {$where}");
+        $order = (!empty($_GET['order']) && strtoupper($_GET['order']) === 'ASC') ? 'ASC' : 'DESC';
+
+        $total_items = (int) $wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->prefix}bfw_history_computy {$where}");
 
         $offset = ($current_page - 1) * $per_page;
 
@@ -166,7 +175,7 @@ class Bfw_History_List_Table extends WP_List_Table
             '<span style="color:%s; font-weight:bold;">%s%s</span>',
             esc_attr($color),
             esc_html($item->symbol),
-            BfwPoints::roundPoints($item->points)
+            esc_html(BfwPoints::formatNumber((float) $item->points))
         );
     }
 

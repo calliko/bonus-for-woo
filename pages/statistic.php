@@ -232,7 +232,7 @@ defined( 'ABSPATH' ) || exit;
                     <span class="bfw-card-title"><?php _e('Pending Points', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-clock"></span></div>
                 </div>
-                <div class="bfw-card-value" style="color: var(--bfw-warning);"><?php echo number_format($stats['pending_points_total'] ?? 0, 0, '.', ' '); ?></div>
+                <div class="bfw-card-value" style="color: var(--bfw-warning);"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['pending_points_total'] ?? 0))); ?></div>
                 <div class="bfw-card-footer">
                     <?php _e('Points awaiting accrual — orders currently in Processing status.', 'bonus-for-woo'); ?>
                 </div>
@@ -280,11 +280,11 @@ defined( 'ABSPATH' ) || exit;
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-top: 15px; border-top: 1px solid var(--bfw-border);">
                     <div>
                         <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php _e('Total Issued', 'bonus-for-woo'); ?></small>
-                        <strong style="font-size: 16px;"><?php echo number_format($stats['issued_total_life'] ?? 0, 0, '.', ' '); ?></strong>
+                        <strong style="font-size: 16px;"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['issued_total_life'] ?? 0))); ?></strong>
                     </div>
                     <div>
                         <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php _e('Total Spent', 'bonus-for-woo'); ?></small>
-                        <strong style="font-size: 16px;"><?php echo number_format($stats['spent_total_life'] ?? 0, 0, '.', ' '); ?></strong>
+                        <strong style="font-size: 16px;"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['spent_total_life'] ?? 0))); ?></strong>
                     </div>
                 </div>
             </div>
@@ -588,13 +588,13 @@ defined( 'ABSPATH' ) || exit;
 
             // Load all analytics data
             waitForBfwAnalytics(function() {
-                console.log('bfwAnalytics is now available, loading data...');
+                
 
                 // Load Points Distribution Chart via AJAX
                 if (document.getElementById('bfwDistributionChart')) {
-                    console.log('Loading distribution data...');
+                    // debug removed
                     window.bfwAnalytics.getDistribution().done(function(response) {
-                        console.log('Distribution response:', response);
+                        // debug removed
                         if (response.success && response.data) {
                             $('#bfw-distribution-loading').hide();
                             $('#bfw-distribution-content').show();

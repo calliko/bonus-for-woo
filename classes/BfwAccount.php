@@ -46,7 +46,7 @@ class BfwAccount
     public static function getCashback(): string
     {
         $roles = BfwRoles::getRole(get_current_user_id());
-        return $roles['percent'] . '%';
+        return BfwPoints::formatNumber((float) ($roles['percent'] ?? 0)) . '%';
     }
 
 
@@ -55,7 +55,6 @@ class BfwAccount
      * Вывод основной информации: статус, процент кешбэка, количество бонусных баллов
      *
      * @param array $shortcode
-     * @throws DateMalformedStringException
      * @version 7.1.2
      */
     public static function accountBasicInfo($shortcode = [])
@@ -110,7 +109,7 @@ class BfwAccount
                     <span class="bfw-pending-badge"><svg class="bfw-icon bfw-icon-pending" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg> %s: <b>+%s %s</b></span>
                 </div>',
                     esc_html(__('Awaiting accrual', 'bonus-for-woo')),
-                    number_format($pendingRounded, 0, '', ' '),
+                    BfwPoints::formatNumber($pendingRounded),
                     esc_html($pendingLabel)
             );
         }
@@ -214,10 +213,8 @@ class BfwAccount
      */
     private static function renderPercentRow(string $label, float $percent): string
     {
-        // Автоматически форматируем число: убираем лишние нули
-        $formattedPercent = (float)(string)$percent === (float)(int)$percent
-                ? (int)$percent
-                : rtrim(rtrim(sprintf('%.2f', $percent), '0'), '.');
+        // Разряды не нужны: процент кешбэка — число до 100, дробь по настройке WC
+        $formattedPercent = BfwPoints::formatNumber($percent);
 
         return sprintf(
                 '<div class="bonus_computy_account bfw-account_percent">
@@ -249,7 +246,7 @@ class BfwAccount
         $output = sprintf(
                 '<div class="bonus_computy_account bfw-account_count_points">
             <span class="value_bca">%s %s</span>',
-                number_format($points, 0, '', ' '),
+                BfwPoints::formatNumber($points),
                 esc_html($label)
         );
 
@@ -309,7 +306,6 @@ class BfwAccount
             $daysSinceLastActivity = $now->diff($dateCreated)->days;
             return max(0, $options['day-inactive'] - $daysSinceLastActivity);
         } catch (Exception $e) {
-            // error_log('Error calculating expiration days: ' . $e->getMessage());
             return 0;
         }
     }
@@ -351,7 +347,7 @@ class BfwAccount
     {
         if (BfwRoles::isPro() && BfwSetting::get('coupon-system') && BfwRoles::isInvalve(get_current_user_id())) {
 
-            $bonus_text = mb_strtolower(BfwSetting::get('bonus-points-on-cart'));
+            $bonus_text = mb_strtolower(BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo'));
             if ($bonus_text) {
                 $coupon_message =
                         /* translators: %s will be replaced with the bonus points amount (lowercase) */
@@ -941,7 +937,7 @@ class BfwAccount
     {
         if (!empty($user_id)) {
             // Не начисляем ежедневные баллы в день регистрации
-            update_user_meta($user_id, 'points_every_day', gmdate('d'));
+            update_user_meta($user_id, 'points_every_day', gmdate('Y-m-d'));
 
             $bfwRoles = new BfwRoles();
             $bfwRoles::updateRole($user_id, false);
@@ -961,17 +957,22 @@ class BfwAccount
             // Начисление баллов
             if ($allowPoints === 1 && $pointsForReg > 0) {
                 $bfwPoints = new BfwPoints();
-                $bfwPoints::updatePoints($user_id, $pointsForReg);
                 /* translators: %s will be replaced with the name of the bonus points. */
-                $reason = sprintf(__('%s for registration.', 'bonus-for-woo'), $bfwPoints::pointsLabel(5));
+                $reason = sprintf(__('%s for registration.', 'bonus-for-woo'), BfwPoints::pointsLabel(5));
 
-                // Записываем в историю
-                $bfwHistory = new BfwHistory();
-                $bfwHistory::clearAllHistoryUser($user_id);
-                $bfwHistory::add_history($user_id, '+', $pointsForReg, '0', $reason);
+                // Через журнал: одно начисление на пользователя
+                $applied = BfwLedger::apply(
+                    $user_id,
+                    (float) $pointsForReg,
+                    BfwLedger::REASON_REGISTRATION,
+                    'user',
+                    $user_id,
+                    $reason
+                );
 
-                // Добавляем лог
-                BfwLogs::addLog('add_points', $user_id, $reason);
+                if (!$applied) {
+                    return;
+                }
 
                 $user = get_userdata($user_id);
 
@@ -1244,29 +1245,42 @@ class BfwAccount
             exit;
         }
 
-        $new_points = (float)sanitize_text_field($_POST['computy_input_points']);
-        $reason = sanitize_text_field($_POST['prichinaizmeneniya'] ?? __('Not specified.', 'bonus-for-woo'));
+        $new_points = (float) sanitize_text_field(wp_unslash($_POST['computy_input_points']));
+        $reason = sanitize_text_field(wp_unslash($_POST['prichinaizmeneniya'] ?? __('Not specified.', 'bonus-for-woo')));
         $old_points = $points::getPoints($user_id);
 
-        if ($new_points === $old_points) {
+        if (abs($new_points - $old_points) < 0.005) {
             return;
         }
 
-        $diff = abs($new_points - $old_points);
-        $action = $new_points > $old_points ? '+' : '-';
+        $diff = $new_points - $old_points;
+        $action = $diff > 0 ? '+' : '-';
 
-        // Добавление истории
-        $history::add_history($user_id, $action, $diff, '0', $reason);
+        // Через журнал: ручная корректировка видна в аудите и меняет баланс атомарно
+        $applied = BfwLedger::apply(
+            $user_id,
+            $diff,
+            BfwLedger::REASON_ADMIN,
+            'admin',
+            (int) (time() . wp_rand(100, 999)),
+            $reason,
+            array('history' => false, 'log' => false, 'allow_negative' => true)
+        );
 
-        // Добавляем лог
+        // Пишем историю с точной дельтой (журнал уже это сделал, но история
+        // должна показывать ручную правку с причиной)
+        if ($applied) {
+            BfwHistory::add_history($user_id, $action, abs($diff), '0', $reason);
+        }
+
         BfwLogs::addLog($action === '+' ? 'add_points' : 'remove_points', $user_id,
-                $reason . ' (' . $action . $diff . ' ' . __('Manual adjustment', 'bonus-for-woo') . ')');
+                $reason . ' (' . $action . abs($diff) . ' ' . __('Manual adjustment', 'bonus-for-woo') . ')');
 
         // Отправка email
-        self::sendPointsChangeEmail($user_id, $email, $new_points, $old_points, $diff, $reason);
+        self::sendPointsChangeEmail($user_id, $email, $new_points, $old_points, abs($diff), $reason);
 
-        // Обновление баллов
-        $points::updatePoints($user_id, $new_points);
+        // Баланс выставляем точно на заданное значение (админ ввёл итог, а не дельту)
+        $points::updatePoints($user_id, max(0, $new_points));
     }
 
     /**

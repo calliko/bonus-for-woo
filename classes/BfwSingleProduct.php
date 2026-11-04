@@ -73,7 +73,7 @@ class BfwSingleProduct
         if (BfwSetting::get('addkeshback-exclude') || !$isExcluded) {
             /* translators: %1$s: "up to" text, %2$s: points amount, %3$s: points label */
             $price_width_bonuses .= '<div class="how_mach_bonus"><span class="how_mach_bonus_title">' . $hmb_title . '</span> ' . sprintf(__('%1$s %2$s %3$s',
-                    'bonus-for-woo'), $upto, $ball, BfwPoints::howLabel($upto, $ball)) . '</div>';
+                    'bonus-for-woo'), $upto, BfwPoints::formatNumber($ball), BfwPoints::howLabel($upto, $ball)) . '</div>';
         }
 
 
@@ -379,7 +379,7 @@ class BfwSingleProduct
             global $wpdb;
 
             $percent = (float)$wpdb->get_var(
-                "SELECT MAX(CAST(percent AS SIGNED)) FROM {$wpdb->prefix}bfw_computy"
+                "SELECT MAX(percent) FROM {$wpdb->prefix}bfw_computy"
             );
             $percent = empty($percent) ? 0 : $percent;
         } else {
