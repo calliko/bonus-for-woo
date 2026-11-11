@@ -12,12 +12,59 @@ defined('ABSPATH') || exit;
 class BfwFunctions
 {
 
+    /**
+     * Нужны ли ассеты плагина на текущей странице.
+     *
+     * Раньше CSS и JS подключались на каждой странице сайта, хотя работают
+     * только там, где есть корзина, оформление, личный кабинет, карточка
+     * товара или любой из шорткодов плагина.
+     *
+     * @return bool
+     * @since 8.5.2
+     */
+    public static function isBonusContext(): bool
+    {
+        $context = false;
+
+        if (function_exists('is_cart') && (is_cart()
+                || is_checkout()
+                || is_account_page()
+                || is_product()
+                || (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url()))) {
+            $context = true;
+        }
+
+        if (!$context && is_singular()) {
+            $post_content = (string) get_post_field('post_content', get_queried_object_id());
+
+            foreach (array('bfw_', 'bfw-', 'link_on_rulles') as $shortcode_prefix) {
+                if (has_shortcode($post_content, $shortcode_prefix)
+                        || strpos($post_content, '[' . $shortcode_prefix) !== false) {
+                    $context = true;
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Позволяет теме/другому плагину включить ассеты там, где нужно.
+         *
+         * @param bool $context
+         */
+        return (bool) apply_filters('bfw_enqueue_assets', $context);
+    }
+
+
     /**  Добавляем стили на фронте
      *
      * @return void
      */
     public static function bfwooComputyStyles(): void
     {
+        if (!self::isBonusContext()) {
+            return;
+        }
+
         wp_register_style(
                 'bonus-computy-style',
                 BONUS_COMPUTY_PLUGIN_URL . '_inc/bonus-computy-style.css',
@@ -34,6 +81,10 @@ class BfwFunctions
      */
     public static function bfwooComputyScript(): void
     {
+        if (!self::isBonusContext()) {
+            return;
+        }
+
         wp_register_script(
                 'bonus-computy-script',
                 BONUS_COMPUTY_PLUGIN_URL . '_inc/bonus-computy-script.js',
@@ -42,29 +93,55 @@ class BfwFunctions
                 true
         );
         wp_enqueue_script('bonus-computy-script');
+
+        /*
+         * Nonce REST живёт 12 часов и, выведенный в HTML, умирает под
+         * полностраничным кешем: страница отдаётся из кеша, а nonce в ней уже
+         * просрочен, и запросы списания/начисления падают с 403. Раньше его
+         * печатали на каждой странице сайта. Теперь отдаём странице только
+         * флаг «залогинен», а nonce JS получает по AJAX (bfw/v1/nonce).
+         */
         wp_localize_script('bonus-computy-script', 'wpApiSettings', [
-                'nonce' => wp_create_nonce('wp_rest'),
-                 'isLoggedIn' => is_user_logged_in(),
+                'nonceAjaxUrl' => esc_url_raw(rest_url('bfw/v1/nonce')),
+                'isLoggedIn'   => is_user_logged_in(),
         ]);
     }
 
 
     /**
-     * Path to the points export CSV.
+     * Пути к legacy-файлам экспорта баллов, которые писались на диск.
      *
-     * The file used to live inside the plugin directory. A plugin installed from
-     * the admin screen cannot write there (and on nginx the bundled .htaccess
-     * does nothing), so the export silently failed. Uploads are writable and,
-     * with the default flat structure, not web-readable.
+     * Версии <= 8.5.0 клали CSV в каталог плагина (туда нет прав записи при
+     * установке из админки), 8.5.1 — в uploads под фиксированным именем, где
+     * файл был доступен по прямому публичному URL. Начиная с 8.5.2 экспорт
+     * отдаётся потоком и на диск не пишется; файлы старых версий надо удалить.
      *
-     * @return string
-     * @since 8.5.1
+     * @return string[]
+     * @since 8.5.2
      */
-    public static function getExportFilePath(): string
+    public static function getLegacyExportFilePaths(): array
     {
         $upload_dir = wp_upload_dir(null, false);
 
-        return wp_normalize_path(trailingslashit($upload_dir['basedir']) . 'bfw_points_export.csv');
+        return array(
+            wp_normalize_path(BONUS_COMPUTY_PLUGIN_DIR . '/export_bfw.csv'),
+            wp_normalize_path(trailingslashit($upload_dir['basedir']) . 'bfw_points_export.csv'),
+        );
+    }
+
+    /**
+     * Удаляет файлы экспорта, оставшиеся от старых версий.
+     *
+     * @return void
+     * @since 8.5.2
+     */
+    public static function deleteLegacyExportFile(): void
+    {
+        foreach (self::getLegacyExportFilePaths() as $path) {
+            if (is_file($path)) {
+                wp_delete_file($path);
+            }
+        }
     }
 
     /**

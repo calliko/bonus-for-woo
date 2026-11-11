@@ -59,7 +59,7 @@ class BfwAdmin
      */
     public static function init(): void
     {
-        if (current_user_can('manage_options') || (defined('WP_CLI') && WP_CLI)) {
+        if (current_user_can(BFW_CAP_MANAGE) || (defined('WP_CLI') && WP_CLI)) {
             /* Инициализируем меню в админке*/
             add_action('admin_menu', array('BfwAdmin', 'add_admin_menu'));
 
@@ -493,7 +493,7 @@ class BfwAdmin
      */
     public static function bfwoo_action_pre_get_users($query): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             return;
         }
         $orderby = $query->get('orderby');
@@ -608,39 +608,45 @@ class BfwAdmin
         $menu_list_history = __('Bonus points history', 'bonus-for-woo');
         $menu_list_history_title = __('History of bonus points for all customers', 'bonus-for-woo');
 
+        /*
+         * Одна capability на всю бонусную систему: раньше пункты меню были
+         * раскиданы между manage_options и manage_woocommerce, из-за чего
+         * shop manager видел страницы, обработчики которых его отклоняли.
+         * Настройки и логи дополнительно защищены capability по умолчанию.
+         */
         /*Страница с основными настройками*/
-        add_menu_page($home_menu_title, $home_menu_title, 'manage_options', 'bonus_for_woo-plugin-options',
+        add_menu_page($home_menu_title, $home_menu_title, BFW_CAP_MANAGE, 'bonus_for_woo-plugin-options',
                 array('BfwAdmin', 'bonus_plugin_options'), plugins_url('bonus-for-woo/img/coin.svg'), 30);
 
         /* Добавляем в меню историю всех начислений клиентов*/
-        add_submenu_page('bonus_for_woo-plugin-options', $menu_list_history_title, $menu_list_history, 'manage_options',
+        add_submenu_page('bonus_for_woo-plugin-options', $menu_list_history_title, $menu_list_history, BFW_CAP_MANAGE,
                 'bonus-for-woo/pages/list_history.php', '', 1);
 
         /*cтраница статистик*/
         add_submenu_page('bonus_for_woo-plugin-options', __('Bonus points statistic - Bonus for Woo', 'bonus-for-woo'),
-                __('Bonus system statistic', 'bonus-for-woo'), 'manage_woocommerce',
+                __('Bonus system statistic', 'bonus-for-woo'), BFW_CAP_MANAGE,
                 'bonus-for-woo/pages/statistic.php', '', 2);
 
         /*Страница управления купонами*/
         if (BfwRoles::isPro() && BfwSetting::get('coupon-system')) {
             add_submenu_page('bonus_for_woo-plugin-options',
                     __('Bonus points coupons - Bonus for Woo', 'bonus-for-woo'),
-                    __('Bonus points coupons', 'bonus-for-woo'), 'manage_woocommerce',
+                    __('Bonus points coupons', 'bonus-for-woo'), BFW_CAP_MANAGE,
                     'bonus-for-woo/pages/coupons.php', '', 3);
         }
         add_submenu_page('bonus_for_woo-plugin-options', __('Tools', 'bonus-for-woo'), __('Tools', 'bonus-for-woo'),
-                'manage_woocommerce', 'bonus-for-woo/pages/tools.php', '', 4);
+                BFW_CAP_MANAGE, 'bonus-for-woo/pages/tools.php', '', 4);
 
 
         /*Генератор правил и условий*/
         add_submenu_page('', __('Rules and Conditions Generator', 'bonus-for-woo'),
-                __('Rules and Conditions Generator', 'bonus-for-woo'), 'manage_woocommerce',
+                __('Rules and Conditions Generator', 'bonus-for-woo'), BFW_CAP_MANAGE,
                 'bonus-for-woo/pages/generator.php', '', 4);
 
 
         /* Добавляем в меню историю всех начислений клиентов*/
         add_submenu_page('bonus_for_woo-plugin-options', __('Logs', 'bonus-for-woo'), __('Logs', 'bonus-for-woo'),
-                'manage_options', 'bonus-for-woo/pages/logs.php', '', 5);
+                BFW_CAP_MANAGE, 'bonus-for-woo/pages/logs.php', '', 5);
 
     }
 
@@ -705,8 +711,12 @@ class BfwAdmin
     public static function handle_delete_history(): void
     {
         if (isset($_GET['bfw_delete_all_post_history_points'])) {
+            if (!current_user_can(BFW_CAP_MANAGE)) {
+                wp_die(esc_html__('You do not have permission to do this.', 'bonus-for-woo'));
+            }
+
             if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'bfw_delete_all_history')) {
-                wp_die('Ошибка безопасности!');
+                wp_die(esc_html__('Security check failed.', 'bonus-for-woo'));
             }
             $delete_history_points = (int) $_GET['bfw_delete_all_post_history_points'];
             BfwHistory::clearAllHistoryUser($delete_history_points, true);
@@ -3180,7 +3190,8 @@ class BfwAdmin
      */
     public static function bonus_plugin_options(): void
     {
-        if (!current_user_can('manage_options')) {
+        // Настройки — сборка бонусной системы, право то же, что у меню
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             return;
         }
 
@@ -3227,126 +3238,7 @@ class BfwAdmin
                             <span class="bfw-article-icon">📄</span> Последние статьи по теме
                         </div>
 
-<?php
-/**
- * Парсит страницу https://computy.ru/blog/tag/sajty/
- * Возвращает массив с заголовками и датами последних 5 постов.
- */
-function computy_parse_tag_page() {
-    $url = 'https://computy.ru/blog/tag/bfw/';
-    $cache_key = 'computy_tag_posts_parsed3';
-    $cached = get_transient($cache_key);
-
-    // Если данные есть в кеше, возвращаем их
-    if ($cached !== false) {
-        return $cached;
-    }
-
-    // Загружаем страницу
-    $response = wp_remote_get($url, array(
-            'timeout' => 15,
-            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    ));
-
-    if (is_wp_error($response)) {
-        return array('error' => 'Не удалось загрузить страницу: ' . $response->get_error_message());
-    }
-
-    $html = wp_remote_retrieve_body($response);
-    if (empty($html)) {
-        return array('error' => 'Страница пуста');
-    }
-
-    // Парсим HTML
-    $posts = array();
-
-    // Используем DOMDocument для парсинга
-    $dom = new DOMDocument();
-    // Подавляем ошибки из-за невалидного HTML
-    libxml_use_internal_errors(true);
-    // Конвертируем в UTF-8, чтобы избежать проблем с кодировкой
-    $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
-    libxml_clear_errors();
-
-    $xpath = new DOMXPath($dom);
-
-    // Находим все элементы article с классом 'loop'
-    $articles = $xpath->query("//article[contains(@class, 'loop')]");
-
-    $count = 0;
-    foreach ($articles as $article) {
-        if ($count >= 5) break;
-
-        // Ищем заголовок внутри .kakh3 > a
-        $title_node = $xpath->query(".//div[contains(@class, 'kakh3')]/a", $article);
-        $title = $title_node->length > 0 ? trim($title_node->item(0)->nodeValue) : '';
-
-        // Ищем дату внутри .bottom-loop > ul > li с датой
-        // Дата находится в span[itemprop='datePublished']
-        $date_node = $xpath->query(".//span[@itemprop='datePublished']", $article);
-        $date = $date_node->length > 0 ? trim($date_node->item(0)->nodeValue) : '';
-
-        // Если дата не нашлась, пробуем другой вариант
-        if (empty($date)) {
-            // Ищем паттерн даты вида "02.09.2026г."
-            preg_match('/\d{2}\.\d{2}\.\d{4}г\./', $article->textContent, $matches);
-            $date = !empty($matches) ? trim($matches[0]) : '';
-        }
-
-        if (!empty($title) && !empty($date)) {
-            $posts[] = array(
-                    'title' => $title,
-                    'date' => $date,
-                    'link' => $title_node->length > 0 ? $title_node->item(0)->getAttribute('href') : ''
-            );
-            $count++;
-        }
-    }
-
-    // Сохраняем в кеш на 1 час
-    set_transient($cache_key, $posts, HOUR_IN_SECONDS);
-
-    return $posts;
-}
-/**
- * Вывод виджета
- */
-function computy_dashboard_widget_render() {
-    $posts = computy_parse_tag_page();
-
-    if (isset($posts['error'])) {
-        echo '<p style="color: #d63638;">⚠️ ' . esc_html($posts['error']) . '</p>';
-        return;
-    }
-
-    if (empty($posts)) {
-        echo '<p>Статей не найдено.</p>';
-        return;
-    }
-
-    echo '<ul style="list-style: auto; margin: 0; padding: 0;">';
-    foreach ($posts as $post) {
-        $title = esc_html($post['title']);
-        $date = esc_html($post['date']);
-        $link = esc_url($post['link']);
-
-        echo '<li>';
-        if (!empty($link)) {
-            echo '<a href="' . $link . '" target="_blank" >';
-            echo $title;
-            echo '</a>';
-        } else {
-            echo '<strong>' . $title . '</strong>';
-        }
-        echo ' <span style="color: #fff; font-size: 12px;">📅 ' . $date . '</span>';
-        echo '</li>';
-    }
-    echo '</ul>';
-}
-
-echo computy_dashboard_widget_render();
-
-?>
+<?php echo BfwBlogWidget::render(); ?>
 
                         <div class="bfw-sidebar-footer">
                             <a href="https://computy.ru/blog/tag/bfw/" target="_blank" class="bfw-sidebar-more">Читать все статьи →</a>
@@ -3637,8 +3529,8 @@ echo computy_dashboard_widget_render();
                                     <?php endif; ?>
                                 </div>
                                 <form action="https://computy.ru/buy_plugin?bonus-for-woo=buy" method="post">
-                                    <input type="hidden" name="successURL" value="<?php echo get_site_url() . $_SERVER['REQUEST_URI']; ?>">
-                                    <input type="hidden" name="label" value="<?php echo get_site_url(); ?>|bonus-for-woo|<?php echo BONUS_COMPUTY_VERSION; ?>|<?php echo get_option('admin_email'); ?>">
+                                    <input type="hidden" name="successURL" value="<?php echo esc_attr(admin_url('admin.php?page=bonus_for_woo-plugin-options')); ?>">
+                                    <input type="hidden" name="label" value="<?php echo esc_attr(wp_unslash(get_site_url(null, '') . '|bonus-for-woo|' . BONUS_COMPUTY_VERSION . '|' . get_option('admin_email'))); ?>">
                                     <button type="submit" class="bfw-btn bfw-btn-primary" style="padding: 16px 50px; font-size: 18px; background: #e67e22; border-radius: 12px;">
                                         <?php _e('Buy', 'bonus-for-woo'); ?>
                                     </button>

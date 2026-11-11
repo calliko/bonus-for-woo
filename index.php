@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           8.5.0
+ * Version:           8.5.2
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
@@ -27,21 +27,40 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 
 // Define plugin constants.
-const BONUS_COMPUTY_VERSION = '8.5.0';
+const BONUS_COMPUTY_VERSION = '8.5.2';
 const BONUS_COMPUTY_VERSION_DB = '8';
 define('BONUS_COMPUTY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BONUS_COMPUTY_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('BFW_CSV_IMPORT_LIMIT', 100); // сколько строк обрабатывать в каждом пакете
 define('BFW_HISTORY_LIMIT', 500); //Лимит в истории начислений
 define('BFW_COUNT_STEPS_FOR_REQUESTS', 20);//Количество обработок за 1 запрос
+
+/*
+ * Единое право на управление бонусной системой.
+ *
+ * Меню отдавалось manage_woocommerce (пункты статистики/купонов/инструментов),
+ * а их AJAX-обработчики требовали manage_options — shop manager видел половину
+ * интерфейса, которая молча не работала. Право собрано в одну константу,
+ * чтобы интерфейс и обработчики нельзя было рассинхронизировать снова.
+ */
+define('BFW_CAP_MANAGE', 'manage_woocommerce');
 /**
  * Автозагрузка классов
  */
 
 spl_autoload_register(static function ($class) {
-    $file = str_replace('\\', '/', BONUS_COMPUTY_PLUGIN_DIR . '/classes/' . $class)
-        . '.php';
-    if (file_exists($file)) {
+    /*
+     * Только свои классы. Раньше автозагрузчик пробовал любой класс и
+     * склеивал путь с двойным слэшем (DIR . '/classes/'), то есть лез в
+     * файловую систему на каждый чужой class_exists().
+     */
+    if (strpos($class, 'Bfw') !== 0 || strpos($class, '/') !== false || strpos($class, '\\') !== false) {
+        return;
+    }
+
+    $file = BONUS_COMPUTY_PLUGIN_DIR . 'classes/' . $class . '.php';
+
+    if (is_file($file)) {
         require_once $file;
     }
 });
@@ -108,12 +127,24 @@ add_action('init', function () {
 
 
 /*-------Действия после обновления-------*/
-if (get_transient('bfw_pro_updated')) {
-    /*Проверка бд после обновления */
-    BfwAdmin::bfw_search_pro();
+/*
+ * Раньше это выполнялось прямо при подключении файла плагина — до
+ * plugins_loaded и до проверки наличия WooCommerce, то есть миграция БД и
+ * поиск PRO могли стартовать в неготовом окружении.
+ */
+add_action('plugins_loaded', function () {
+    if (!get_transient('bfw_pro_updated')) {
+        return;
+    }
+
+    if (bfw_dependencies_met()) {
+        BfwAdmin::bfw_search_pro();
+    }
+
     BfwDB::checkDb();
+
     delete_transient('bfw_pro_updated');
-}
+}, 20);
 /*-------Действия после обновления-------*/
 
 
@@ -139,6 +170,14 @@ function bfw_load_textdomain()
 
 /*-------Регистрация REST API маршрутов (отдельно от init для корректной работы)-------*/
 add_action('rest_api_init', function () {
+    /*
+     * Без WooCommerce все обработчики ниже обращаются к WC()/WC_Cart и
+     * падают фаталом. Маршруты регистрируем только при живых зависимостях.
+     */
+    if (!bfw_dependencies_met()) {
+        return;
+    }
+
     register_rest_route('bfw/v1', '/clear-fast-bonus', [
         'methods' => 'POST',
         'callback' => ['BfwPoints', 'bfwoo_clean_fast_bonus_rest'],
@@ -174,6 +213,21 @@ add_action('rest_api_init', function () {
     register_rest_route('bfw/v1', '/activate-coupon', [
         'methods' => 'POST',
         'callback' => ['BfwPoints', 'rest_activate_coupon'],
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+    ]);
+
+    /*
+     * Свежий REST nonce. Нужен потому, что nonce, напечатанный в HTML,
+     * протухает под полностраничным кешем; страница запрашивает его при
+     * загрузке и получает актуальный.
+     */
+    register_rest_route('bfw/v1', '/nonce', [
+        'methods' => 'GET',
+        'callback' => function () {
+            return new WP_REST_Response(['nonce' => wp_create_nonce('wp_rest')], 200);
+        },
         'permission_callback' => function () {
             return is_user_logged_in();
         },

@@ -46,7 +46,7 @@ class BfwAnalytics
     public static function ajaxGetPointsDistribution()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
 
@@ -90,7 +90,7 @@ class BfwAnalytics
     public static function ajaxGetPointsTrend()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         $days = isset($_POST['days']) ? (int)$_POST['days'] : 30;
@@ -157,7 +157,7 @@ class BfwAnalytics
     public static function ajaxGetOverallStats()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         wp_send_json_success(self::getOverallStats());
@@ -198,7 +198,7 @@ class BfwAnalytics
     public static function ajaxGetTopUsersByPoints()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         $limit = isset($_POST['limit']) ? (int)$_POST['limit'] : 10;
@@ -235,7 +235,7 @@ class BfwAnalytics
     public static function ajaxGetStatusDistribution()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         wp_send_json_success(self::getStatusDistribution());
@@ -297,7 +297,7 @@ class BfwAnalytics
     public static function ajaxGetReferralStats()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         wp_send_json_success(self::getReferralStats());
@@ -352,7 +352,7 @@ class BfwAnalytics
     public static function ajaxGetCouponStats()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         wp_send_json_success(self::getCouponStats());
@@ -366,7 +366,7 @@ class BfwAnalytics
      */
     public static function exportToCSV(string $type): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_die('Access denied');
         }
 
@@ -417,7 +417,7 @@ class BfwAnalytics
     public static function ajaxExportToCSV()
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
         }
         $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'overall';

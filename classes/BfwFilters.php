@@ -91,7 +91,11 @@ class BfwFilters
         }, 10, 3);
 
         add_filter('woocommerce_coupon_error', function ($err, $err_code, $coupon) {
+            if (!($coupon instanceof WC_Coupon)) {
+                return $err;
+            }
             $bonus_coupon_code = mb_strtolower(trim(BfwSetting::get('bonus-points-on-cart') ??  __('Bonus points', 'bonus-for-woo')));
+
             if (strtolower($coupon->get_code()) === $bonus_coupon_code) {
                 return false; // Подавляем ошибку для бонусного купона
             }

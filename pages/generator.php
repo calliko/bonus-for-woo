@@ -119,18 +119,18 @@ defined( 'ABSPATH' ) || exit;
 
 <div class="bfw-generator-dashboard">
     <a class="bfw-back-link" href="?page=bonus-for-woo/pages/tools.php">
-        <span class="dashicons dashicons-arrow-left-alt"></span> <?php _e('Back to Tools', 'bonus-for-woo'); ?>
+        <span class="dashicons dashicons-arrow-left-alt"></span> <?php esc_html_e('Back to Tools', 'bonus-for-woo'); ?>
     </a>
 
     <div class="bfw-gen-header">
         <div class="bfw-gen-title">
-            <h1><?php _e('Rules and Conditions Generator', 'bonus-for-woo'); ?></h1>
-            <p><?php _e('Automatically generated text based on your current plugin settings.', 'bonus-for-woo'); ?></p>
+            <h1><?php esc_html_e('Rules and Conditions Generator', 'bonus-for-woo'); ?></h1>
+            <p><?php esc_html_e('Automatically generated text based on your current plugin settings.', 'bonus-for-woo'); ?></p>
         </div>
         <div class="bfw-action-bar">
             <button class="bfw-btn-copy" id="bfw-copy-doc">
-                <span class="dashicons dashicons-admin-page"></span> <?php _e('Copy Text to Clipboard', 'bonus-for-woo'); ?>
-                <div class="copy-success-tip" id="copy-tip"><?php _e('Copied!', 'bonus-for-woo'); ?></div>
+                <span class="dashicons dashicons-admin-page"></span> <?php esc_html_e('Copy Text to Clipboard', 'bonus-for-woo'); ?>
+                <div class="copy-success-tip" id="copy-tip"><?php esc_html_e('Copied!', 'bonus-for-woo'); ?></div>
             </button>
         </div>
     </div>
@@ -144,11 +144,11 @@ defined( 'ABSPATH' ) || exit;
             $currency = get_woocommerce_currency_symbol();
             ?>
 
-            <h1>Программа лояльности "<?php echo !empty($val['bonus-points-on-cart']) ? $val['bonus-points-on-cart'] : 'бонусной системы'; ?>"</h1>
+            <h1><?php echo esc_html(sprintf(__('Loyalty program "%s"', 'bonus-for-woo'), !empty($val['bonus-points-on-cart']) ? $val['bonus-points-on-cart'] : __('bonus system', 'bonus-for-woo'))); ?></h1>
             
             <p>Наша система бонусов создана с целью предоставить покупателям выгодные условия, которые помогут им экономить свои деньги.</p>
 
-            <p>Программа лояльности включает в себя возврат части стоимости покупок в виде бонусных <?php echo $label_points; ?>, где каждый <?php echo $label_point; ?> эквивалентен одному рублю. Это означает, что за каждую покупку покупатели получают бонусы, которые могут использовать для будущих расходов, тем самым уменьшая общую стоимость их следующих покупок.</p>
+            <p>Программа лояльности включает в себя возврат части стоимости покупок в виде бонусных <?php echo esc_html($label_points); ?>, где каждый <?php echo esc_html($label_point); ?> эквивалентен одному рублю. Это означает, что за каждую покупку покупатели получают бонусы, которые могут использовать для будущих расходов, тем самым уменьшая общую стоимость их следующих покупок.</p>
             
             <p>Размер возврата определяется суммой заказа и статусом клиента. Статус клиента зависит от общей суммы его заказов. В зависимости от общей суммы заказов клиенту присваивается соответствующий статус:</p>
             
@@ -163,33 +163,33 @@ defined( 'ABSPATH' ) || exit;
                 ?>
             </ul>
 
-            <h2>Отображение <?php echo $label_points; ?> и кешбэка</h2>
-            <p>Узнать сколько <?php echo $label_points; ?> на счету можно в личном кабинете во вкладке "<?php echo !empty($val['title-on-account']) ? $val['title-on-account'] : 'Страница бонусов'; ?>" </p>
+            <h2>Отображение <?php echo esc_html($label_points); ?> и кешбэка</h2>
+            <p>Узнать сколько <?php echo esc_html($label_points); ?> на счету можно в личном кабинете во вкладке "<?php echo esc_html(!empty($val['title-on-account']) ? $val['title-on-account'] : __('Bonuses page', 'bonus-for-woo')); ?>" </p>
             
             <?php if (empty($val['hystory-hide'])) : ?>
-                <p>Также в этой вкладке можно посмотреть историю списаний и начислений <?php echo $label_points; ?>.</p>
+                <p>Также в этой вкладке можно посмотреть историю списаний и начислений <?php echo esc_html($label_points); ?>.</p>
             <?php endif; ?>
 
             <?php if (!empty($val['bonus-in-price'])) : ?>
-                <p>На странице товара указано, сколько вам вернется <?php echo $label_points; ?> за покупку данного товара.</p>
+                <p>На странице товара указано, сколько вам вернется <?php echo esc_html($label_points); ?> за покупку данного товара.</p>
             <?php endif; ?>
 
             <?php if (!empty($val['cashback-in-cart'])) : ?>
-                <p>При оформлении заказа и в корзине будет показано, сколько бонусных <?php echo $label_points; ?> вы получите за ваш заказ.</p>
+                <p>При оформлении заказа и в корзине будет показано, сколько бонусных <?php echo esc_html($label_points); ?> вы получите за ваш заказ.</p>
             <?php endif; ?>
 
 
-            <h2>Начисление <?php echo $label_points; ?></h2>
-            <p>Кроме начисления <?php echo $label_points; ?> за покупки товаров, предусмотрены другие вознаграждения:</p>
+            <h2>Начисление <?php echo esc_html($label_points); ?></h2>
+            <p>Кроме начисления <?php echo esc_html($label_points); ?> за покупки товаров, предусмотрены другие вознаграждения:</p>
             <ul>
                 <?php if (!empty($val['bonus-for-otziv'])) : ?>
-                    <li><?php echo $val['bonus-for-otziv'] . ' ' . BfwPoints::pointsLabel((int)$val['bonus-for-otziv']); ?> за отзыв о купленном товаре.</li>
+                    <li><?php echo esc_html(absint($val['bonus-for-otziv'])) . ' ' . esc_html(BfwPoints::pointsLabel((int) $val['bonus-for-otziv'])); ?> за отзыв о купленном товаре.</li>
                 <?php endif; ?>
 
                 <?php if (BfwRoles::isPro()) : ?>
                     <?php if (!empty($val['points-for-registration'])) : ?>
                         <?php $reg_suffix = !empty($val['register-points-only-referal']) ? ' (только при регистрации по реферальной ссылке)' : ''; ?>
-                        <li><?php echo $val['points-for-registration'] . ' ' . BfwPoints::pointsLabel((int)$val['points-for-registration']); ?> начислят за регистрацию в нашем магазине<?php echo $reg_suffix; ?>.</li>
+                        <li><?php echo esc_html(absint($val['points-for-registration'])) . ' ' . esc_html(BfwPoints::pointsLabel((int) $val['points-for-registration'])); ?> начислят за регистрацию в нашем магазине<?php echo esc_html($reg_suffix); ?>.</li>
                     <?php endif; ?>
 
                     <?php if (!empty($val['birthday'])) : ?>
@@ -201,11 +201,11 @@ defined( 'ABSPATH' ) || exit;
                             $bday_when = 'в день вашего рождения';
                         }
                         ?>
-                        <li><?php echo $val['birthday'] . ' ' . BfwPoints::pointsLabel((int)$val['birthday']); ?> начислят <?php echo $bday_when; ?> (его можно указать в настройках профиля).</li>
+                        <li><?php echo esc_html(absint($val['birthday'])) . ' ' . esc_html(BfwPoints::pointsLabel((int) $val['birthday'])); ?> начислят <?php echo $bday_when; ?> (его можно указать в настройках профиля).</li>
                     <?php endif; ?>
 
                     <?php if (!empty($val['every_days'])) : ?>
-                        <li><?php echo $val['every_days'] . ' ' . BfwPoints::pointsLabel((int)$val['every_days']); ?> начислят за ежедневный вход в личный кабинет.</li>
+                        <li><?php echo esc_html(absint($val['every_days'])) . ' ' . esc_html(BfwPoints::pointsLabel((int) $val['every_days'])); ?> начислят за ежедневный вход в личный кабинет.</li>
                     <?php endif; ?>
 
                     <?php if (!empty($val['cashback_for_first_order'])) : ?>
@@ -214,7 +214,7 @@ defined( 'ABSPATH' ) || exit;
                 <?php endif; ?>
             </ul>
 
-            <h2>Статус заказа для начисления <?php echo $label_points; ?></h2>
+            <h2>Статус заказа для начисления <?php echo esc_html($label_points); ?></h2>
             <?php
             $order_statuses = wc_get_order_statuses();
             $accrual_status_key = 'wc-' . ($val['add_points_order_status'] ?? 'completed');
@@ -222,7 +222,7 @@ defined( 'ABSPATH' ) || exit;
             echo '<p>' . $label_points . ' начисляются на счёт после перевода заказа в статус «' . esc_html($accrual_status_label) . '».</p>';
             ?>
 
-            <h2>Ограничения начисления <?php echo $label_points; ?></h2>
+            <h2>Ограничения начисления <?php echo esc_html($label_points); ?></h2>
             <?php
                 if (!empty($val['cashback-for-shipping'])) echo '<p>Кешбэк за доставку не будет начислен.</p>';
                 if (!empty($val['cashback-on-sale-products'])) echo '<p>За товары со скидкой кешбэк не будет начислен.</p>';
@@ -258,7 +258,7 @@ defined( 'ABSPATH' ) || exit;
             <h2>Использование баллов</h2>
             <p>В корзине<?php echo !empty($val['spisanie-in-checkout']) ? ' и при оформлении заказа ' : ' '; ?>вы можете использовать баллы для оплаты товаров.</p>
 
-            <h2>Ограничения использования <?php echo $label_points; ?></h2>
+            <h2>Ограничения использования <?php echo esc_html($label_points); ?></h2>
             <?php 
                 if (!empty($val['spisanie-onsale'])) echo '<p>Вы не можете использовать баллы на покупку товаров со скидкой.</p>';
                 if (!empty($val['balls-and-coupon'])) echo '<p>Вы не можете использовать баллы, если применен скидочный купон.</p>';
@@ -266,7 +266,7 @@ defined( 'ABSPATH' ) || exit;
                 if (BfwRoles::isPro()) {
                     $max_percent = $val['max-percent-bonuses'] ?? 100;
                     if ($max_percent < 100) {
-                        echo '<p>Вы не можете потратить более ' . $max_percent . '% ' . $label_points . ' от суммы заказа.</p>';
+                        echo '<p>' . esc_html(sprintf(__('You cannot spend more than %1$s%% %2$s of the order total.', 'bonus-for-woo'), $max_percent, $label_points)) . '</p>';
                     }
 
                     $categories = $val['exclude-category-cashback'] ?? '';
@@ -283,11 +283,11 @@ defined( 'ABSPATH' ) || exit;
                     
                     if (!empty($val['minimal-amount'])) {
                         $extra = !empty($val['minimal-amount-cashback']) ? ' и получения кешбэка' : '';
-                        echo '<p>Для списания ' . $label_points . $extra . ' сумма в заказе должна быть не менее ' . $val['minimal-amount'] . $currency . '.</p>';
+                        echo '<p>' . esc_html(sprintf(__('To redeem %1$s%2$s the order total must be at least %3$s%4$s.', 'bonus-for-woo'), $label_points, $extra, $val['minimal-amount'], $currency)) . '</p>';
                     }
 
                     if (!empty($val['day-inactive'])) {
-                        echo '<h2>Сгорание ' . $label_points . '</h2>';
+                        echo '<h2>' . esc_html(sprintf(__('Expiration of %s', 'bonus-for-woo'), $label_points)) . '</h2>';
                         $notice_days = !empty($val['day-inactive-notice']) ? (int)$val['day-inactive-notice'] : 0;
                         if ($notice_days > 0) {
                             $days_word = $notice_days === 1 ? 'день' : ($notice_days < 5 ? 'дня' : 'дней');
@@ -303,7 +303,7 @@ defined( 'ABSPATH' ) || exit;
 
                         $min_sum_ref = !empty($val['sum-orders-for-referral']) ? (float)$val['sum-orders-for-referral'] : 0;
                         if ($min_sum_ref > 0) {
-                            echo '<p>Кешбэк за приглашённого друга начисляется только при сумме его заказа от ' . $min_sum_ref . $currency . '.</p>';
+                            echo '<p>' . esc_html(sprintf(__('Cashback for an invited friend is credited only if their order total is at least %1$s%2$s.', 'bonus-for-woo'), $min_sum_ref, $currency)) . '</p>';
                         }
 
                         echo '<p>За покупки приглашённых друзей вы получите ' . ($val['referal-cashback'] ?? 0) . '% кешбэка';

@@ -7,40 +7,11 @@ class Bfw_Export
     public static function init()
     {
         add_action('admin_init', [__CLASS__, 'handle_export_requests']);
-        add_action('admin_post_bfw_download_export', [__CLASS__,'bfw_handle_download_export']);
     }
 
-    public static function bfw_handle_download_export() {
-        // Проверяем права доступа
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have permission to download this file.', 'bonus-for-woo'));
-        }
-
-        check_admin_referer('bfw_download_export');
-
-        $file_path = BfwFunctions::getExportFilePath();
-
-        // Проверяем существование файла
-        if (!is_file($file_path)) {
-            wp_die(__('The export file was not found. Generate it first.', 'bonus-for-woo'));
-        }
-
-        // Отправляем заголовки для скачивания
-        header('Content-Description: File Transfer');
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($file_path));
-
-        // Читаем файл и отправляем в браузер
-        readfile($file_path);
-        exit; // Обязательно завершаем выполнение
-    }
     public static function handle_export_requests()
     {
-        if (!is_admin() || !current_user_can('manage_options')) {
+        if (!is_admin() || !current_user_can(BFW_CAP_MANAGE)) {
             return;
         }
 

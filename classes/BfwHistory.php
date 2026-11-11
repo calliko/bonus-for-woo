@@ -105,7 +105,7 @@ class BfwHistory
         <div class="bfw-history-points-header">
             <h3><?php echo $history_title; ?></h3>
 
-            <?php if (current_user_can('manage_options')): ?>
+            <?php if (current_user_can(BFW_CAP_MANAGE)): ?>
                 <a class="clear_history" href="javascript:void(0);" onclick="return confirmClearHistory();">
                     <?php echo __('Clear the history', 'bonus-for-woo'); ?>
                 </a>
@@ -133,7 +133,7 @@ class BfwHistory
                 <th><?php echo __('Date', 'bonus-for-woo'); ?></th>
                 <th><?php echo BfwPoints::pointsLabel(5); ?></th>
                 <th><?php echo __('Event', 'bonus-for-woo'); ?></th>
-                <?php if (current_user_can('manage_options')): ?>
+                <?php if (current_user_can(BFW_CAP_MANAGE)): ?>
                     <th><?php echo __('Action', 'bonus-for-woo'); ?></th>
                 <?php endif; ?>
             </tr>
@@ -147,7 +147,7 @@ class BfwHistory
                 $order_link = '';
                 if ($item->orderz != '0') {
                     $order_text = __('Order', 'bonus-for-woo') . ' №' . $item->orderz;
-                    if (current_user_can('manage_options')) {
+                    if (current_user_can(BFW_CAP_MANAGE)) {
                         $order_link = sprintf(
                                 '<a href="%s">%s</a> ',
                                 esc_url(admin_url("post.php?post={$item->orderz}&action=edit")),
@@ -182,7 +182,7 @@ class BfwHistory
                         <span style="color: <?php echo esc_attr($color); ?>"><?php echo esc_html($item->symbol . BfwPoints::formatNumber((float) $item->points)); ?></span>
                     </td>
                     <td><?php echo $order_link . wp_kses_post($item->comment_admin); ?></td>
-                    <?php if (current_user_can('manage_options')): ?>
+                    <?php if (current_user_can(BFW_CAP_MANAGE)): ?>
                         <td>
                             <form method="post" class="list_role_computy">
                                 <?php wp_nonce_field('bfw_action_history', 'bfw_nonce_history'); ?>
@@ -294,7 +294,7 @@ class BfwHistory
                     echo '<td><a href="'.esc_url($edit_user_url).'" target="_blank">' . esc_html($nameuser) . '</a></td><td>' .esc_html($role['name']) . '</td>
 <td><span style="color:' . esc_attr($color) . ' ">' . esc_html($bfw->symbol . BfwPoints::formatNumber((float) $bfw->points)) . '</span></td>
 <td>' . $getorderz . wp_kses_post($bfw->comment_admin) . '</td>';
-                    if (current_user_can('manage_options')) {
+                    if (current_user_can(BFW_CAP_MANAGE)) {
                         echo '<td><form method="post" action="" class="list_role_computy">
                         ' . wp_nonce_field('bfw_action_history', 'bfw_nonce_history', true, false) . '
                         <input type="hidden" name="bfw_delete_post_history_points" value="' . $bfw->id . '" >

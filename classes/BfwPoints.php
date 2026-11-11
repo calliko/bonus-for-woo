@@ -804,11 +804,7 @@ global $wpdb;
             return;
         }
 
-        $redirect = esc_url_raw($_POST['redirect'] ?? '');
-        if (empty($redirect)) {
-            wp_send_json_error('Invalid redirect URL');
-            return;
-        }
+        $redirect = self::sanitizeRedirect(wp_unslash($_POST['redirect'] ?? ''));
 
         echo self::bfw_write_off_points($redirect);
         exit();
@@ -835,7 +831,7 @@ global $wpdb;
             WC()->cart->get_cart();
         }
         $params = $request->get_json_params();
-        $redirect = isset($params['redirect']) ? $params['redirect'] : '';
+        $redirect = self::sanitizeRedirect($params['redirect'] ?? '');
 
         ob_start();
         $html = self::bfw_write_off_points($redirect);
@@ -883,8 +879,40 @@ global $wpdb;
      * @return string
      * @version 6.5.5
      */
+    /**
+     * Приводит адрес возврата к безопасному внутреннему URL.
+     *
+     * Значение приходит из запроса/JSON и потом уходит в скрытое поле формы, в
+     * JSON-ответ и в window.location.href на клиенте, поэтому проверять надо
+     * не только экранирование, но и то, что адрес остаётся на своём сайте:
+     * иначе получаем открытый редирект и javascript:-URL.
+     *
+     * @param mixed $redirect
+     * @param string|null $fallback
+     * @return string
+     * @since 8.5.2
+     */
+    public static function sanitizeRedirect($redirect, ?string $fallback = null): string
+    {
+        $fallback = $fallback ?? wc_get_cart_url();
+
+        if (!is_string($redirect) || $redirect === '') {
+            return $fallback;
+        }
+
+        $candidate = esc_url_raw(wp_unslash($redirect));
+
+        if ($candidate === '') {
+            return $fallback;
+        }
+
+        return wp_validate_redirect($candidate, $fallback);
+    }
+
     public static function bfw_write_off_points($redirect): string
     {
+        $redirect = self::sanitizeRedirect($redirect);
+
         global $pagenow;
         if ($pagenow === 'post.php') {
             //Если находимся в редакторе страницы, то ничего не делаем
@@ -1023,7 +1051,7 @@ global $wpdb;
 <div class="write_points_form">
  
         <input type="hidden" name="action" value="computy_trata_points">
-        <input type="hidden" name="redirect" value="' . $redirect . '">
+        <input type="hidden" name="redirect" value="' . esc_attr($redirect) . '">
         <input type="hidden" name="_wpnonce" value="' . wp_create_nonce('bfw_trata_points') . '">
         <input type="text" name="computy_input_points" class="input-text" value="' . self::roundPoints(($user_fast_points > 0 ? $user_fast_points : $vozmojniy_ball)) . '">
        <button type="button" class="button write_points" >
@@ -1043,7 +1071,7 @@ global $wpdb;
 
             $return .= '<div class="remove_points_form">
                 <input type="hidden" name="action" value="clear_bonus" />
-                <input type="hidden" name="redirect" value="' . esc_url($redirect) . '">
+                <input type="hidden" name="redirect" value="' . esc_attr($redirect) . '">
                 <input type="hidden" name="security" value="' . wp_create_nonce('bfw_clear_fast_bonus') . '">
 
                 <button type="button" class="remove_points" >
@@ -1085,7 +1113,7 @@ global $wpdb;
         }
 
         $requestedPoints = self::roundPoints((float) ($_POST['computy_input_points'] ?? 0));
-        $redirect = esc_url_raw($_POST['redirect'] ?? '');
+        $redirect = self::sanitizeRedirect(wp_unslash($_POST['redirect'] ?? ''));
 
         if ($requestedPoints <= 0) {
             wp_send_json_success($redirect);
@@ -1117,7 +1145,7 @@ global $wpdb;
 
             self::updateFastPoints($user_id, $pointsToApply);
 
-            wp_send_json_success($_POST['redirect']);
+            wp_send_json_success($redirect);
         } catch (Exception $e) {
             wp_send_json_error(__('An error occurred while processing your request.', 'bonus-for-woo'));
         }
@@ -1132,7 +1160,7 @@ global $wpdb;
         }
         $params = $request->get_json_params();
         $requestedPoints = isset($params['points']) ? self::roundPoints((float) $params['points']) : 0;
-        $redirect = isset($params['redirect']) ? esc_url($params['redirect']) : wc_get_cart_url();
+        $redirect = self::sanitizeRedirect($params['redirect'] ?? '', wc_get_cart_url());
 
         $user_id = get_current_user_id();
 
@@ -1356,7 +1384,8 @@ global $wpdb;
             }
         }
 
-        $redirect = $request->get_param('redirect') ?: home_url();
+        $redirect = self::sanitizeRedirect($request->get_param('redirect'), home_url());
+
         return new WP_REST_Response(['success' => true, 'data' => $redirect], 200);
     }
 
@@ -1374,7 +1403,7 @@ global $wpdb;
     {
         $params = $request->get_json_params();
         $code_coupon = isset($params['code_coupon']) ? sanitize_text_field($params['code_coupon']) : '';
-        $redirect_url = isset($params['redirect']) ? esc_url($params['redirect']) : home_url();
+        $redirect_url = self::sanitizeRedirect($params['redirect'] ?? '', home_url());
 
         if (empty($code_coupon)) {
             return new WP_REST_Response([
@@ -1969,7 +1998,7 @@ global $wpdb;
     {
         check_ajax_referer('bfw_export_bonuses_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
             return;
         }
@@ -1980,53 +2009,28 @@ global $wpdb;
             ? sanitize_text_field(wp_unslash($_POST['search_by']))
             : 'by_id';
 
-        $array = json_decode(stripslashes(wp_unslash($_POST['response'] ?? '')), true);
-        if (!$array || empty($array['data']['url'])) {
-            wp_send_json_error('Invalid response data');
-        }
-
         /*
-         * Путь раньше склеивался как ABSPATH . str_replace(site_url(), '', $url)
-         * без канонизации: ".." не отсекались, что давало чтение произвольных
-         * файлов. Теперь допускается только файл внутри папки плагина или
-         * внутри uploads (там лежит экспорт после 8.5.1).
+         * Раньше сюда присылали JSON-ответ медиатеки с URL файла, загруженного
+         * на сайт: файл с балансами клиентов оставался в uploads навсегда, а
+         * путь вычислялся из клиентских данных. Теперь файл приходит в самом
+         * запросе (multipart), читается из временного каталога PHP и на сайте
+         * не сохраняется.
          */
-        $url = (string) $array['data']['url'];
-        $relative = str_replace(site_url(), '', $url);
-        $candidate = wp_normalize_path(ABSPATH . ltrim($relative, '/'));
+        $uploaded = $_FILES['bfw_import_file'] ?? null;
 
-        if (strpos($candidate, '..') !== false) {
-            wp_send_json_error('Invalid file path');
+        if (empty($uploaded) || !isset($uploaded['tmp_name']) || (int) ($uploaded['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            wp_send_json_error(__('The file was not uploaded.', 'bonus-for-woo'));
         }
 
-        $allowed_dirs = array(wp_normalize_path(BONUS_COMPUTY_PLUGIN_DIR));
-        $upload_dir = wp_upload_dir(null, false);
-        $allowed_dirs[] = wp_normalize_path($upload_dir['basedir']);
-
-        $real = realpath($candidate);
-
-        if ($real === false) {
-            wp_send_json_error('Файл не найден');
+        if (!is_uploaded_file($uploaded['tmp_name'])) {
+            wp_send_json_error(__('Invalid upload.', 'bonus-for-woo'));
         }
 
-        $real = wp_normalize_path($real);
-        $allowed = false;
-        foreach ($allowed_dirs as $allowed_dir) {
-            if (strpos($real, trailingslashit($allowed_dir)) === 0) {
-                $allowed = true;
-                break;
-            }
-        }
-
-        if (!$allowed) {
-            wp_send_json_error('Invalid file path');
-        }
-
-        $file_path = $real;
+        $file_path = $uploaded['tmp_name'];
 
         $fileHandle = fopen($file_path, 'rb');
         if ($fileHandle === false) {
-            wp_send_json_error('Ошибка при открытии файла');
+            wp_send_json_error(__('Cannot open the uploaded file.', 'bonus-for-woo'));
         }
 
         // Пропускаем заголовок CSV
@@ -3196,7 +3200,7 @@ global $wpdb;
     {
         check_ajax_referer('bfw_recalc_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
             return;
         }

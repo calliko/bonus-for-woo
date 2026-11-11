@@ -19,7 +19,7 @@ class BfwStatistic
 
     public static function ajax_get_stats_timestamp()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error(['message' => 'Access denied']);
         }
         $data = get_option(self::OPTION_KEY);
@@ -84,7 +84,7 @@ class BfwStatistic
     {
         check_ajax_referer('bfw_stat_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error(['message' => 'Access denied']);
         }
 
@@ -147,22 +147,41 @@ class BfwStatistic
                 // Pending-баллы: сумма ожидающих начисления по всем пользователям
                 $pending_total = 0;
 
-                $pending_order_ids = wc_get_orders([
-                    'status' => ['processing', 'on-hold'],
-                    'limit'  => -1,
-                    'return' => 'ids',
-                ]);
+                /*
+                 * Раньше здесь был wc_get_orders(limit => -1) с последующим
+                 * wc_get_order() в цикле: на магазине с тысячами заказов в
+                 * обработке один AJAX-шаг тянул их все в память.
+                 * Теперь пагинация и «загруженные» объекты заказов — WC
+                 * переиспользует их из своего кеша, поэтому повторный
+                 * wc_get_order() в пределах страницы стоит одно чтение.
+                 */
+                $page      = 1;
+                $per_page  = 200;
+                $max_orders = (int) apply_filters('bfw_pending_statistics_max_orders', 2000);
 
-                foreach ($pending_order_ids as $order_id) {
-                    $order = wc_get_order($order_id);
-                    if (!$order) {
-                        continue;
+                do {
+                    $pending_orders = wc_get_orders([
+                        'status'       => ['processing', 'on-hold'],
+                        'limit'        => $per_page,
+                        'page'         => $page,
+                        'return'       => 'objects',
+                        'orderby'      => 'date',
+                        'order'        => 'DESC',
+                        'meta_query'   => [
+                            [
+                                'key'     => 'cashback_receipt',
+                                'value'   => 'received',
+                                'compare' => '!=',
+                            ],
+                        ],
+                    ]);
+
+                    foreach ($pending_orders as $order) {
+                        $pending_total += BfwPoints::howMatchCashbackInOrder($order->get_id());
                     }
-                    if ($order->get_meta('cashback_receipt') === 'received') {
-                        continue;
-                    }
-                    $pending_total += BfwPoints::howMatchCashbackInOrder($order_id);
-                }
+
+                    $page++;
+                } while (count($pending_orders) === $per_page && (($page - 1) * $per_page) < $max_orders);
 
                 $data['pending_points_total'] = (float) $pending_total;
 
@@ -426,7 +445,7 @@ class BfwStatistic
     {
         check_ajax_referer('bfw_stat_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error(['message' => 'Access denied']);
         }
 

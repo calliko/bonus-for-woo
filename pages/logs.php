@@ -139,9 +139,9 @@ $date_finish = $_GET['date_finish'] ?? gmdate("Y-m-d");
     <header class="bfw-dashboard-header">
         <h1>
             <span class="dashicons dashicons-media-text" style="font-size: 32px; width:32px; height:32px;"></span>
-            <?php echo __('Logs', 'bonus-for-woo'); ?>
+            <?php echo esc_html__('Logs', 'bonus-for-woo'); ?>
         </h1>
-        <p><?php _e('Review system activities, errors, and automated processes tracking.', 'bonus-for-woo'); ?></p>
+        <p><?php esc_html_e('Review system activities, errors, and automated processes tracking.', 'bonus-for-woo'); ?></p>
     </header>
 
     <div class="bfw-filter-card">
@@ -149,7 +149,7 @@ $date_finish = $_GET['date_finish'] ?? gmdate("Y-m-d");
             <input type="hidden" name="page" value="bonus-for-woo/pages/logs.php">
             
             <div class="bfw-filter-group">
-                <label><?php echo __('From', 'bonus-for-woo'); ?></label>
+                <label><?php echo esc_html__('From', 'bonus-for-woo'); ?></label>
                 <input type="date" id="date_start" name="date_start" class="bfw-date-input" 
                        value="<?php echo esc_attr($date_start); ?>" 
                        max="<?php echo gmdate("Y-m-d"); ?>" 
@@ -157,7 +157,7 @@ $date_finish = $_GET['date_finish'] ?? gmdate("Y-m-d");
             </div>
 
             <div class="bfw-filter-group">
-                <label><?php echo __('to', 'bonus-for-woo'); ?></label>
+                <label><?php echo esc_html__('to', 'bonus-for-woo'); ?></label>
                 <input type="date" id="date_finish" name="date_finish" class="bfw-date-input" 
                        value="<?php echo esc_attr($date_finish); ?>" 
                        max="<?php echo gmdate("Y-m-d"); ?>" 
@@ -165,18 +165,18 @@ $date_finish = $_GET['date_finish'] ?? gmdate("Y-m-d");
             </div>
 
             <button type="submit" class="bfw-btn bfw-btn-primary">
-                <span class="dashicons dashicons-search"></span> <?php echo __('Search', 'bonus-for-woo'); ?>
+                <span class="dashicons dashicons-search"></span> <?php echo esc_html__('Search', 'bonus-for-woo'); ?>
             </button>
             
             <a class="bfw-btn bfw-btn-outline" href="admin.php?page=bonus-for-woo/pages/logs.php">
-                <span class="dashicons dashicons-no-alt"></span> <?php echo __('Clear', 'bonus-for-woo'); ?>
+                <span class="dashicons dashicons-no-alt"></span> <?php echo esc_html__('Clear', 'bonus-for-woo'); ?>
             </a>
         </form>
 
         <?php if (empty($_GET['date_start'])) : ?>
             <div class="bfw-log-notice">
                 <span class="dashicons dashicons-info"></span>
-                <?php echo __('The last 500 entries are displayed.', 'bonus-for-woo'); ?>
+                <?php echo esc_html__('The last 500 entries are displayed.', 'bonus-for-woo'); ?>
             </div>
         <?php endif; ?>
     </div>

@@ -80,96 +80,157 @@ class BfwRouter
      */
     private static function handleExportPoints()
     {
-        if (!isset($_GET['export_bfw_points']) || !current_user_can('manage_options')) {
+        if (!isset($_GET['export_bfw_points']) || !current_user_can(BFW_CAP_MANAGE)) {
             return;
         }
 
-        if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'bfw_export_points')) {
-            wp_die('Security check failed');
-        }
+        check_admin_referer('bfw_export_points');
 
-        self::generateExportFile();
+        self::streamExport();
     }
 
     /**
-     * Генерация CSV файла экспорта баллов
+     * Отдаёт CSV баллов потоком, не создавая файл на диске.
+     *
+     * Раньше файл писался в uploads с фиксированным именем и оставался там
+     * после выгрузки — то есть данные всех клиентов (email, телефон, баланс)
+     * лежали по постоянному публичному URL. Теперь данные уходят в php://output
+     * и на диске не остаются.
+     *
+     * @return void
      */
-    private static function generateExportFile()
+    private static function streamExport(): void
     {
-        $file_path = BfwFunctions::getExportFilePath();
-        $buffer = fopen($file_path, 'w');
+        $output = fopen('php://output', 'wb');
 
-        if (!$buffer) {
-            wp_die('Cannot create export file');
+        if ($output === false) {
+            wp_die(esc_html__('Cannot create export file.', 'bonus-for-woo'));
         }
 
-        fwrite($buffer, "\xEF\xBB\xBF"); // BOM for UTF-8
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="bfw_points_' . gmdate('Y-m-d') . '.csv"');
 
-        $title_export = ['User id', 'User name', 'Email', 'Phone', 'Points', 'Status', 'Comment'];
-        fputcsv($buffer, $title_export, ',');
+        fwrite($output, "\xEF\xBB\xBF"); // BOM для UTF-8
 
-        $status = new BfwRoles();
-        $data = self::prepareExportData($status);
+        fputcsv($output, ['User id', 'User name', 'Email', 'Phone', 'Points', 'Status', 'Comment'], ',');
 
-        foreach ($data as $row) {
-            fputcsv($buffer, $row, ',');
+        foreach (self::iterateExportRows() as $row) {
+            fputcsv($output, $row, ',');
         }
 
-        fclose($buffer);
+        fclose($output);
+        exit;
     }
 
+    /** Размер пакета при экспорте: столько пользователей держим в памяти за раз */
+    const EXPORT_BATCH_SIZE = 500;
+
     /**
-     * Подготовка данных для экспорта баллов
+     * Построчный обход пользователей для экспорта.
+     *
+     * Раньше все пользователи и все их мета выбирались целиком в память, а
+     * статус запрашивался отдельно на каждого (N+1). Теперь выборка идёт
+     * пакетами, а статусы подтягиваются одним SQL-запросом на пакет.
+     *
+     * @return \Generator
      */
-    private static function prepareExportData($status): array
+    private static function iterateExportRows(): \Generator
     {
         global $wpdb;
 
-        // 1. Получаем только необходимые поля
-        $users = $wpdb->get_results("SELECT ID, user_nicename, user_email FROM {$wpdb->users} ORDER BY ID");
+        $offset = 0;
 
-        if (empty($users)) {
-            return [];
-        }
+        do {
+            $users = $wpdb->get_results($wpdb->prepare(
+                "SELECT ID, user_nicename, user_email FROM {$wpdb->users} ORDER BY ID LIMIT %d OFFSET %d",
+                self::EXPORT_BATCH_SIZE,
+                $offset
+            ));
 
-        $user_ids = wp_list_pluck($users, 'ID');
-        $metas = [];
+            if (empty($users)) {
+                break;
+            }
 
-        // 2. Собираем метаполя ОДНИМ запросом для всех
+            $user_ids = array_map('intval', wp_list_pluck($users, 'ID'));
+
+            // 1. Мета и статусы — по одному запросу на пакет
+            $metas = self::getUsersMetaBatch($user_ids);
+            $statuses = self::getUsersStatusNamesBatch($user_ids);
+
+            // 2. Отдаём строки
+            foreach ($users as $user) {
+                $user_id = (int) $user->ID;
+
+                yield [
+                    'id'      => $user_id,
+                    'name'    => sanitize_text_field($user->user_nicename),
+                    'email'   => sanitize_email($user->user_email),
+                    'phone'   => sanitize_text_field($metas[$user_id]['billing_phone'] ?? ''),
+                    'points'  => (int) ($metas[$user_id]['computy_point'] ?? 0),
+                    'status'  => sanitize_text_field($statuses[$user_id] ?? ''),
+                    'comment' => '',
+                ];
+            }
+
+            $offset += self::EXPORT_BATCH_SIZE;
+            unset($users, $metas, $statuses);
+        } while (count($user_ids) === self::EXPORT_BATCH_SIZE);
+    }
+
+    /**
+     * Метрики баллов и телефона для пакета пользователей.
+     *
+     * @param int[] $user_ids
+     * @return array<int, array<string, string>>
+     */
+    private static function getUsersMetaBatch(array $user_ids): array
+    {
+        global $wpdb;
+
         $placeholders = implode(',', array_fill(0, count($user_ids), '%d'));
-        $meta_query = $wpdb->prepare(
-            "SELECT user_id, meta_key, meta_value 
-         FROM {$wpdb->usermeta} 
-         WHERE user_id IN ($placeholders) AND meta_key IN ('computy_point', 'billing_phone')",
-            ...$user_ids // Важно: распаковываем массив для wpdb->prepare
-        );
 
-        foreach ($wpdb->get_results($meta_query) as $meta) {
-            $metas[$meta->user_id][$meta->meta_key] = $meta->meta_value;
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT user_id, meta_key, meta_value
+             FROM {$wpdb->usermeta}
+             WHERE user_id IN ({$placeholders}) AND meta_key IN ('computy_point', 'billing_phone')",
+            ...$user_ids
+        ));
+
+        $metas = [];
+        foreach ($rows as $row) {
+            $metas[(int) $row->user_id][$row->meta_key] = $row->meta_value;
         }
 
-        // 3. Формируем итоговый массив
-        $data = [];
-        foreach ($users as $user) {
-            $points = (int)($metas[$user->ID]['computy_point'] ?? 0);
-            $phone = $metas[$user->ID]['billing_phone'] ?? '';
+        return $metas;
+    }
 
-            // Внимание: если getRole внутри делает SQL-запрос,
-            // скрипт все еще может притормаживать на больших объемах.
-            $arrayRole = $status->getRole($user->ID);
+    /**
+     * Названия статусов для пакета пользователей — один запрос вместо getRole() в цикле.
+     *
+     * @param int[] $user_ids
+     * @return array<int, string>
+     */
+    private static function getUsersStatusNamesBatch(array $user_ids): array
+    {
+        global $wpdb;
 
-            $data[] = [
-                'id'      => (int)$user->ID,
-                'name'    => sanitize_text_field($user->user_nicename),
-                'email'   => sanitize_email($user->user_email),
-                'phone'   => sanitize_text_field($phone),
-                'points'  => $points,
-                'status'  => sanitize_text_field($arrayRole['name'] ?? ''),
-                'comment' => '',
-            ];
+        $placeholders = implode(',', array_fill(0, count($user_ids), '%d'));
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT um.user_id, r.name
+             FROM {$wpdb->usermeta} um
+             INNER JOIN {$wpdb->prefix}bfw_computy r ON r.id = um.meta_value
+             WHERE um.user_id IN ({$placeholders}) AND um.meta_key = 'bfw_status'",
+            ...$user_ids
+        ));
+
+        $statuses = [];
+        foreach ($rows as $row) {
+            $statuses[(int) $row->user_id] = (string) $row->name;
         }
 
-        return $data;
+        return $statuses;
     }
 
     /**
@@ -177,7 +238,7 @@ class BfwRouter
      */
     private static function handleRemoveExport()
     {
-        if (!isset($_GET['remove_export_bfw_points']) || !current_user_can('manage_options')) {
+        if (!isset($_GET['remove_export_bfw_points']) || !current_user_can(BFW_CAP_MANAGE)) {
             return;
         }
 
@@ -185,15 +246,15 @@ class BfwRouter
             wp_die('Security check failed');
         }
 
-        $file_path = BfwFunctions::getExportFilePath();
+        /*
+         * Экспорт больше не пишется на диск (см. streamExport()), но у сайтов,
+         * обновлённых с версий <= 8.5.1, в uploads может остаться старый файл —
+         * с персональными данными и по публичному URL. Чистим его.
+         */
+        BfwFunctions::deleteLegacyExportFile();
 
-        if (!is_file($file_path)) {
-            wp_die('Invalid file path');
-        }
-
-        if (file_exists($file_path)) {
-            wp_delete_file($file_path);
-        }
+        wp_safe_redirect(admin_url('admin.php?page=bonus-for-woo%2Fpages%2Ftools.php&bfw_export_removed=1'));
+        exit;
     }
 
     /**
@@ -201,7 +262,7 @@ class BfwRouter
      */
     public static function handleAnalyticsExport()
     {
-        if (!isset($_GET['bfw_analytics_export']) || !current_user_can('manage_options')) {
+        if (!isset($_GET['bfw_analytics_export']) || !current_user_can(BFW_CAP_MANAGE)) {
             return;
         }
 

@@ -153,7 +153,7 @@ defined( 'ABSPATH' ) || exit;
 </style>
 
 <div class="wrap bfw-stat-wrap">
-    <h1 style="font-weight: 700; margin-bottom: 25px;"><?php _e('Advanced Business Analytics', 'bonus-for-woo'); ?></h1>
+    <h1 style="font-weight: 700; margin-bottom: 25px;"><?php esc_html_e('Advanced Business Analytics', 'bonus-for-woo'); ?></h1>
 
     <?php
     $stats = BfwStatistic::get_stats();
@@ -162,102 +162,102 @@ defined( 'ABSPATH' ) || exit;
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
             <div class="bfw-badge-time">
                 <span class="dashicons dashicons-calendar-alt"></span>
-                <?php _e('Range:', 'bonus-for-woo'); ?> 
-                <strong><?php echo !empty($stats['date_start']) ? esc_html($stats['date_start']) :  _e('All time', 'bonus-for-woo'); ?> - <?php echo !empty($stats['date_end']) ? esc_html($stats['date_end']) : 'All time'; ?></strong>
-                <span style="font-size: 11px; margin-left:10px;">(<?php _e('Updated', 'bonus-for-woo'); ?>: <?php echo date_i18n('H:i', $stats['timestamp']); ?>)</span>
+                <?php esc_html_e('Range:', 'bonus-for-woo'); ?> 
+                <strong><?php echo !empty($stats['date_start']) ? esc_html($stats['date_start']) :  esc_html_e('All time', 'bonus-for-woo'); ?> - <?php echo !empty($stats['date_end']) ? esc_html($stats['date_end']) : 'All time'; ?></strong>
+                <span style="font-size: 11px; margin-left:10px;">(<?php esc_html_e('Updated', 'bonus-for-woo'); ?>: <?php echo esc_html(date_i18n('H:i', (int) $stats['timestamp'])); ?>)</span>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="date" id="bfw-date-start" class="regular-text" value="<?php echo esc_attr($stats['date_start'] ?? date('Y-m-d', strtotime('-30 days'))); ?>" style="height:35px; width: 140px;">
                 <span>&mdash;</span>
                 <input type="date" id="bfw-date-end" class="regular-text" value="<?php echo esc_attr($stats['date_end'] ?? date('Y-m-d')); ?>" style="height:35px; width: 140px;">
-                <button id="bfw-clear-stats" class="button"><?php _e('Reset', 'bonus-for-woo'); ?></button>
-                <button id="bfw-recalc-start" class="button button-primary" style="height: auto; padding: 6px 20px;"><?php _e('Refresh Analytics', 'bonus-for-woo'); ?></button>
+                <button id="bfw-clear-stats" class="button"><?php esc_html_e('Reset', 'bonus-for-woo'); ?></button>
+                <button id="bfw-recalc-start" class="button button-primary" style="height: auto; padding: 6px 20px;"><?php esc_html_e('Refresh Analytics', 'bonus-for-woo'); ?></button>
             </div>
         </div>
         <div id="bfw-recalc-progress" style="display:none;">
-            <h3 style="margin-top: 0;"><?php _e('Deep Data Analysis', 'bonus-for-woo'); ?>...</h3>
+            <h3 style="margin-top: 0;"><?php esc_html_e('Deep Data Analysis', 'bonus-for-woo'); ?>...</h3>
             <div style="background: #f0f0f1; height: 10px; border-radius: 5px; overflow: hidden; margin: 15px 0;">
                 <div id="bfw-progress-inner" style="width: 0%; background: var(--bfw-primary); height: 100%; transition: width 0.3s;"></div>
             </div>
-            <p id="bfw-progress-text" style="font-weight: 600;"><?php _e('Processing...', 'bonus-for-woo'); ?></p>
+            <p id="bfw-progress-text" style="font-weight: 600;"><?php esc_html_e('Processing...', 'bonus-for-woo'); ?></p>
         </div>
         <!-- Ряд 1: Главные деньги -->
         <div class="bfw-dashboard-grid">
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Lifetime Value (LTV)', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Lifetime Value (LTV)', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-id"></span></div>
                 </div>
-                <div class="bfw-card-value"><?php echo wc_price($stats['ltv_bonus'] ?? 0); ?></div>
+                <div class="bfw-card-value"><?php echo wp_kses_post(wc_price($stats['ltv_bonus'] ?? 0)); ?></div>
                 <div class="bfw-card-footer">
-                    <?php echo __('Average total revenue from each participant of the bonus system.', 'bonus-for-woo'); ?>
+                    <?php echo esc_html__('Average total revenue from each participant of the bonus system.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Referral Revenue', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Referral Revenue', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-groups"></span></div>
                 </div>
-                <div class="bfw-card-value"><?php echo wc_price($stats['referral_revenue'] ?? 0); ?></div>
+                <div class="bfw-card-value"><?php echo wp_kses_post(wc_price($stats['referral_revenue'] ?? 0)); ?></div>
                 <div class="bfw-card-footer">
-                    <?php _e('Total money brought by invited friends.', 'bonus-for-woo'); ?>
+                    <?php esc_html_e('Total money brought by invited friends.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Customer Retention', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Customer Retention', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-update"></span></div>
                 </div>
-                <div class="bfw-card-value"><?php echo round($stats['retention_rate'] ?? 0, 1); ?>%</div>
+                <div class="bfw-card-value"><?php echo esc_html(round((float) ($stats['retention_rate'] ?? 0), 1)); ?>%</div>
                 <div class="bfw-card-footer">
-                    <?php _e('Percentage of loyal customers who make repeat purchases.', 'bonus-for-woo'); ?>
+                    <?php esc_html_e('Percentage of loyal customers who make repeat purchases.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Point Liability', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Point Liability', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-money-alt"></span></div>
                 </div>
-                <div class="bfw-card-value"><?php echo wc_price($stats['points_total'] ?? 0); ?></div>
+                <div class="bfw-card-value"><?php echo wp_kses_post(wc_price($stats['points_total'] ?? 0)); ?></div>
                 <div class="bfw-card-footer">
-                    <?php _e('Current financial "debt" in points sitting on user balances.', 'bonus-for-woo'); ?>
+                    <?php esc_html_e('Current financial "debt" in points sitting on user balances.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Pending Points', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Pending Points', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-clock"></span></div>
                 </div>
                 <div class="bfw-card-value" style="color: var(--bfw-warning);"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['pending_points_total'] ?? 0))); ?></div>
                 <div class="bfw-card-footer">
-                    <?php _e('Points awaiting accrual — orders currently in Processing status.', 'bonus-for-woo'); ?>
+                    <?php esc_html_e('Points awaiting accrual — orders currently in Processing status.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Burn Rate', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Burn Rate', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-chart-line"></span></div>
                 </div>
                 <?php $burn = round($stats['prr'] ?? 0, 1); ?>
-                <div class="bfw-card-value" style="color: <?php echo $burn >= 20 && $burn <= 50 ? 'var(--bfw-success)' : 'var(--bfw-warning)'; ?>"><?php echo $burn; ?>%</div>
+                <div class="bfw-card-value" style="color: <?php echo $burn >= 20 && $burn <= 50 ? 'var(--bfw-success)' : 'var(--bfw-warning)'; ?>"><?php echo esc_html(round((float) $burn, 1)); ?>%</div>
                 <div class="bfw-card-footer">
-                    <?php _e('20-40% is a healthy figure for most stores.', 'bonus-for-woo'); ?>
+                    <?php esc_html_e('20-40% is a healthy figure for most stores.', 'bonus-for-woo'); ?>
                 </div>
             </div>
 
             <div class="bfw-card">
                 <div class="bfw-card-header">
-                    <span class="bfw-card-title"><?php _e('Program Penetration', 'bonus-for-woo'); ?></span>
+                    <span class="bfw-card-title"><?php esc_html_e('Program Penetration', 'bonus-for-woo'); ?></span>
                     <div class="bfw-card-icon"><span class="dashicons dashicons-admin-users"></span></div>
                 </div>
-                <div class="bfw-card-value" style="color: var(--bfw-primary);"><?php echo round($stats['penetration'] ?? 0, 1); ?>%</div>
+                <div class="bfw-card-value" style="color: var(--bfw-primary);"><?php echo esc_html(round((float) ($stats['penetration'] ?? 0), 1)); ?>%</div>
                 <div class="bfw-card-footer">
-                    <?php _e('Share of all active customers using the bonus system.', 'bonus-for-woo'); ?>
+                    <?php esc_html_e('Share of all active customers using the bonus system.', 'bonus-for-woo'); ?>
                 </div>
             </div>
         </div>
@@ -265,25 +265,25 @@ defined( 'ABSPATH' ) || exit;
         <div class="bfw-section-grid">
             <!-- Здоровье системы -->
             <div class="bfw-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Ecosystem Health', 'bonus-for-woo'); ?></h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Ecosystem Health', 'bonus-for-woo'); ?></h3>
                 <div style="margin-bottom: 25px;">
                     <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                        <span style="font-weight: 600;"><?php _e('Redemption Rate', 'bonus-for-woo'); ?></span>
-                        <span style="font-size: 24px; font-weight: 800; color: var(--bfw-primary);"><?php echo round($stats['prr'] ?? 0, 1); ?>%</span>
+                        <span style="font-weight: 600;"><?php esc_html_e('Redemption Rate', 'bonus-for-woo'); ?></span>
+                        <span style="font-size: 24px; font-weight: 800; color: var(--bfw-primary);"><?php echo esc_html(round((float) ($stats['prr'] ?? 0), 1)); ?>%</span>
                     </div>
-                    <div class="bfw-health-bar"><div class="bfw-health-fill" style="width: <?php echo min(100, $stats['prr'] ?? 0); ?>%"></div></div>
+                    <div class="bfw-health-bar"><div class="bfw-health-fill" style="width: <?php echo esc_attr(min(100, (float) ($stats['prr'] ?? 0))); ?>%"></div></div>
                     <p style="font-size: 13px; color: var(--bfw-text-muted);">
-                        <?php _e('This shows how actively users spend their points. 20-40% is healthy for most stores.', 'bonus-for-woo'); ?>
+                        <?php esc_html_e('This shows how actively users spend their points. 20-40% is healthy for most stores.', 'bonus-for-woo'); ?>
                     </p>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-top: 15px; border-top: 1px solid var(--bfw-border);">
                     <div>
-                        <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php _e('Total Issued', 'bonus-for-woo'); ?></small>
+                        <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php esc_html_e('Total Issued', 'bonus-for-woo'); ?></small>
                         <strong style="font-size: 16px;"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['issued_total_life'] ?? 0))); ?></strong>
                     </div>
                     <div>
-                        <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php _e('Total Spent', 'bonus-for-woo'); ?></small>
+                        <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php esc_html_e('Total Spent', 'bonus-for-woo'); ?></small>
                         <strong style="font-size: 16px;"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['spent_total_life'] ?? 0))); ?></strong>
                     </div>
                 </div>
@@ -291,7 +291,7 @@ defined( 'ABSPATH' ) || exit;
 
             <!-- Распределение уровней -->
             <div class="bfw-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Customer Segmentation', 'bonus-for-woo'); ?></h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Customer Segmentation', 'bonus-for-woo'); ?></h3>
                 <?php 
                 $labels = []; $counts = [];
                 global $wpdb;
@@ -311,10 +311,10 @@ defined( 'ABSPATH' ) || exit;
         <div class="bfw-section-grid" style=" ">
              <!-- Распределение баллов -->
              <div class="bfw-card">
-                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Points Distribution', 'bonus-for-woo'); ?></h3>
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Points Distribution', 'bonus-for-woo'); ?></h3>
                  <div id="bfw-distribution-loading" style="text-align: center; padding: 20px;">
                      <span class="dashicons dashicons-spinner is-active"></span>
-                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                     <?php esc_html_e('Loading...', 'bonus-for-woo'); ?>
                  </div>
                  <div id="bfw-distribution-content" style="display: none;">
                      <div style="height: 350px;"><canvas id="bfwDistributionChart"></canvas></div>
@@ -322,13 +322,13 @@ defined( 'ABSPATH' ) || exit;
              </div>
             <!-- Топ клиентов -->
             <div class="bfw-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Top 5 VIP Customers', 'bonus-for-woo'); ?></h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Top 5 VIP Customers', 'bonus-for-woo'); ?></h3>
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
                     <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
-                        <th style="padding: 10px 5px;"><?php _e('User', 'bonus-for-woo'); ?></th>
-                        <th style="padding: 10px 5px;"><?php _e('Revenue', 'bonus-for-woo'); ?></th>
-                        <th style="padding: 10px 5px;"><?php _e('Orders', 'bonus-for-woo'); ?></th>
+                        <th style="padding: 10px 5px;"><?php esc_html_e('User', 'bonus-for-woo'); ?></th>
+                        <th style="padding: 10px 5px;"><?php esc_html_e('Revenue', 'bonus-for-woo'); ?></th>
+                        <th style="padding: 10px 5px;"><?php esc_html_e('Orders', 'bonus-for-woo'); ?></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -338,11 +338,11 @@ defined( 'ABSPATH' ) || exit;
                         ?>
                         <tr style="border-bottom: 1px solid #eee;">
                             <td style="padding: 12px 5px; font-weight: 600;"><?php echo esc_html($name); ?></td>
-                            <td style="padding: 12px 5px; color: var(--bfw-success);"><?php echo wc_price($vip['revenue']); ?></td>
-                            <td style="padding: 12px 5px;"><?php echo $vip['orders']; ?></td>
+                            <td style="padding: 12px 5px; color: var(--bfw-success);"><?php echo wp_kses_post(wc_price($vip['revenue'])); ?></td>
+                            <td style="padding: 12px 5px;"><?php echo esc_html((int) $vip['orders']); ?></td>
                         </tr>
                     <?php endforeach; else: ?>
-                        <tr><td colspan="3" style="padding: 15px; text-align: center;"><?php _e('Not enough data.', 'bonus-for-woo'); ?></td></tr>
+                        <tr><td colspan="3" style="padding: 15px; text-align: center;"><?php esc_html_e('Not enough data.', 'bonus-for-woo'); ?></td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>
@@ -354,17 +354,17 @@ defined( 'ABSPATH' ) || exit;
              <!-- Points Trend Analytics -->
              <div class="bfw-card">
                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                     <h3 style="margin: 0;"><?php _e('Points Trend Analytics', 'bonus-for-woo'); ?></h3>
+                     <h3 style="margin: 0;"><?php esc_html_e('Points Trend Analytics', 'bonus-for-woo'); ?></h3>
                      <select id="bfw-trend-period" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--bfw-border);">
-                         <option value="7"><?php _e('Last 7 days', 'bonus-for-woo'); ?></option>
-                         <option value="30" selected><?php _e('Last 30 days', 'bonus-for-woo'); ?></option>
-                         <option value="90"><?php _e('Last 90 days', 'bonus-for-woo'); ?></option>
-                         <option value="365"><?php _e('Last year', 'bonus-for-woo'); ?></option>
+                         <option value="7"><?php esc_html_e('Last 7 days', 'bonus-for-woo'); ?></option>
+                         <option value="30" selected><?php esc_html_e('Last 30 days', 'bonus-for-woo'); ?></option>
+                         <option value="90"><?php esc_html_e('Last 90 days', 'bonus-for-woo'); ?></option>
+                         <option value="365"><?php esc_html_e('Last year', 'bonus-for-woo'); ?></option>
                      </select>
                  </div>
                  <div id="bfw-trend-loading" style="text-align: center; padding: 20px;">
                      <span class="dashicons dashicons-spinner is-active"></span>
-                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                     <?php esc_html_e('Loading...', 'bonus-for-woo'); ?>
                  </div>
                  <div id="bfw-trend-content" style="display: none;">
                      <div style="height: 350px;"><canvas id="bfwTrendAnalyticsChart"></canvas></div>
@@ -375,31 +375,31 @@ defined( 'ABSPATH' ) || exit;
         <div class="bfw-section-grid">
              <!-- Overall Stats -->
              <div class="bfw-card">
-                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Overall System Statistics', 'bonus-for-woo'); ?></h3>
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Overall System Statistics', 'bonus-for-woo'); ?></h3>
                  <div id="bfw-overall-loading" style="text-align: center; padding: 20px;">
                      <span class="dashicons dashicons-spinner is-active"></span>
-                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                     <?php esc_html_e('Loading...', 'bonus-for-woo'); ?>
                  </div>
                  <div id="bfw-overall-content" style="display: none;">
                      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Points', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Total Points', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 24px; font-weight: 700; color: var(--bfw-primary);" id="bfw-total-points">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Users with Points', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Users with Points', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 24px; font-weight: 700; color: var(--bfw-primary);" id="bfw-users-with-points">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Earned', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Total Earned', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 24px; font-weight: 700; color: var(--bfw-success);" id="bfw-total-earned">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Spent', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Total Spent', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 24px; font-weight: 700; color: var(--bfw-warning);" id="bfw-total-spent">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; grid-column: span 2;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Active Users (30 days)', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Active Users (30 days)', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 24px; font-weight: 700; color: var(--bfw-primary);" id="bfw-active-users">0</div>
                          </div>
                      </div>
@@ -408,17 +408,17 @@ defined( 'ABSPATH' ) || exit;
 
              <!-- Top Users -->
              <div class="bfw-card">
-                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Top Users by Points', 'bonus-for-woo'); ?></h3>
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Top Users by Points', 'bonus-for-woo'); ?></h3>
                  <div id="bfw-top-users-loading" style="text-align: center; padding: 20px;">
                      <span class="dashicons dashicons-spinner is-active"></span>
-                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                     <?php esc_html_e('Loading...', 'bonus-for-woo'); ?>
                  </div>
                  <div id="bfw-top-users-content" style="display: none;">
                      <table style="width: 100%; border-collapse: collapse;">
                          <thead>
                              <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
-                                 <th style="padding: 10px; text-align: left;"><?php _e('User', 'bonus-for-woo'); ?></th>
-                                 <th style="padding: 10px; text-align: right;"><?php _e('Points', 'bonus-for-woo'); ?></th>
+                                 <th style="padding: 10px; text-align: left;"><?php esc_html_e('User', 'bonus-for-woo'); ?></th>
+                                 <th style="padding: 10px; text-align: right;"><?php esc_html_e('Points', 'bonus-for-woo'); ?></th>
                              </tr>
                          </thead>
                          <tbody id="bfw-top-users-table"></tbody>
@@ -430,27 +430,27 @@ defined( 'ABSPATH' ) || exit;
         <div class="bfw-section-grid" style="grid-template-columns: 1fr;">
              <!-- Coupon Stats -->
              <div class="bfw-card">
-                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Coupon Statistics', 'bonus-for-woo'); ?></h3>
+                 <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Coupon Statistics', 'bonus-for-woo'); ?></h3>
                  <div id="bfw-coupon-loading" style="text-align: center; padding: 20px;">
                      <span class="dashicons dashicons-spinner is-active"></span>
-                     <?php _e('Loading...', 'bonus-for-woo'); ?>
+                     <?php esc_html_e('Loading...', 'bonus-for-woo'); ?>
                  </div>
                  <div id="bfw-coupon-content" style="display: none;">
                      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Coupons', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Total Coupons', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);" id="bfw-total-coupons">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Active Coupons', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Active Coupons', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);" id="bfw-active-coupons">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Used Coupons', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Used Coupons', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 20px; font-weight: 700; color: var(--bfw-warning);" id="bfw-used-coupons">0</div>
                          </div>
                          <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                             <small style="color: var(--bfw-text-muted);"><?php _e('Total Coupon Sum', 'bonus-for-woo'); ?></small>
+                             <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Total Coupon Sum', 'bonus-for-woo'); ?></small>
                              <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);" id="bfw-total-coupon-sum">0</div>
                          </div>
                      </div>
@@ -463,21 +463,21 @@ defined( 'ABSPATH' ) || exit;
         <div class="bfw-section-grid">
              <!-- Сводка оборота -->
              <div class="bfw-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Revenue Breakdown', 'bonus-for-woo'); ?></h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Revenue Breakdown', 'bonus-for-woo'); ?></h3>
                 <div style="margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                        <span><?php _e('Total Store Revenue', 'bonus-for-woo'); ?></span>
-                        <strong><?php echo wc_price($stats['total_revenue'] ?? 0); ?></strong>
+                        <span><?php esc_html_e('Total Store Revenue', 'bonus-for-woo'); ?></span>
+                        <strong><?php echo wp_kses_post(wc_price($stats['total_revenue'] ?? 0)); ?></strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--bfw-text-muted);">
-                        <span><?php _e('From orders with bonus discount', 'bonus-for-woo'); ?></span>
-                        <span><?php echo wc_price($stats['total_revenue'] - ($stats['rev_no_bonus'] ?? ($stats['total_revenue'] / 2))); ?></span>
+                        <span><?php esc_html_e('From orders with bonus discount', 'bonus-for-woo'); ?></span>
+                        <span><?php echo wp_kses_post(wc_price($stats['total_revenue'] - ($stats['rev_no_bonus'] ?? ($stats['total_revenue'] / 2)))); ?></span>
                     </div>
                 </div>
                 
                 <div style="padding-top: 15px; border-top: 1px solid var(--bfw-border);">
                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 600;"><?php _e('AOV Increase', 'bonus-for-woo'); ?></span>
+                        <span style="font-weight: 600;"><?php esc_html_e('AOV Increase', 'bonus-for-woo'); ?></span>
                         <?php
                         $aov_no = $stats['aov_no_bonus'] ?? 0;
                         $aov_with = $stats['aov_with_bonus'] ?? 0;
@@ -485,7 +485,7 @@ defined( 'ABSPATH' ) || exit;
                         $trend_class = $increase >= 0 ? 'bfw-trend-up' : 'bfw-trend-down';
                         $trend_sign = $increase >= 0 ? '+' : '';
                         ?>
-                        <span class="bfw-trend <?php echo $trend_class; ?>" style="font-size: 14px;"><?php echo $trend_sign . round($increase, 1); ?>%</span>
+                        <span class="bfw-trend <?php echo esc_attr($trend_class); ?>" style="font-size: 14px;"><?php echo esc_html($trend_sign . round((float) $increase, 1)); ?>%</span>
                      </div>
                      <p style="font-size: 12px; color: var(--bfw-text-muted); margin-top: 5px;">
                         <?php echo sprintf(__('Orders with bonuses are on average %s more expensive.', 'bonus-for-woo'), round($increase, 1) . '%'); ?>
@@ -495,43 +495,43 @@ defined( 'ABSPATH' ) || exit;
 
              <!-- Реферальная активность -->
              <div class="bfw-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Viral Growth (Referrals)', 'bonus-for-woo'); ?></h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Viral Growth (Referrals)', 'bonus-for-woo'); ?></h3>
                 <?php if (BfwRoles::isPro() && BfwSetting::get('referal-system')) : ?>
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                            <small style="color: var(--bfw-text-muted);"><?php _e('Ambassadors', 'bonus-for-woo'); ?></small>
-                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);"><?php echo $stats['referrals_total'] ?? 0; ?></div>
+                            <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Ambassadors', 'bonus-for-woo'); ?></small>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);"><?php echo esc_html((int) ($stats['referrals_total'] ?? 0)); ?></div>
                         </div>
                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                            <small style="color: var(--bfw-text-muted);"><?php _e('Friends Invited', 'bonus-for-woo'); ?></small>
-                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);"><?php echo $stats['referrals_invited'] ?? 0; ?></div>
+                            <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Friends Invited', 'bonus-for-woo'); ?></small>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);"><?php echo esc_html((int) ($stats['referrals_invited'] ?? 0)); ?></div>
                         </div>
                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                            <small style="color: var(--bfw-text-muted);"><?php _e('Users with Referral Link', 'bonus-for-woo'); ?></small>
+                            <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Users with Referral Link', 'bonus-for-woo'); ?></small>
                             <div style="font-size: 20px; font-weight: 700; color: var(--bfw-primary);" id="bfw-referral-users">0</div>
                         </div>
                         <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                            <small style="color: var(--bfw-text-muted);"><?php _e('Referral Revenue', 'bonus-for-woo'); ?></small>
-                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);"><?php echo wc_price($stats['referral_revenue'] ?? 0); ?></div>
+                            <small style="color: var(--bfw-text-muted);"><?php esc_html_e('Referral Revenue', 'bonus-for-woo'); ?></small>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--bfw-success);"><?php echo wp_kses_post(wc_price($stats['referral_revenue'] ?? 0)); ?></div>
                         </div>
                     </div>
-                    <h4 style="margin-bottom: 10px;"><?php _e('Top Referrers', 'bonus-for-woo'); ?></h4>
+                    <h4 style="margin-bottom: 10px;"><?php esc_html_e('Top Referrers', 'bonus-for-woo'); ?></h4>
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--bfw-border); color: var(--bfw-text-muted);">
-                                <th style="padding: 10px; text-align: left;"><?php _e('User', 'bonus-for-woo'); ?></th>
-                                <th style="padding: 10px; text-align: right;"><?php _e('Invitations', 'bonus-for-woo'); ?></th>
+                                <th style="padding: 10px; text-align: left;"><?php esc_html_e('User', 'bonus-for-woo'); ?></th>
+                                <th style="padding: 10px; text-align: right;"><?php esc_html_e('Invitations', 'bonus-for-woo'); ?></th>
                             </tr>
                         </thead>
                         <tbody id="bfw-top-referrers-table"></tbody>
                     </table>
                     <div id="bfw-referral-loading" style="text-align: center; padding: 20px; display: none;">
                         <span class="dashicons dashicons-spinner is-active"></span>
-                        <?php _e('Loading...', 'bonus-for-woo'); ?>
+                        <?php esc_html_e('Loading...', 'bonus-for-woo'); ?>
                     </div>
                 <?php else: ?>
                     <p style="color: var(--bfw-text-muted); text-align: center; padding: 20px 0;">
-                        <?php _e('Referral system is currently disabled.', 'bonus-for-woo'); ?>
+                        <?php esc_html_e('Referral system is currently disabled.', 'bonus-for-woo'); ?>
                     </p>
                 <?php endif; ?>
              </div>
@@ -541,11 +541,11 @@ defined( 'ABSPATH' ) || exit;
         <div class="bfw-section-grid" style="grid-template-columns: 1fr;">
             <!-- Export Buttons -->
             <div class="bfw-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php _e('Export Analytics', 'bonus-for-woo'); ?></h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;"><?php esc_html_e('Export Analytics', 'bonus-for-woo'); ?></h3>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="button" id="bfw-export-distribution"><?php _e('Export Distribution', 'bonus-for-woo'); ?></button>
-                    <button class="button" id="bfw-export-trend"><?php _e('Export Trend', 'bonus-for-woo'); ?></button>
-                    <button class="button" id="bfw-export-overall"><?php _e('Export Overall Stats', 'bonus-for-woo'); ?></button>
+                    <button class="button" id="bfw-export-distribution"><?php esc_html_e('Export Distribution', 'bonus-for-woo'); ?></button>
+                    <button class="button" id="bfw-export-trend"><?php esc_html_e('Export Trend', 'bonus-for-woo'); ?></button>
+                    <button class="button" id="bfw-export-overall"><?php esc_html_e('Export Overall Stats', 'bonus-for-woo'); ?></button>
                 </div>
             </div>
         </div>
@@ -611,7 +611,7 @@ defined( 'ABSPATH' ) || exit;
                                 data: {
                                     labels: labels,
                                     datasets: [{
-                                        label: '<?php _e('Number of Users', 'bonus-for-woo'); ?>',
+                                        label: '<?php esc_html_e('Number of Users', 'bonus-for-woo'); ?>',
                                         data: data,
                                         backgroundColor: '#2271b1',
                                         borderWidth: 0
@@ -626,11 +626,11 @@ defined( 'ABSPATH' ) || exit;
                                 }
                             });
                         } else {
-                            $('#bfw-distribution-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                            $('#bfw-distribution-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                         }
                     }).fail(function(xhr, status, error) {
                         console.error('Distribution AJAX failed:', status, error);
-                        $('#bfw-distribution-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                        $('#bfw-distribution-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                     });
                 }
 
@@ -667,7 +667,7 @@ defined( 'ABSPATH' ) || exit;
                                         labels: labels,
                                         datasets: [
                                             {
-                                                label: '<?php _e('Issued Points (+)', 'bonus-for-woo'); ?>',
+                                                label: '<?php esc_html_e('Issued Points (+)', 'bonus-for-woo'); ?>',
                                                 data: issuedData,
                                                 borderColor: '#00a65a',
                                                 backgroundColor: 'rgba(0, 166, 90, 0.1)',
@@ -676,7 +676,7 @@ defined( 'ABSPATH' ) || exit;
                                                 tension: 0.3
                                             },
                                             {
-                                                label: '<?php _e('Spent Points (-)', 'bonus-for-woo'); ?>',
+                                                label: '<?php esc_html_e('Spent Points (-)', 'bonus-for-woo'); ?>',
                                                 data: spentData,
                                                 borderColor: '#f0b849',
                                                 backgroundColor: 'rgba(240, 184, 73, 0.1)',
@@ -695,10 +695,10 @@ defined( 'ABSPATH' ) || exit;
                                     }
                                 });
                             } else {
-                                $('#bfw-trend-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                                $('#bfw-trend-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                             }
                         }).fail(function() {
-                            $('#bfw-trend-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                            $('#bfw-trend-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                         });
                     }
 
@@ -723,10 +723,10 @@ defined( 'ABSPATH' ) || exit;
                         $('#bfw-total-spent').text(response.data.total_spent.toLocaleString());
                         $('#bfw-active-users').text(response.data.active_users.toLocaleString());
                     } else {
-                        $('#bfw-overall-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                        $('#bfw-overall-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                     }
                 }).fail(function() {
-                    $('#bfw-overall-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    $('#bfw-overall-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                 });
 
                 // Load Top Users
@@ -741,10 +741,10 @@ defined( 'ABSPATH' ) || exit;
                             tbody.append('<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px 10px;">' + userName + '</td><td style="padding: 12px 10px; text-align: right; font-weight: 600;">' + parseFloat(user.points).toLocaleString() + '</td></tr>');
                         });
                     } else {
-                        $('#bfw-top-users-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                        $('#bfw-top-users-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                     }
                 }).fail(function() {
-                    $('#bfw-top-users-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    $('#bfw-top-users-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                 });
 
 
@@ -762,11 +762,11 @@ defined( 'ABSPATH' ) || exit;
                                 tbody.append('<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px 10px;">' + userName + '</td><td style="padding: 12px 10px; text-align: right; font-weight: 600;">' + referrer.invite_count + '</td></tr>');
                             });
                         } else {
-                            tbody.append('<tr><td colspan="2" style="padding: 15px; text-align: center;"><?php _e('No data', 'bonus-for-woo'); ?></td></tr>');
+                            tbody.append('<tr><td colspan="2" style="padding: 15px; text-align: center;"><?php esc_html_e('No data', 'bonus-for-woo'); ?></td></tr>');
                         }
                     }
                 }).fail(function() {
-                    $('#bfw-top-referrers-table').append('<tr><td colspan="2" style="padding: 15px; text-align: center;"><?php _e('Failed to load data', 'bonus-for-woo'); ?></td></tr>');
+                    $('#bfw-top-referrers-table').append('<tr><td colspan="2" style="padding: 15px; text-align: center;"><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></td></tr>');
                 });
 
                 // Load Coupon Stats
@@ -779,10 +779,10 @@ defined( 'ABSPATH' ) || exit;
                         $('#bfw-used-coupons').text(response.data.used_coupons.toLocaleString());
                         $('#bfw-total-coupon-sum').text(response.data.total_coupon_sum.toLocaleString());
                     } else {
-                        $('#bfw-coupon-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                        $('#bfw-coupon-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                     }
                 }).fail(function() {
-                    $('#bfw-coupon-loading').html('<p><?php _e('Failed to load data', 'bonus-for-woo'); ?></p>');
+                    $('#bfw-coupon-loading').html('<p><?php esc_html_e('Failed to load data', 'bonus-for-woo'); ?></p>');
                 });
 
                 // Export handlers
@@ -807,9 +807,9 @@ defined( 'ABSPATH' ) || exit;
     <?php else : ?>
         <div style="text-align: center; padding: 80px 20px; background: #fff; border-radius: 12px; border: 1px solid var(--bfw-border);">
             <span class="dashicons dashicons-analytics" style="font-size: 80px; width: 80px; height: 80px; color: #ccd0d4; margin-bottom: 20px;"></span>
-            <h2><?php _e('Analytics is ready to work', 'bonus-for-woo'); ?></h2>
-            <p><?php _e('Calculate your first report to unlock insights about LTV, Retention and Referral ROI.', 'bonus-for-woo'); ?></p>
-            <button id="bfw-recalc-start" class="button button-primary button-large" style="margin-top: 20px; height: auto; padding: 10px 40px;"><?php _e('Start Initial Calculation', 'bonus-for-woo'); ?></button>
+            <h2><?php esc_html_e('Analytics is ready to work', 'bonus-for-woo'); ?></h2>
+            <p><?php esc_html_e('Calculate your first report to unlock insights about LTV, Retention and Referral ROI.', 'bonus-for-woo'); ?></p>
+            <button id="bfw-recalc-start" class="button button-primary button-large" style="margin-top: 20px; height: auto; padding: 10px 40px;"><?php esc_html_e('Start Initial Calculation', 'bonus-for-woo'); ?></button>
         </div>
     <?php endif; ?>
 
@@ -830,13 +830,13 @@ jQuery(function ($) {
         let percent = Math.floor((step / totalSteps) * 100);
         $('#bfw-progress-inner').css('width', percent + '%');
         const msgs = [
-            '<?php _e('Analyzing user statuses...', 'bonus-for-woo'); ?>',
-            '<?php _e('Calculating Point Redemption Rate...', 'bonus-for-woo'); ?>',
-            '<?php _e('Auditing Referral network and Revenue...', 'bonus-for-woo'); ?>',
-            '<?php _e('Correlating Retention and LTV metrics...', 'bonus-for-woo'); ?>',
-            '<?php _e('Rendering dynamic timeline...', 'bonus-for-woo'); ?>'
+            '<?php esc_html_e('Analyzing user statuses...', 'bonus-for-woo'); ?>',
+            '<?php esc_html_e('Calculating Point Redemption Rate...', 'bonus-for-woo'); ?>',
+            '<?php esc_html_e('Auditing Referral network and Revenue...', 'bonus-for-woo'); ?>',
+            '<?php esc_html_e('Correlating Retention and LTV metrics...', 'bonus-for-woo'); ?>',
+            '<?php esc_html_e('Rendering dynamic timeline...', 'bonus-for-woo'); ?>'
         ];
-        $('#bfw-progress-text').text(msgs[step] || '<?php _e('Finalizing...', 'bonus-for-woo'); ?>');
+        $('#bfw-progress-text').text(msgs[step] || '<?php esc_html_e('Finalizing...', 'bonus-for-woo'); ?>');
     }
 
     $('#bfw-recalc-start').on('click', function () {
@@ -860,7 +860,7 @@ jQuery(function ($) {
                 if (step < totalSteps) {
                     setTimeout(runStep, 100);
                 } else {
-                    $('#bfw-progress-text').text('✅ <?php _e('Analysis Complete! Reloading...', 'bonus-for-woo'); ?>');
+                    $('#bfw-progress-text').text('✅ <?php esc_html_e('Analysis Complete! Reloading...', 'bonus-for-woo'); ?>');
                     setTimeout(() => window.location.reload(), 1000);
                 }
             } else {
@@ -871,7 +871,7 @@ jQuery(function ($) {
     }
 
     $('#bfw-clear-stats').on('click', function () {
-        if (!confirm('<?php _e('Clear stats cache?', 'bonus-for-woo'); ?>')) return;
+        if (!confirm('<?php esc_html_e('Clear stats cache?', 'bonus-for-woo'); ?>')) return;
         $.post(ajaxurl, { 
             action: 'bfw_clear_stats',
             nonce: '<?php echo wp_create_nonce("bfw_stat_nonce"); ?>'

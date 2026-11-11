@@ -561,7 +561,7 @@ class BfwCashback
 
     public static function computyMassAddPoints(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error('Access denied');
             return;
         }

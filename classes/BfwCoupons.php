@@ -11,6 +11,11 @@ defined('ABSPATH') || exit;
 
 class BfwCoupons
 {
+    /** Сколько неудачных попыток ввести код допустимо в окне */
+    const MAX_FAILED_COUPON_ATTEMPTS = 5;
+
+    /** Длина окна ограничения перебора, секунд */
+    const FAILED_COUPON_WINDOW = 900;
 
     /**
      * Adding a coupon
@@ -347,11 +352,28 @@ class BfwCoupons
     public static function enterCoupon(int $userid, string $code_coupon): string
     {
         $code_coupon = trim($code_coupon);
+
+        /*
+         * Защита от перебора кодов. Раньше счётчик daily_coupon увеличивался
+         * только при успешной активации, а на неверный код сразу возвращался
+         * 'not_coupon' — то есть подбирать купоны (а купон = деньги) можно было
+         * без ограничений. Считаем неудачи в transient до поиска купона.
+         */
+        $fail_key = 'bfw_coupon_fails_' . $userid;
+        $fails = (int) get_transient($fail_key);
+
+        if ($fails >= self::MAX_FAILED_COUPON_ATTEMPTS) {
+            return 'limit';
+        }
+
         $coupon = self::getCoupon($code_coupon);
 
         if (!isset($coupon->code) || $coupon->status !== 'active') {
+            set_transient($fail_key, $fails + 1, self::FAILED_COUPON_WINDOW);
             return 'not_coupon';
         }
+
+        delete_transient($fail_key);
 
         // Лимит попыток в день
         $daily_coupon = get_user_meta($userid, 'daily_coupon', true);
@@ -466,7 +488,7 @@ class BfwCoupons
 
     public static function bfwExportCoupons(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(BFW_CAP_MANAGE)) {
             wp_send_json_error(__('Access denied.', 'bonus-for-woo'));
             return;
         }
@@ -476,20 +498,24 @@ class BfwCoupons
             return;
         }
 
-        $response = json_decode(stripslashes($_POST['response']), true);
-        $url_export_file = $response['data']['url']; // ссылка на загруженный файл экспорта
+        /*
+         * Раньше путь приходил в JSON от клиента и проверялся только по префиксу
+         * uploads: `.../uploads/../../wp-config.php` проходил проверку. Теперь
+         * файл читается из загрузки запроса и на сайте не сохраняется.
+         */
+        $uploaded = $_FILES['bfw_import_file'] ?? null;
 
-        $upload_dir = wp_upload_dir();
-        if (strpos($url_export_file, $upload_dir['baseurl']) !== 0 && strpos($url_export_file, $upload_dir['basedir']) !== 0) {
-            wp_send_json_error(__('Invalid file path.', 'bonus-for-woo'));
+        if (empty($uploaded['tmp_name']) || (int) ($uploaded['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+                || !is_uploaded_file($uploaded['tmp_name'])) {
+            wp_send_json_error(__('The file was not uploaded.', 'bonus-for-woo'));
             return;
         }
 
-
-        $fileHandle = fopen($url_export_file, "rb");
+        $fileHandle = fopen($uploaded['tmp_name'], 'rb');
 
         if ($fileHandle === false) {
-            die(__('Error opening', 'bonus-for-woo') . ' ' . htmlspecialchars($url_export_file));
+            wp_send_json_error(__('Cannot open the uploaded file.', 'bonus-for-woo'));
+            return;
         }
 
         global $wpdb;
@@ -516,118 +542,9 @@ class BfwCoupons
         }
 
         fclose($fileHandle);
-        echo 'good';
-        exit();
+
+        wp_send_json_success(array('message' => __('Coupons imported successfully', 'bonus-for-woo')));
     }
-
-    /**todo проверить на работоспособность. Возможно заменить верхним
-     *
-     * @return void
-     */
-    public static function NEWbfwExportCoupons(): void
-    {
-        // Проверяем nonce для безопасности
-        check_ajax_referer('bfw_export_nonce', 'nonce');
-
-        $response = json_decode(stripslashes($_POST['response']), true);
-
-        // Проверяем наличие данных
-        if (!isset($response['data']['url'])) {
-            wp_die(__('Invalid data', 'bonus-for-woo'));
-        }
-
-        $url_export_file = $response['data']['url'];
-
-        // Инициализируем WP_Filesystem
-        global $wp_filesystem;
-
-        if (!function_exists('WP_Filesystem')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-        }
-
-        WP_Filesystem();
-
-        // Проверяем, что файловая система доступна
-        if (!$wp_filesystem || !$wp_filesystem->exists($url_export_file)) {
-            wp_die(__('Error accessing file', 'bonus-for-woo') . ' ' . esc_html($url_export_file));
-        }
-
-        // Получаем содержимое файла
-        $file_content = $wp_filesystem->get_contents($url_export_file);
-
-        if ($file_content === false) {
-            wp_die(__('Error reading file', 'bonus-for-woo'));
-        }
-
-        // Обрабатываем CSV данные
-        $lines = explode("\n", $file_content);
-        global $wpdb;
-        $table = $wpdb->prefix . 'bfw_coupons_computy';
-
-
-        $processed = 0;
-        $total_lines = count($lines);
-
-        for ($j = 0; $j < $total_lines; $j += BFW_CSV_IMPORT_LIMIT) {
-            $end = min($j + BFW_CSV_IMPORT_LIMIT, $total_lines);
-
-            for ($i = $j; $i < $end; $i++) {
-                // Пропускаем пустые строки
-                if (empty(trim($lines[$i]))) {
-                    continue;
-                }
-
-                // Парсим CSV строку
-                $currRow = str_getcsv($lines[$i]);
-
-                // Проверяем корректность строки
-                if (count($currRow) < 5) {
-                    continue;
-                }
-
-                $coupon = (string)$currRow[0];
-                $sum = (float)$currRow[1];
-                $comment_admin = $currRow[2];
-                $status = in_array($currRow[3], ['active', 'noactive', 'used']) ? $currRow[3] : 'noactive';
-                $reusable = isset($currRow[4]) ? (int)$currRow[4] : 0;
-
-                // Пропускаем заголовок, если он есть
-                if ($coupon === 'code' || $coupon === 'comment_admin') {
-                    continue;
-                }
-
-                // Проверяем существование купона
-                $safe_table_name = str_replace('`', '``', $table);
-                $existing_coupon = $wpdb->get_var(
-                        $wpdb->prepare(
-                                "SELECT code FROM `{$safe_table_name}` WHERE code = %s",
-                                $coupon
-                        )
-                );
-
-                if (!$existing_coupon) {
-                    self::addCoupon($coupon, $sum, $comment_admin, $status, $reusable);
-                    $processed++;
-                }
-            }
-
-            // Делаем небольшую паузу между пакетами для оптимизации нагрузки
-            if (($j + BFW_CSV_IMPORT_LIMIT) < $total_lines) {
-                sleep(1);
-            }
-        }
-
-        // Удаляем временный файл, если он был загружен
-        if (strpos($url_export_file, wp_upload_dir()['basedir']) !== false) {
-            $wp_filesystem->delete($url_export_file);
-        }
-
-        wp_send_json_success(array(
-                'message' => __('Coupons imported successfully', 'bonus-for-woo'),
-                'processed' => $processed
-        ));
-    }
-
 
     public static function getListCodeCoupons()
     {
@@ -640,7 +557,7 @@ class BfwCoupons
     {
         // Проверяем, ошибка ли "купон не найден"
 
-        if ($err_code == '105') {
+        if ($err_code == '105' && $coupon instanceof WC_Coupon) {
 
             $arrayCoupons = self::getListCodeCoupons();
             $codes = wp_list_pluck($arrayCoupons, 'code');

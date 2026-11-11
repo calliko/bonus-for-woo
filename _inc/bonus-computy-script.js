@@ -1,4 +1,20 @@
+/*
+ * Nonce больше не печатается в HTML страницы: под полностраничным кешем он
+ * отдавался протухшим, и запросы падали с 403. Получаем его один раз при
+ * загрузке и подставляем вместо лениво читаемого wpApiSettings.nonce.
+ */
+window.bfwRestHeaders = function (extra) {
+    return Object.assign({}, extra || {}, { 'X-WP-Nonce': window.bfwRestNonce || '' });
+};
+
 jQuery(document).ready(function ($) {
+    if (window.wpApiSettings && window.wpApiSettings.isLoggedIn && window.wpApiSettings.nonceAjaxUrl) {
+        fetch(window.wpApiSettings.nonceAjaxUrl, { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (res) { if (res && res.nonce) { window.bfwRestNonce = res.nonce; } })
+            .catch(function () {});
+    }
+
     /*действие при удалении баллов   */
     $('body').on('click', '#bfw_remove_cart_point', async function () {
         const currentURL = window.location.href;
@@ -9,7 +25,7 @@ jQuery(document).ready(function ($) {
                 headers: {
                     'Content-Type': 'application/json',
                     // Если требуется nonce (для авторизованных действий):
-                    'X-WP-Nonce': wpApiSettings.nonce
+                    'X-WP-Nonce': window.bfwRestNonce || ''
                 },
                 body: JSON.stringify({
                     redirect: currentURL
@@ -48,7 +64,7 @@ jQuery(document).ready(function ($) {
                 headers: {
                     'Content-Type': 'application/json',
                     // Если используете nonce:
-                    'X-WP-Nonce': wpApiSettings.nonce
+                    'X-WP-Nonce': window.bfwRestNonce || ''
                 },
                 body: JSON.stringify({
                     redirect: redirectUrl
@@ -163,7 +179,7 @@ jQuery(document).ready(function ($) {
                 headers: {
                     'Content-Type': 'application/json',
                     // Добавляем nonce для безопасности REST API
-                    'X-WP-Nonce': wpApiSettings.nonce // Убедитесь, что передаете nonce через wp_localize_script
+                    'X-WP-Nonce': window.bfwRestNonce || ''
                 },
                 body: JSON.stringify({
                     points: computyInputPoints,
@@ -212,7 +228,7 @@ jQuery(document).ready(function ($) {
                 headers: {
                     'Content-Type': 'application/json',
                     // Используем стандартный Nonce WordPress или ваш bfw_params.nonce
-                    'X-WP-Nonce': typeof wpApiSettings !== 'undefined' ? wpApiSettings.nonce : bfw_params.nonce
+                    'X-WP-Nonce': window.bfwRestNonce || ''
                 },
                 body: JSON.stringify(formData)
             });
@@ -270,7 +286,8 @@ window.bfwUpdateBlocks = function() {
         let isUpdating = false;
 
         const API_BASE = '/wp-json/bfw/v1';
-        const NONCE = typeof wpApiSettings !== 'undefined' ? wpApiSettings.nonce : '';
+        // Читаем в момент запроса: nonce приходит AJAX-ом после загрузки страницы
+        const NONCE = () => window.bfwRestNonce || '';
 
         const debounce = (func, delay) => {
             let timeout;
@@ -286,7 +303,7 @@ window.bfwUpdateBlocks = function() {
             try {
                 const response = await fetch(`${API_BASE}${endpoint}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE() },
                     body: JSON.stringify(params)
                 });
                 return response.ok ? (await response.json()).html : null;
@@ -335,7 +352,7 @@ window.bfwUpdateBlocks = function() {
             try {
                 const response = await fetch(`${API_BASE}/check-points-only-products`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE() },
                     body: JSON.stringify({})
                 });
                 const data = await response.json();

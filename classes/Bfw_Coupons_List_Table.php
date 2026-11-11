@@ -37,15 +37,20 @@ class Bfw_Coupons_List_Table extends WP_List_Table
 
         $this->_column_headers = [$columns, $hidden, $sortable];
 
+        /*
+         * orderby / order приходят из $_GET и вклеиваются в строку до prepare().
+         * esc_sql() экранирует только кавычки, идентификаторы и ключевые слова
+         * он не защищает, поэтому ORDER BY был инъектируемым. Только белый список.
+         */
         $allowed_orderby = ['id', 'created', 'sum', 'code', 'status'];
-        $orderby = (!empty($_GET['orderby']) && in_array($_GET['orderby'], $allowed_orderby))
-                ? sanitize_text_field($_GET['orderby'])
+        $orderby = (!empty($_GET['orderby']) && in_array($_GET['orderby'], $allowed_orderby, true))
+                ? sanitize_key($_GET['orderby'])
                 : 'id';
-        $order = (!empty($_GET['order'])) ? esc_sql($_GET['order']) : 'DESC';
+        $order = (!empty($_GET['order']) && strtoupper(sanitize_key($_GET['order'])) === 'ASC') ? 'ASC' : 'DESC';
 
         $where = '';
         if (!empty($_REQUEST['s'])) {
-            $search = esc_sql($_REQUEST['s']);
+            $search = $wpdb->esc_like(sanitize_text_field(wp_unslash($_REQUEST['s'])));
             $where = $wpdb->prepare(" WHERE code LIKE %s OR comment_admin LIKE %s", '%' . $search . '%', '%' . $search . '%');
         }
 

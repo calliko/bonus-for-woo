@@ -160,7 +160,7 @@ $date_finish = $_GET['date_finish'] ?? current_time("Y-m-d");
         <input type="hidden" name="page" value="bonus-for-woo/pages/list_history.php">
         
         <div class="bfw-filter-group">
-            <label><?php _e('From', 'bonus-for-woo'); ?></label>
+            <label><?php esc_html_e('From', 'bonus-for-woo'); ?></label>
             <input type="date" id="date_start" name="date_start" class="bfw-input-date" 
                    value="<?php echo esc_html($date_start); ?>" 
                    max="<?php echo current_time("Y-m-d"); ?>" 
@@ -168,7 +168,7 @@ $date_finish = $_GET['date_finish'] ?? current_time("Y-m-d");
         </div>
 
         <div class="bfw-filter-group">
-            <label><?php _e('to', 'bonus-for-woo'); ?></label>
+            <label><?php esc_html_e('to', 'bonus-for-woo'); ?></label>
             <input type="date" id="date_finish" name="date_finish" class="bfw-input-date" 
                    value="<?php echo esc_html($date_finish); ?>" 
                    max="<?php echo current_time("Y-m-d"); ?>" 
@@ -178,10 +178,10 @@ $date_finish = $_GET['date_finish'] ?? current_time("Y-m-d");
         <div style="display:flex; gap: 10px;">
             <button type="submit" class="bfw-btn bfw-btn-primary">
                 <span class="dashicons dashicons-search"></span>
-                <?php _e('Search', 'bonus-for-woo'); ?>
+                <?php esc_html_e('Search', 'bonus-for-woo'); ?>
             </button>
             <a href="/wp-admin/admin.php?page=bonus-for-woo%2Fpages%2Flist_history.php" class="bfw-btn bfw-btn-outline">
-                <?php _e('Reset', 'bonus-for-woo'); ?>
+                <?php esc_html_e('Reset', 'bonus-for-woo'); ?>
             </a>
         </div>
     </form>

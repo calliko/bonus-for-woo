@@ -4,9 +4,9 @@ Donate link: https://yoomoney.ru/to/410011302808683
 Tags: loyalty, cashback, points, reward, referral
 Requires at least:  6.2
 Tested up to:  7.1
-WC requires at least: 6.0
-WC tested up to: 11.0.1
-Stable tag: 8.5.0
+WC requires at least: 6.2
+WC tested up to: 11.2.1
+Stable tag: 8.5.2
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -82,9 +82,37 @@ If you need support or have questions, please write to our [**support**](https:/
 
 == Installation ==
 
-1. Upload dir `bonus-for-woo-computy` to the `/wp-content/plugins/` directory
+1. Upload dir `bonus-for-woo` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
+
+== External services ==
+
+This plugin connects to the plugin author's server in the following cases.
+
+= License activation (PRO) =
+The PRO key is verified against `https://computy.ru/API/api.php`. The request sends the license key, the site domain, the plugin version and the product identifier. The server returns a signed token that is stored in the site options.
+
+* Service: computy.ru
+* Data sent: license key, site domain, plugin version, product ID
+* When: on activation and no more than once every 7 days
+* Terms: https://computy.ru/privacy
+
+= Buy button =
+The "Buy" button on the PRO settings screen posts the site URL, the plugin version and the site administrator email to `https://computy.ru/buy_plugin`.
+
+* Service: computy.ru
+* Data sent: site URL, plugin version, admin email
+* When: only when the administrator clicks the button
+* Terms: https://computy.ru/privacy
+
+= Blog articles widget =
+The plugin settings screen loads the list of the author's recent articles from `https://computy.ru/blog/tag/bfw/` and caches the result in a transient.
+
+* Service: computy.ru
+* Data sent: no visitor data, an ordinary HTTP request
+* When: when the plugin settings screen is opened while the cache is empty
+* Terms: https://computy.ru/privacy
 
 == Screenshots ==
 
@@ -123,7 +151,19 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
-= 8.5.0 - 2026-11-04 =
+= 8.5.2 - 2026-11-04 =
+* Security: the coupons list no longer interpolates the `order`/`orderby` query arguments; only an allowlist is accepted.
+* Security: failed coupon code entries are rate-limited, so codes can no longer be brute-forced.
+* Security: the points export is streamed and never written to disk; the download link is nonce-protected.
+* Security: the redirect parameter is validated against the site host on every write-off entry point.
+* Security: CSV import reads the uploaded file instead of a client-supplied path.
+* Security: coupon actions require the plugin capability, not just a nonce.
+* One capability (BFW_CAP_MANAGE) now drives both the menu and the AJAX handlers.
+* Points export is batched (500 users per query) instead of loading every customer at once.
+* Removed an unused coupon import handler and the leftover QR / DataTables demo files.
+* A critical error that occurred when entering an empty coupon has been fixed.
+
+= 8.5.1 - 2026-11-04 =
 * Cashback percent, points and sums now follow the WooCommerce "Number of decimals" setting: 0 decimals shows 3%, 250; 2 decimals shows 3.50%, 250.75. Rounding of points uses the same setting.
 * Points export file moved from the plugin directory to uploads — a plugin installed from the admin screen could not write there. Download link is now nonce-protected.
 * Import accepts the export file from uploads.
@@ -223,5 +263,7 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Upgrade Notice ==
 
-= 9.0.0 =
-* Super update.
+= 8.5.2 =
+* Points export is now streamed and is never written to the disk.
+* Coupons: the list respects a strict ORDER BY whitelist, and repeated failed code entries are rate-limited.
+* Cashback percent and points follow the WooCommerce number of decimals setting.

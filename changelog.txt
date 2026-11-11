@@ -1,4 +1,13 @@
 
+= 8.5.2 - 2026-11-04 =
+* Fixed SQL injection in the coupons list ORDER BY.
+* Added rate limiting for failed coupon code entries.
+* Points export is streamed, never stored on disk.
+* Redirect parameter validated on all entry points.
+* CSV imports read the uploaded file instead of a client path.
+* Unified capability for menu and AJAX handlers.
+* Batched points export.
+
 = 7.6.12 - 2026-03-23 =
 * Fixed the setting for excluding items from cashback.
 
