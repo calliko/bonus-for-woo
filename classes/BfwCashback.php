@@ -519,7 +519,7 @@ class BfwCashback
      *
      * @return void
      */
-    public static function cashbackRecount()
+    public static function cashbackRecount(): void
     {
         check_ajax_referer('bfw_cashback_recount_nonce', 'nonce');
 
@@ -732,7 +732,7 @@ class BfwCashback
     /**
      * @return void
      */
-    public static function recount_user_orders()
+    public static function recount_user_orders(): void
     {
         check_ajax_referer( 'bfw_recount_nonce', 'nonce' );
 

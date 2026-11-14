@@ -6,7 +6,7 @@ Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.2
 WC tested up to: 11.2.1
-Stable tag: 8.5.2
+Stable tag: 8.5.5
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -150,6 +150,10 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.5.5 - 2026-11-15 =
+* Fixed a cookie-related issue that occurred when redeeming points.
+* Optimized the cashback calculation for variable products.
 
 = 8.5.2 - 2026-11-04 =
 * Security: the coupons list no longer interpolates the `order`/`orderby` query arguments; only an allowlist is accepted.

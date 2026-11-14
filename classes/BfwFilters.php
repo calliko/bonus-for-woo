@@ -110,7 +110,7 @@ class BfwFilters
     /**
      * Admin related filters
      */
-    private static function initAdminFilters()
+    private static function initAdminFilters(): void
     {
         add_filter('plugin_action_links', array('BfwAdmin', 'add_settings_link'), 10, 2);
     }
@@ -118,7 +118,7 @@ class BfwFilters
     /**
      * Product related filters
      */
-    private static function initProductFilters()
+    private static function initProductFilters(): void
     {
         /*-------Текст на странице товара (сколько бонусов получите)-------*/
         add_filter('woocommerce_get_price_html', array('BfwSingleProduct', 'ballsAfterProductPriceAll'), 100, 2);

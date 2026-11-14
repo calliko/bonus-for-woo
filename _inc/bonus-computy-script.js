@@ -1,19 +1,95 @@
 /*
  * Nonce больше не печатается в HTML страницы: под полностраничным кешем он
- * отдавался протухшим, и запросы падали с 403. Получаем его один раз при
- * загрузке и подставляем вместо лениво читаемого wpApiSettings.nonce.
+ * отдавался протухшим, и запросы падали с 403. Получаем его при загрузке.
+ *
+ * ВАЖНО: nonce приходит асинхронно. Если запрос уходит раньше, чем он
+ * получен, заголовок X-WP-Nonce уходит пустым, и WordPress отвечает
+ * «Проверка куки не удалась» (rest_cookie_invalid_nonce).
+ * Поэтому все запросы ждут один общий промис bfwNoncePromise.
  */
-window.bfwRestHeaders = function (extra) {
-    return Object.assign({}, extra || {}, { 'X-WP-Nonce': window.bfwRestNonce || '' });
+window.bfwNoncePromise = null;
+
+window.bfwGetNonce = function () {
+    // Уже есть — отдаём сразу
+    if (window.bfwRestNonce) {
+        return Promise.resolve(window.bfwRestNonce);
+    }
+
+    /*
+     * Приоритет — nonce из HTML страницы. Он напечатан под текущего
+     * пользователя и не может прийти от гостя. Запрос /nonce нужен только
+     * если в HTML ничего нет (например, страница отдалась из кеша раньше).
+     */
+    if (window.wpApiSettings && window.wpApiSettings.nonce) {
+        window.bfwRestNonce = window.wpApiSettings.nonce;
+        return Promise.resolve(window.bfwRestNonce);
+    }
+
+    // Запрос уже идёт — не дублируем
+    if (window.bfwNoncePromise) {
+        return window.bfwNoncePromise;
+    }
+
+    if (!window.wpApiSettings || !window.wpApiSettings.nonceAjaxUrl) {
+        return Promise.resolve('');
+    }
+
+    window.bfwNoncePromise = fetch(window.wpApiSettings.nonceAjaxUrl, {
+        credentials: 'same-origin',
+        cache: 'no-store'   // nonce персональный, кеш тут недопустим
+    })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (res) {
+            if (!res || !res.nonce) {
+                return '';
+            }
+
+            /*
+             * Сервер сообщает, под каким пользователем выдан nonce.
+             * Если он расходится с тем, что считает страница, nonce
+             * не подойдёт и WordPress ответит 403. Так бывает, когда
+             * ответ отдался из кеша или страница загружена до входа.
+             */
+            if (typeof res.isLoggedIn !== 'undefined') {
+                const pageSays = String((window.wpApiSettings || {}).isLoggedIn || '');
+                const nonceSays = String(res.isLoggedIn || '');
+
+                const pageLoggedIn = pageSays === '1' || pageSays === 'true' || pageSays === true;
+                const nonceLoggedIn = nonceSays === '1' || nonceSays === 'true' || nonceSays === true;
+
+                if (pageLoggedIn !== nonceLoggedIn) {
+                    console.warn('[BFW] nonce выдан под другого пользователя (страница: ' + pageSays + ', сервер: ' + nonceSays + '). Nonce не применён — возможен кеш.');
+                    return '';
+                }
+            }
+
+            window.bfwRestNonce = res.nonce;
+            return res.nonce;
+        })
+        .catch(function () { return ''; })
+        .then(function (nonce) {
+            // Сбрасываем промис, чтобы при сбое можно было повторить попытку
+            if (!nonce) {
+                window.bfwNoncePromise = null;
+            }
+            return nonce;
+        });
+
+    return window.bfwNoncePromise;
+};
+
+/*
+ * Заголовки для REST-запроса. Асинхронные: дожидаются nonce, чтобы
+ * не отправлять X-WP-Nonce пустой строкой.
+ */
+window.bfwRestHeaders = async function (extra) {
+    const nonce = await window.bfwGetNonce();
+    return Object.assign({}, extra || {}, { 'X-WP-Nonce': nonce });
 };
 
 jQuery(document).ready(function ($) {
-    if (window.wpApiSettings && window.wpApiSettings.isLoggedIn && window.wpApiSettings.nonceAjaxUrl) {
-        fetch(window.wpApiSettings.nonceAjaxUrl, { credentials: 'same-origin' })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (res) { if (res && res.nonce) { window.bfwRestNonce = res.nonce; } })
-            .catch(function () {});
-    }
+    // Стартуем загрузку nonce сразу, не дожидаясь первого запроса
+    window.bfwGetNonce();
 
     /*действие при удалении баллов   */
     $('body').on('click', '#bfw_remove_cart_point', async function () {
@@ -22,11 +98,7 @@ jQuery(document).ready(function ($) {
         try {
             const response = await fetch('/wp-json/bfw/v1/clear-fast-bonus', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Если требуется nonce (для авторизованных действий):
-                    'X-WP-Nonce': window.bfwRestNonce || ''
-                },
+                headers: await window.bfwRestHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     redirect: currentURL
                 })
@@ -61,11 +133,7 @@ jQuery(document).ready(function ($) {
         try {
             const response = await fetch('/wp-json/bfw/v1/clear-fast-bonus', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Если используете nonce:
-                    'X-WP-Nonce': window.bfwRestNonce || ''
-                },
+                headers: await window.bfwRestHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     redirect: redirectUrl
                 })
@@ -176,11 +244,7 @@ jQuery(document).ready(function ($) {
         try {
             const response = await fetch("/wp-json/bfw/v1/apply-points", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Добавляем nonce для безопасности REST API
-                    'X-WP-Nonce': window.bfwRestNonce || ''
-                },
+                headers: await window.bfwRestHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     points: computyInputPoints,
                     redirect: redirect,
@@ -225,11 +289,7 @@ jQuery(document).ready(function ($) {
         try {
             const response = await fetch('/wp-json/bfw/v1/activate-coupon', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Используем стандартный Nonce WordPress или ваш bfw_params.nonce
-                    'X-WP-Nonce': window.bfwRestNonce || ''
-                },
+                headers: await window.bfwRestHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(formData)
             });
 
@@ -286,8 +346,6 @@ window.bfwUpdateBlocks = function() {
         let isUpdating = false;
 
         const API_BASE = '/wp-json/bfw/v1';
-        // Читаем в момент запроса: nonce приходит AJAX-ом после загрузки страницы
-        const NONCE = () => window.bfwRestNonce || '';
 
         const debounce = (func, delay) => {
             let timeout;
@@ -301,9 +359,12 @@ window.bfwUpdateBlocks = function() {
 
         const fetchBlockData = async (endpoint, params = {}) => {
             try {
+                // Дожидаемся nonce: иначе заголовок уходит пустым и WP
+                // отвечает «Проверка куки не удалась»
+                const headers = await window.bfwRestHeaders({ 'Content-Type': 'application/json' });
                 const response = await fetch(`${API_BASE}${endpoint}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE() },
+                    headers: headers,
                     body: JSON.stringify(params)
                 });
                 return response.ok ? (await response.json()).html : null;
@@ -352,7 +413,7 @@ window.bfwUpdateBlocks = function() {
             try {
                 const response = await fetch(`${API_BASE}/check-points-only-products`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE() },
+                    headers: await window.bfwRestHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({})
                 });
                 const data = await response.json();
@@ -492,20 +553,54 @@ window.bfwUpdateBlocks = function() {
         
         const updateCashbackDisplay = (variationId) => {
             const cashbackData = window.bfwVariationCashback;
+            if (!cashbackData || !cashbackData.variations) return;
+
             const variation = cashbackData.variations[variationId];
-            
-            // Удаляем старый блок кешбэка
-            $('.how_mach_bonus').remove();
-            
-            if (variation && variation.cashback > 0) {
-                // Создаем новый блок кешбэка
-                const cashbackHtml = '<div class="how_mach_bonus"><span class="how_mach_bonus_title">' + 
-                                   cashbackData.label + '</span> ' + variation.cashback + ' ' + 
-                                   getPointsLabel(variation.cashback) + '</div>';
-                
-                // Добавляем после цены
-                $('.price').first().append(cashbackHtml);
+
+            /*
+             * Обновляем блок ТОЛЬКО основного товара.
+             *
+             * Раньше здесь было $('.how_mach_bonus').remove() — это стирало
+             * бонусы у всех товаров на странице, включая Related Products
+             * и Upsells. Плюс $('.price').first() мог вставить блок в цену
+             * совершенно другого товара.
+             */
+            const $mainPrice = getMainProductPriceElement();
+            if (!$mainPrice.length) return;
+
+            const $existing = $mainPrice.find('.how_mach_bonus');
+            if ($existing.length) {
+                $existing.remove();
             }
+
+            if (variation && variation.cashback > 0) {
+                const cashbackHtml = '<div class="how_mach_bonus"><span class="how_mach_bonus_title">' +
+                                   cashbackData.label + '</span> ' + variation.cashback + ' ' +
+                                   getPointsLabel(variation.cashback) + '</div>';
+
+                $mainPrice.append(cashbackHtml);
+            }
+        };
+
+        /*
+         * Блок цены именно основного товара, а не первой карточки на
+         * странице. Порядок проверок: контейнер страницы товара, затем
+         * обычный .price вне списков товаров.
+         */
+        const getMainProductPriceElement = () => {
+            const selectors = [
+                '.product .entry-summary .price',
+                '.product .summary .price',
+                '.wp-block-woocommerce-product-price .price',
+                '.single-product .price'
+            ];
+
+            for (const sel of selectors) {
+                const $el = $(sel).first();
+                if ($el.length) return $el;
+            }
+
+            return $();
         };
 
         const getPointsLabel = (amount) => {

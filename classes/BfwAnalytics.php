@@ -154,7 +154,7 @@ class BfwAnalytics
     /**
      * AJAX handler для общей статистики
      */
-    public static function ajaxGetOverallStats()
+    public static function ajaxGetOverallStats(): void
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
         if (!current_user_can(BFW_CAP_MANAGE)) {
@@ -195,7 +195,7 @@ class BfwAnalytics
     /**
      * AJAX handler для топ пользователей
      */
-    public static function ajaxGetTopUsersByPoints()
+    public static function ajaxGetTopUsersByPoints(): void
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
         if (!current_user_can(BFW_CAP_MANAGE)) {
@@ -232,7 +232,7 @@ class BfwAnalytics
     /**
      * AJAX handler для статистики по статусам
      */
-    public static function ajaxGetStatusDistribution()
+    public static function ajaxGetStatusDistribution(): void
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
         if (!current_user_can(BFW_CAP_MANAGE)) {
@@ -294,7 +294,7 @@ class BfwAnalytics
     /**
      * AJAX handler для статистики по рефералам
      */
-    public static function ajaxGetReferralStats()
+    public static function ajaxGetReferralStats(): void
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
         if (!current_user_can(BFW_CAP_MANAGE)) {
@@ -349,7 +349,7 @@ class BfwAnalytics
     /**
      * AJAX handler для статистики по купонам
      */
-    public static function ajaxGetCouponStats()
+    public static function ajaxGetCouponStats(): void
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
         if (!current_user_can(BFW_CAP_MANAGE)) {
@@ -414,7 +414,7 @@ class BfwAnalytics
     /**
      * AJAX handler для экспорта аналитики
      */
-    public static function ajaxExportToCSV()
+    public static function ajaxExportToCSV(): void
     {
         check_ajax_referer('bfw_analytics_nonce', 'nonce');
         if (!current_user_can(BFW_CAP_MANAGE)) {

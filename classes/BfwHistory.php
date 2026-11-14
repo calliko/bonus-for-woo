@@ -209,7 +209,7 @@ class BfwHistory
      * Show history of all clients
      * Показ истории всех клиентов
      *
-     * @param string $date_start С какой даты
+     * @param false|string $date_start С какой даты
      * @param string $date_finish По какую дату
      *
      * @return void

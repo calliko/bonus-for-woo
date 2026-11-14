@@ -4,7 +4,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Bonus for Woo
- * Version:           8.5.2
+ * Version:           8.5.5
  * Plugin URI:        https://computy.ru/blog/bonus-for-woo-wordpress
  * Description:       A comprehensive cashback bonus system for WooCommerce with user status management.
  * Author:            computy
@@ -27,7 +27,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 
 // Define plugin constants.
-const BONUS_COMPUTY_VERSION = '8.5.2';
+const BONUS_COMPUTY_VERSION = '8.5.5';
 const BONUS_COMPUTY_VERSION_DB = '8';
 define('BONUS_COMPUTY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BONUS_COMPUTY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -181,17 +181,13 @@ add_action('rest_api_init', function () {
     register_rest_route('bfw/v1', '/clear-fast-bonus', [
         'methods' => 'POST',
         'callback' => ['BfwPoints', 'bfwoo_clean_fast_bonus_rest'],
-        'permission_callback' => function () {
-            return is_user_logged_in();
-        },
+        'permission_callback' => '__return_true',
     ]);
 
     register_rest_route('bfw/v1', '/apply-points', [
         'methods' => 'POST',
         'callback' => ['BfwPoints', 'rest_trata_points'],
-        'permission_callback' => function () {
-            return is_user_logged_in();
-        },
+        'permission_callback' => '__return_true',
     ]);
 
     register_rest_route('bfw/v1', '/get-spisanie-html', [
@@ -222,15 +218,35 @@ add_action('rest_api_init', function () {
      * Свежий REST nonce. Нужен потому, что nonce, напечатанный в HTML,
      * протухает под полностраничным кешем; страница запрашивает его при
      * загрузке и получает актуальный.
+     *
+     * ВАЖНО: nonce привязан к пользователю (wp_create_nonce использует
+     * user ID и session token). Если этот ответ закешируется и уйдёт
+     * гостю или наоборот, nonce окажется невалидным для залогиненного
+     * покупателя — WordPress ответит 403 на все запросы.
+     * Поэтому: no-cache + Vary по кукам + явный флаг isLoggedIn.
      */
     register_rest_route('bfw/v1', '/nonce', [
         'methods' => 'GET',
         'callback' => function () {
-            return new WP_REST_Response(['nonce' => wp_create_nonce('wp_rest')], 200);
+            $response = new WP_REST_Response([
+                'nonce'      => wp_create_nonce('wp_rest'),
+                'isLoggedIn' => is_user_logged_in(),
+                // user ID, под которым выдан nonce (для диагностики)
+                'userId'     => get_current_user_id(),
+            ], 200);
+
+            /*
+             * Ответ персональный — его нельзя отдавать из кеша другому
+             * посетителю, иначе nonce не подойдёт и будет 403.
+             */
+            $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, private, max-age=0');
+            $response->header('Pragma', 'no-cache');
+            $response->header('Expires', '0');
+            $response->header('Vary', 'Cookie');
+
+            return $response;
         },
-        'permission_callback' => function () {
-            return is_user_logged_in();
-        },
+        'permission_callback' => '__return_true',
     ]);
 
     register_rest_route('bfw/v1', '/check-points-only-products', [

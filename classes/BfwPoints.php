@@ -1154,6 +1154,11 @@ global $wpdb;
 
     public static function rest_trata_points(WP_REST_Request $request): WP_REST_Response
     {
+        // Проверка авторизации пользователя
+        if (!is_user_logged_in()) {
+            return new WP_REST_Response(['success' => false, 'message' => __('You must be logged in to use points.', 'bonus-for-woo')], 403);
+        }
+
         // Проверка, инициализирован ли WooCommerce и корзина
         if (null === WC()->cart) {
             wc_load_cart(); // Принудительная загрузка, если эндпоинт вызван слишком рано
@@ -2672,7 +2677,7 @@ global $wpdb;
      * @return void
      * @version 8.0.1
      */
-    public static function refundedPoints(int $order_id, int $refund_id = null): void
+    public static function refundedPoints(int $order_id, ?int $refund_id = null): void
     {
         $order = wc_get_order($order_id);
         if (!$order) {

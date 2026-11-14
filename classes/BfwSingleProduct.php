@@ -108,7 +108,21 @@ class BfwSingleProduct
        // $type = $product->get_type();
         $price = 0;
 
-        $constant_cashback = get_post_meta($product->get_id(), '_constant_cashback_percentage', true);
+        $product_id = (int) $product->get_id();
+
+        /*
+         * Кеш в пределах запроса: get_variation_sale_price() для вариативных
+         * товаров стоит заметно дорого, а вызывается он несколько раз за
+         * одно формирование цены (сначала max, потом min). На странице с
+         * десятком карточек это суммируется.
+         */
+        static $cache = [];
+        $cache_key = $product_id . '|' . (int) is_user_logged_in() . '|' . get_current_user_id();
+        if (isset($cache[$cache_key])) {
+            return $cache[$cache_key];
+        }
+
+        $constant_cashback = get_post_meta($product_id, '_constant_cashback_percentage', true);
 
         if ($product->is_type('simple')) {
             $price = $product->get_sale_price() ?: $product->get_price();
@@ -116,7 +130,7 @@ class BfwSingleProduct
             $maxPrice = $product->get_variation_sale_price('max', true);
             $minPrice = $product->get_variation_sale_price('min', true);
 
-            $constant_cashback = get_post_meta($product->get_id(), '_constant_cashback_percentage_variation', true);
+            $constant_cashback = get_post_meta($product_id, '_constant_cashback_percentage_variation', true);
 
             $price = $maxPrice;
 
@@ -145,7 +159,7 @@ class BfwSingleProduct
             $upto = empty(BfwSetting::get('bonus-in-price-upto')) ? __('up to', 'bonus-for-woo') : '';
         }
 
-        return ['percent' => $percent, 'price' => $price, 'upto' => $upto];
+        return $cache[$cache_key] = ['percent' => $percent, 'price' => $price, 'upto' => $upto];
     }
 
 
@@ -164,70 +178,182 @@ class BfwSingleProduct
         global $post;
         global $product;
 
-        // Получаем настройки бонусов
-        $price_width_bonuses = ''; // Инициализация переменной для бонусов
-
-        // Получаем ID товара
-        if (is_object($post) && isset($post->ID)) {
-            $id = $post->ID;
-        } else {
-            // Обработка случая, когда $post не является объектом
-            $id = 0; // или другое значение по умолчанию
-        }
+        $id = (is_object($_product) && method_exists($_product, 'get_id'))
+            ? (int) $_product->get_id()
+            : ((is_object($post) && isset($post->ID)) ? (int) $post->ID : 0);
 
         if (empty($id)) {
             return $price; // Если ID товара отсутствует, возвращаем исходную цену
         }
-        // Получаем информацию о типе продукта
-        $productInfo = self::typeProduct($_product);
-        $prize = (float)$productInfo['price'];
-        $upto = $productInfo['upto'];
-        $percent = (float)$productInfo['percent'];
 
-        // Возвращаем результат функции с расчетом бонусов
-        $price_width_bonuses = self::bfwPointsInSinglePage($prize, $percent, $id, $price_width_bonuses, $upto,
-            $_product);
+        /*
+         * ГЛАВНЫЙ ТОВАР СТРАНИЦЫ или карточка в списке?
+         *
+         * is_product() возвращает true для ВСЕЙ страницы товара, поэтому
+         * внутри Related Products / Upsells он тоже true. Из-за этого
+         * тяжёлый расчёт по вариациям выполнялся для каждой карточки:
+         * 8 рекомендаций × 30–50 вариаций = сотни вызовов на одно открытие
+         * страницы (до 8,5 с).
+         *
+         * Определяем именно «это товар, для которого открыта страница»:
+         * его объект равен глобальному $product (который WooCommerce
+         * выставляет в цикле основного запроса).
+         */
+        $is_main_product = self::isMainProductPage($_product);
 
-        if (BfwSetting::get('bonus-in-price-loop') && !is_product()) {
-            // Отображать на других страницах, всех кроме страницы товара
-            $price .= $price_width_bonuses;
+        // Облегчённый режим для карточек-рекомендаций: без get_available_variations()
+        if ($is_main_product) {
+            $productInfo = self::typeProduct($_product);
+            $bonuses = self::bfwPointsInSinglePage(
+                (float) $productInfo['price'],
+                (float) $productInfo['percent'],
+                $id,
+                '',
+                $productInfo['upto'],
+                $_product
+            );
+
+            if (BfwSetting::get('bonus-in-price')) {
+                $price .= $bonuses;
+
+                // Данные для JS — ТОЛЬКО для основного товара
+                if ($_product->is_type('variable')) {
+                    $price .= self::variationCashbackScript($_product, (float) $productInfo['percent']);
+                }
+            }
+
+            return $price;
         }
 
-        if (BfwSetting::get('bonus-in-price') && is_product()) {
-            $price .= $price_width_bonuses;
-            
-            // Добавляем данные для JavaScript расчета кешбэка вариаций
-            if ($_product->is_type('variable')) {
-                $user_id = get_current_user_id();
-                if (!$user_id) $user_id = -1;
-                
-                $cashback_percent = $percent;
-                $variations_data = [];
-                
-                foreach ($_product->get_available_variations() as $variation_data) {
-                    $variation = wc_get_product($variation_data['variation_id']);
-                    if ($variation) {
-                        $variation_cashback = self::cashbackFromOneProduct($_product->get_id(), $user_id, $variation->get_id());
-                        $variations_data[$variation_data['variation_id']] = [
-                            'price' => (float) $variation->get_price(),
-                            'cashback' => BfwPoints::roundPoints($variation_cashback['amount']),
-                            'percent' => (float) $variation_cashback['percent']
-                        ];
-                    }
-                }
-                
-                $price .= '<script type="text/javascript">
-                    window.bfwVariationCashback = ' . json_encode([
-                        'percent' => $cashback_percent,
-                        'variations' => $variations_data,
-                        'label' => BfwSetting::get('how-mach-bonus-title', __('Cashback:', 'bonus-for-woo')),
-                        'pointsLabel' => BfwPoints::pointsLabel(1, false)
-                    ]) . ';
-                </script>';
-            }
+        /*
+         * Карточка в цикле (Related, Upsells, архив, шорткоды).
+         * Кешбэк считаем по цене товара — это дёшево и не требует
+         * перебора вариаций. Для вариативных берётся минимальная цена,
+         * как и раньше в typeProduct().
+         */
+        $productInfo = self::typeProduct($_product);
+        $bonuses = self::bfwPointsInSinglePage(
+            (float) $productInfo['price'],
+            (float) $productInfo['percent'],
+            $id,
+            '',
+            $productInfo['upto'],
+            $_product
+        );
+
+        /*
+         * Когда показывать бонусы у карточек.
+         *
+         * Раньше на странице товара они выводились по настройке
+         * bonus-in-price — той же, что и для основного товара. Именно из-за
+         * этого настройка «в списках» не работала, а карточки Related
+         * Products получали тяжёлый расчёт.
+         *
+         * Теперь: на странице товара карточки списков управляются
+         * настройкой bonus-in-price-loop, на остальных страницах — ей же.
+         */
+        if (BfwSetting::get('bonus-in-price-loop')) {
+            $price .= $bonuses;
         }
 
         return $price;
+    }
+
+    /**
+     * Основной товар ли это для текущей страницы.
+     *
+     * Отличает товар, ради которого открыта страница, от карточек в
+     * списках (Related Products, Upsells, архив). Тяжёлые расчёты
+     * (get_available_variations по всем вариациям) нужны только первому.
+     *
+     * @param mixed $_product
+     *
+     * @return bool
+     * @since 8.5.5
+     */
+    public static function isMainProductPage($_product): bool
+    {
+        if (!is_product()) {
+            return false;
+        }
+
+        if (!is_object($_product) || !method_exists($_product, 'get_id')) {
+            return false;
+        }
+
+        $queried_id = get_queried_object_id();
+        if ($queried_id && (int) $_product->get_id() === (int) $queried_id) {
+            return true;
+        }
+
+        // Запасные варианты: глобальный $product или get_the_ID()
+        global $product;
+
+        if (is_object($product) && method_exists($product, 'get_id')
+            && (int) $product->get_id() === (int) $_product->get_id()) {
+            return true;
+        }
+
+        $current = get_the_ID();
+
+        return $current && (int) $current === (int) $_product->get_id();
+    }
+
+    /**
+     * Формирует JS-данные о кешбэке вариаций основного товара.
+     *
+     * Вызывается один раз за страницу — только для товара, для которого
+     * она открыта. Раньше вызывался для каждой карточки в Related Products,
+     * и записи перезаписывали друг друга в window.bfwVariationCashback.
+     *
+     * @param WC_Product $product
+     * @param float $cashback_percent
+     *
+     * @return string
+     * @since 8.5.5
+     */
+    public static function variationCashbackScript($product, float $cashback_percent): string
+    {
+        // Не дублируем блок, если хук сработал повторно на том же товаре
+        static $done = [];
+
+        $product_id = (int) $product->get_id();
+        if (isset($done[$product_id])) {
+            return '';
+        }
+        $done[$product_id] = true;
+
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            $user_id = -1;
+        }
+
+        $variations_data = [];
+
+        foreach ($product->get_available_variations() as $variation_data) {
+            $variation = wc_get_product($variation_data['variation_id']);
+            if (!$variation) {
+                continue;
+            }
+
+            $variation_cashback = self::cashbackFromOneProduct($product_id, $user_id, $variation->get_id());
+
+            $variations_data[$variation_data['variation_id']] = [
+                'price'    => (float) $variation->get_price(),
+                'cashback' => BfwPoints::roundPoints($variation_cashback['amount']),
+                'percent'  => (float) $variation_cashback['percent'],
+            ];
+        }
+
+        return '<script type="text/javascript">
+                    window.bfwVariationCashback = ' . wp_json_encode([
+                'productId'  => $product_id,
+                'percent'    => $cashback_percent,
+                'variations' => $variations_data,
+                'label'      => BfwSetting::get('how-mach-bonus-title', __('Cashback:', 'bonus-for-woo')),
+                'pointsLabel' => BfwPoints::pointsLabel(1, false),
+            ]) . ';
+                </script>';
     }
 
 
@@ -281,7 +407,7 @@ class BfwSingleProduct
     public static function cashbackFromOneProduct(
         int $product_id,
         int $user_id = -1,
-        int $variation_id = null,
+        ?int $variation_id = null,
         $oldPrice = null
     ): array {
         $Role = new BfwRoles();

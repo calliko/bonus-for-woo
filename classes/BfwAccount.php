@@ -57,7 +57,7 @@ class BfwAccount
      * @param array $shortcode
      * @version 7.1.2
      */
-    public static function accountBasicInfo($shortcode = [])
+    public static function accountBasicInfo( $shortcode = [])
     {
         // Обработка параметров шорткода
         $shortcode = shortcode_atts([

@@ -103,7 +103,23 @@ class BfwFunctions
          */
         wp_localize_script('bonus-computy-script', 'wpApiSettings', [
                 'nonceAjaxUrl' => esc_url_raw(rest_url('bfw/v1/nonce')),
-                'isLoggedIn'   => is_user_logged_in(),
+                /*
+                 * wp_localize_script приводит false к пустой строке, поэтому
+                 * передаём явные строки '1'/'0' — иначе JS не отличит
+                 * «не залогинен» от «значение потерялось».
+                 */
+                'isLoggedIn'   => is_user_logged_in() ? '1' : '0',
+                /*
+                 * Запасной nonce прямо в HTML.
+                 *
+                 * Основной путь — запрос /wp-json/bfw/v1/nonce. Но если на
+                 * сайте есть кеширование страниц (или прокси), ответ /nonce
+                 * может прийти от гостя, и nonce окажется чужим — тогда все
+                 * запросы падают с 403. Для залогиненных nonce гарантированно
+                 * актуален: их страницы персональные и не кешируются.
+                 * Гостю nonce не нужен — он всё равно не может списывать баллы.
+                 */
+                'nonce'        => is_user_logged_in() ? wp_create_nonce('wp_rest') : '',
         ]);
     }
 
@@ -693,7 +709,7 @@ class BfwFunctions
     /**
      * Получает количество заказов пользователя
      */
-    public static function get_customer_order_count(int $user_id, array $order_status = null, $exclude_order_id = null): int
+    public static function get_customer_order_count(int $user_id, ?array $order_status = null, $exclude_order_id = null): int
     {
         if (!$user_id) {
             return 0;
