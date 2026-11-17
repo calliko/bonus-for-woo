@@ -5,8 +5,8 @@ Tags: loyalty, cashback, points, reward, referral
 Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.2
-WC tested up to: 11.2.1
-Stable tag: 8.5.5
+WC tested up to: 11.3.0
+Stable tag: 8.5.6
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -151,123 +151,15 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 == Changelog ==
 
+= 8.5.6 - 2026-11-17 =
+* Fixed: refunding an order fully paid with points (total 0) never returned the spent points — refund share is now calculated from item subtotals for such orders.
+* Fixed: cashback forecast in the cart ignored the points discount, so the cart showed a bigger cashback than was actually credited (base is now the amount after all discounts and coupons).
+* Added: referral link (?bfwkey) is now saved for logged-in customers too, and the referrer is attached to the specific order (order meta _bfw_referrer_id) — a one-time reward instead of a permanent user binding. Filter: bfw_referral_order_cookie_once.
+* Added: referral reward for an order can now be revoked on refund (reason referral_revoke, idempotent by refund id). Filter: bfw_referral_revoke_on_cancel.
+* Changed: the write-off limit is calculated per cart item — products/categories «points only» can be covered up to 100%, the rest keeps the global max-percent-bonuses. Filter: bfw_points_only_max_percent.
+* Added: statistics break down spent points by reason (purchases, burned by expiry, returned on refunds, cashback revoked).
+* Added: filters bfw_referral_cookie_days, bfw_points_only_max_percent, bfw_referral_revoke_on_cancel.
+
 = 8.5.5 - 2026-11-15 =
 * Fixed a cookie-related issue that occurred when redeeming points.
 * Optimized the cashback calculation for variable products.
-
-= 8.5.2 - 2026-11-04 =
-* Security: the coupons list no longer interpolates the `order`/`orderby` query arguments; only an allowlist is accepted.
-* Security: failed coupon code entries are rate-limited, so codes can no longer be brute-forced.
-* Security: the points export is streamed and never written to disk; the download link is nonce-protected.
-* Security: the redirect parameter is validated against the site host on every write-off entry point.
-* Security: CSV import reads the uploaded file instead of a client-supplied path.
-* Security: coupon actions require the plugin capability, not just a nonce.
-* One capability (BFW_CAP_MANAGE) now drives both the menu and the AJAX handlers.
-* Points export is batched (500 users per query) instead of loading every customer at once.
-* Removed an unused coupon import handler and the leftover QR / DataTables demo files.
-* A critical error that occurred when entering an empty coupon has been fixed.
-
-= 8.5.1 - 2026-11-04 =
-* Cashback percent, points and sums now follow the WooCommerce "Number of decimals" setting: 0 decimals shows 3%, 250; 2 decimals shows 3.50%, 250.75. Rounding of points uses the same setting.
-* Points export file moved from the plugin directory to uploads — a plugin installed from the admin screen could not write there. Download link is now nonce-protected.
-* Import accepts the export file from uploads.
-* Fixed duplication of cron events.
-* Added status caching.
-* Implemented more precise rounding for point deductions and accruals.
-* Fixed the display of cashback in the block-based cart.
-* Removed the `woocommerce_new_order` hook.
-* Improved security.
-* Performance optimization.
-* Added checks for the presence of WooCommerce.
-
-
-= 8.3.3 - 2026-10-14 =
-* Fixed the button style.
-* Fixed the recalculation of points for previous orders.
-* Removed point recalculation for guests.
-* Code optimization
-
-= 8.3.2 - 2026-09-02 =
-* Fixed the loading of the point redemption form for guests.
-* Fixed the point redemption form in the block cart.
-* Added a notification regarding payment made entirely with points in the block cart and during checkout.
-
-
-= 8.3.1 - 2026-09-01 =
-* Added a "Do not deduct points for the first order" setting for the PRO version.
-* Added functionality to select products that can be purchased only with points.
-* Translation-related work.
-* Improved security.
-* Performance optimization.
-* Statistics updated: added point distribution, top clients by total points, statistics export, and coupon statistics.
-* Protecting the export file from external downloads.
-
-= 8.2.9 - 2026-08-20 =
-* Security enhanced.
-* WordPress 7.1 support.
-
-= 8.2.8 - 2026-08-10 =
-* Fixed a bug with saving the product.
-
-= 8.2.7 - 2026-08-10 =
-* Fixed an extra request on the product page.
-* Security improvements.
-
-= 8.2.6 - 2026-07-20 =
-* Fixed the deduction of points for other statuses.
-* Fixed the clearing of bonus history in the user editor.
-
-= 8.2.5 - 2026-07-10 =
-* Optimized the loading of deduction blocks.
-* Fixed an issue where delivery details were reset when applying points.
-
-= 8.2.4 - 2026-06-08 =
-* Adjusted styles in the admin panel.
-* Added the `bfw_get_role_filter` filter.
-* Added the `bfw_check_first_order_referral_filter` filter.
-* Corrected the status title update.
-
-= 8.2.3 - 2026-06-03 =
-* Clear cache when recalculating statuses.
-
-= 8.2.2 - 2026-06-02 =
-* fix bug
-
-= 8.2.1 - 2026-05-27 =
-* Added a max limit for referral links.
-* Added a filter for replacing referral links.
-
-= 8.1.2 - 2026-05-22 =
-* Optimizing database queries.
-
-= 8.1.1 - 2026-05-04 =
-* Fixed the accrual of points for past orders.
-* Added the ability to insert links and images into emails.
-
-= 8.1.0 - 2026-04-26 =
-* PHP Type Declaration.
-* The order information in the user's personal account displays how many points have been received or are planned to be received.
-
-= 8.0.1 - 2026-04-21 =
-* Translations have been corrected.
-* Bonus point refunds have been corrected.
-
-= 8.0.0 - 2026-04-17 =
-* Fixed an issue with incorrect point accrual for the first order.
-* Improved security.
-* Added standard WordPress tables to the point and coupon accrual history in the admin panel.
-* Redesigned the plugin's admin panel interface.
-* Added logging for other point actions.
-* Updated the terms and conditions generator.
-* Added a line in the personal account displaying how many points are pending accrual.
-* Fixed a memory overflow error when writing off bonus points.
-* Changed bonus system statistics.
-* The plugin no longer cancels all cashback in the event of a partial refund.
-* Fixed an error calculating the use of reusable coupons.
-
-== Upgrade Notice ==
-
-= 8.5.2 =
-* Points export is now streamed and is never written to the disk.
-* Coupons: the list respects a strict ORDER BY whitelist, and repeated failed code entries are rate-limited.
-* Cashback percent and points follow the WooCommerce number of decimals setting.

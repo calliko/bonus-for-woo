@@ -285,6 +285,17 @@ class BfwHooks
         if (BfwSetting::get('referal-system')) {
             (new BfwReferral())->bfwSetCookies();
             add_action('user_register', array('BfwReferral', 'registerInvate'));
+
+            /*
+             * Реферальная атрибуция конкретного заказа: ключ из ссылки
+             * сохраняется уже для авторизованных покупателей и переносится
+             * в метаданные заказа, поэтому вознаграждение привязано
+             * к покупке, а не к пользователю навсегда.
+             */
+            add_action('woocommerce_checkout_create_order', array('BfwReferral', 'attachReferrerToOrder'), 10, 1);
+
+            // Отзыв реферального вознаграждения при отмене — по желанию магазина.
+            add_action('woocommerce_order_status_cancelled', array('BfwReferral', 'maybeRevokeOnCancel'), 20, 1);
         }
 
         add_action('computy_copyright', array('BfwFunctions', 'computy_copyright'), 25);

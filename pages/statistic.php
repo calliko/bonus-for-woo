@@ -285,6 +285,26 @@ defined( 'ABSPATH' ) || exit;
                     <div>
                         <small style="color: var(--bfw-text-muted); display: block; margin-bottom: 4px;"><?php esc_html_e('Total Spent', 'bonus-for-woo'); ?></small>
                         <strong style="font-size: 16px;"><?php echo esc_html(BfwPoints::formatNumber((float) ($stats['spent_total_life'] ?? 0))); ?></strong>
+                        <?php
+                        $bfw_breakdown = $stats['spent_breakdown'] ?? [];
+                        $bfw_breakdown_rows = [
+                            __('On purchases', 'bonus-for-woo')   => (float) ($bfw_breakdown['purchases'] ?? 0),
+                            __('Burned by expiry', 'bonus-for-woo') => (float) ($bfw_breakdown['burned'] ?? 0),
+                            __('Returned on refunds', 'bonus-for-woo') => (float) ($bfw_breakdown['refunded'] ?? 0),
+                            __('Cashback revoked', 'bonus-for-woo') => (float) ($bfw_breakdown['revoked'] ?? 0),
+                        ];
+                        $bfw_breakdown_has_data = array_sum($bfw_breakdown_rows) > 0;
+                        ?>
+                        <?php if ($bfw_breakdown_has_data) : ?>
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--bfw-text-muted); line-height: 1.6;">
+                                <?php foreach ($bfw_breakdown_rows as $bfw_label => $bfw_value) : ?>
+                                    <div>
+                                        <?php echo esc_html($bfw_label); ?>:
+                                        <strong style="color: inherit;"><?php echo esc_html(BfwPoints::formatNumber($bfw_value)); ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

@@ -29,6 +29,15 @@ class BfwLedger
     const REASON_CASHBACK_REVOKE  = 'cashback_revoke';
     const REASON_REFERRAL         = 'referral';
     const REASON_REFERRAL_L2      = 'referral_l2';
+    /**
+     * Реферальное вознаграждение за конкретный заказ (атрибуция по ссылке для
+     * уже зарегистрированного покупателя, а не постоянная привязка пользователя).
+     */
+    const REASON_REFERRAL_ORDER   = 'referral_order';
+    /**
+     * Отзыв реферального вознаграждения при возврате заказа.
+     */
+    const REASON_REFERRAL_REVOKE  = 'referral_revoke';
     const REASON_COUPON           = 'coupon';
     const REASON_REVIEW           = 'review';
     const REASON_REVIEW_REVOKE    = 'review_revoke';
@@ -297,6 +306,36 @@ class BfwLedger
             $user_id,
             $limit
         ));
+    }
+
+    /**
+     * Операции журнала по объекту (например, все реферальные начисления по заказу).
+     *
+     * @param string $ref_type 'order', 'refund', ...
+     * @param int    $ref_id   ID объекта
+     * @param array  $reasons  список reason; пустой массив = любые
+     *
+     * @return array
+     */
+    public static function getOperations(string $ref_type, int $ref_id, array $reasons = array()): array
+    {
+        if (!self::isAvailable() || $ref_type === '' || $ref_id <= 0) {
+            return array();
+        }
+        global $wpdb;
+
+        $sql = 'SELECT * FROM ' . self::table() . ' WHERE ref_type = %s AND ref_id = %d';
+        $args = array($ref_type, $ref_id);
+
+        $reasons = array_values(array_filter(array_map('strval', $reasons), 'strlen'));
+        if (!empty($reasons)) {
+            $sql .= ' AND reason IN (' . implode(', ', array_fill(0, count($reasons), '%s')) . ')';
+            $args = array_merge($args, $reasons);
+        }
+
+        $sql .= ' ORDER BY id ASC';
+
+        return (array) $wpdb->get_results($wpdb->prepare($sql, $args));
     }
 
     /**

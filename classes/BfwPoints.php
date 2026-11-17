@@ -1231,6 +1231,7 @@ global $wpdb;
         $excluded_products = apply_filters('bfw-excluded-products-filter', $excluded_products, $exclude_products_raw);
 
         $eligible_subtotal = 0;
+        $items_caps = array();
 
         foreach ($items as $item) {
             $product = $item['data'];
@@ -1258,7 +1259,15 @@ global $wpdb;
             }
 
             if ($is_eligible) {
-                $eligible_subtotal += $product->get_price() * $item['quantity'];
+                $line_base = $product->get_price() * $item['quantity'];
+                $eligible_subtotal += $line_base;
+
+                $items_caps[] = array(
+                    'base'  => $line_base,
+                    'limit' => self::isPointsOnlyItem((int) $product_id, (int) ($item['variation_id'] ?? 0))
+                        ? self::pointsOnlyPercent()
+                        : null, // null — подставить общий лимит ниже
+                );
             }
         }
 
@@ -1279,9 +1288,119 @@ global $wpdb;
         $max_percent = $is_pro ? BfwSetting::get('max-percent-bonuses', 100) : 100;
         $max_percent = apply_filters('max-percent-bonuses-filter', $max_percent, $eligible_subtotal);
 
-        $maxPossiblePoints = self::roundPoints($eligible_subtotal * $max_percent / 100);
+        // Позиции «только за баллы» считаются по своему лимиту,
+        // остальные — по общему. Купоны уменьшают базу пропорционально.
+        $base_before_coupons = 0.0;
+        foreach ($items_caps as $cap) {
+            $base_before_coupons += (float) $cap['base'];
+        }
+
+        $scale = ($base_before_coupons > 0)
+            ? max(0.0, $eligible_subtotal) / $base_before_coupons
+            : 0.0;
+
+        foreach ($items_caps as $index => $cap) {
+            if ($cap['limit'] === null) {
+                $items_caps[$index]['limit'] = $max_percent;
+            }
+        }
+
+        $maxPossiblePoints = self::sumItemCaps($items_caps, $scale);
 
         return max(0.0, $maxPossiblePoints);
+    }
+
+
+    /**
+     * Итоговый лимит списания по набору позиций корзины.
+     *
+     * Чистая функция: на вход позиции с базой и процентом, на выход — сколько
+     * баллов можно списать. Нужна, чтобы лимит считался по позициям
+     * (товары «только за баллы» — до 100%), а не единым процентом на корзину.
+     *
+     * @param array $caps  список ['base' => float, 'limit' => float]
+     * @param float $scale коэффициент для базы (например, доля после купонов)
+     *
+     * @return float
+     * @version 8.5.6
+     */
+    public static function sumItemCaps(array $caps, float $scale = 1.0): float
+    {
+        if ($scale < 0) {
+            $scale = 0.0;
+        }
+
+        $total = 0.0;
+
+        foreach ($caps as $cap) {
+            $base = (float) ($cap['base'] ?? 0) * $scale;
+            $limit = max(0.0, min(100.0, (float) ($cap['limit'] ?? 0)));
+
+            if ($base <= 0 || $limit <= 0) {
+                continue;
+            }
+
+            $total += $base * $limit / 100;
+        }
+
+        return max(0.0, self::roundPoints($total));
+    }
+
+
+    /**
+     * Товар/категория «только за баллы».
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     *
+     * @return bool
+     * @version 8.5.6
+     */
+    public static function isPointsOnlyItem(int $product_id, int $variation_id = 0): bool
+    {
+        if (!BfwRoles::isPro()) {
+            return false;
+        }
+
+        $points_only_products = (array) BfwSetting::get('points-only-products', array());
+        $points_only_categories = (array) BfwSetting::get('points-only-categories', array());
+
+        if (empty($points_only_products) && empty($points_only_categories)) {
+            return false;
+        }
+
+        if (in_array($product_id, array_map('intval', $points_only_products), true)
+            || ($variation_id > 0 && in_array($variation_id, array_map('intval', $points_only_products), true))
+        ) {
+            return true;
+        }
+
+        if (!empty($points_only_categories)) {
+            $terms = get_the_terms($product_id, 'product_cat');
+            if ($terms && !is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    if (in_array((int) $term->term_id, array_map('intval', $points_only_categories), true)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Процент списания для товаров «только за баллы» (по умолчанию — полностью).
+     *
+     * @return float
+     * @version 8.5.6
+     */
+    public static function pointsOnlyPercent(): float
+    {
+        $percent = (float) apply_filters('bfw_points_only_max_percent', 100.0);
+
+        return max(0.0, min(100.0, $percent));
     }
 
 
@@ -2486,6 +2605,15 @@ global $wpdb;
         }
 
 
+        /*
+         * Реферальное вознаграждение за конкретный заказ.
+         * Работает только для покупателей, пришедших по ссылке и не имеющих
+         * постоянной привязки пригласившего (иначе — двойное начисление).
+         */
+        if (BfwSetting::get('referal-system')) {
+            BfwReferral::maybeAccrueOrderReferral($order);
+        }
+
         delete_user_meta($user_id, 'first_order');
         return true;
     }
@@ -2669,6 +2797,73 @@ global $wpdb;
 
 
     /**
+     * Расчёт доли возврата для заказа.
+     *
+     * Чистая функция (без обращений к БД) — чтобы поведение можно было
+     * проверить тестом. Отдельно закрывает случай заказа с итоговой суммой
+     * 0 ₽ (полная оплата баллами): там доля считается по стоимости позиций,
+     * иначе деление на ноль и «возврат не обрабатывается».
+     *
+     * @param float $order_total     итог заказа в деньгах
+     * @param float $order_subtotal  сумма позиций до скидок
+     * @param float $refund_amount   сумма возврата в деньгах (0 для возврата по статусу)
+     * @param float $refund_subtotal сумма позиций возврата до скидок
+     * @param bool  $has_refund      есть объект возврата (refund_id)
+     * @param bool  $is_status_refund возврат оформлен сменой статуса
+     *
+     * @return array{ratio: float, is_full: bool}
+     * @version 8.5.6
+     */
+    public static function refundPlan(
+        float $order_total,
+        float $order_subtotal,
+        float $refund_amount,
+        float $refund_subtotal,
+        bool $has_refund,
+        bool $is_status_refund
+    ): array {
+        $empty = array('ratio' => 0.0, 'is_full' => false);
+
+        if ($is_status_refund) {
+            return array('ratio' => 1.0, 'is_full' => true);
+        }
+
+        if (!$has_refund) {
+            return $empty;
+        }
+
+        if ($order_total > 0) {
+            if ($refund_amount <= 0) {
+                return $empty;
+            }
+
+            return array(
+                'ratio'   => min(1, $refund_amount / $order_total),
+                'is_full' => ($refund_amount >= $order_total - 0.01),
+            );
+        }
+
+        /*
+         * Заказ на 0 ₽: денег нет, поэтому доля — по стоимости позиций.
+         * Возврат без позиций на таком заказе считаем полным
+         * (в админке «вернуть всё» на заказе за баллы создаёт возврат на 0 ₽).
+         */
+        if ($order_subtotal <= 0) {
+            return $empty;
+        }
+
+        if ($refund_subtotal <= 0) {
+            return array('ratio' => 1.0, 'is_full' => true);
+        }
+
+        return array(
+            'ratio'   => min(1, $refund_subtotal / $order_subtotal),
+            'is_full' => ($refund_subtotal >= $order_subtotal - 0.01),
+        );
+    }
+
+
+    /**
      * Action when points refund is issued
      * Действие когда оформлен возврат баллов
      *
@@ -2689,15 +2884,17 @@ global $wpdb;
             return;
         }
 
-        // 1. Сумма возврата и коэффициент
-        $original_total = (float) $order->get_total();
-        if ($original_total <= 0) {
-            return;
-        }
+        $total_earned = (float) $order->get_meta('cashback_amount');
+        $total_spent = (float) $order->get_meta('_bfw_points_deducted');
 
-        $current_refund_amount = 0;
-        $refund_statuses = (array) BfwSetting::get('refunded_points_order_status', array('refunded'));
-        $is_full_refund = false;
+        /*
+         * Собираем контекст возврата.
+         * Для заказов, полностью оплаченных баллами, денежная сумма равна нулю,
+         * поэтому долю возврата приходится считать по стоимости позиций —
+         * иначе такой возврат вообще не обрабатывался.
+         */
+        $refund_amount = 0.0;
+        $refund_subtotal = 0.0;
 
         if ($refund_id) {
             $refund = wc_get_order($refund_id);
@@ -2717,29 +2914,42 @@ global $wpdb;
             }
 
             if ($refund) {
-                // Сумма возврата = остаток по этому возврату (без повторного учёта)
-                $current_refund_amount = abs((float) $refund->get_amount());
-                $is_full_refund = ($current_refund_amount >= $original_total - 0.01);
+                $refund_amount = abs((float) $refund->get_amount());
+
+                foreach ($refund->get_items() as $refund_item) {
+                    $refund_subtotal += abs((float) $refund_item->get_subtotal());
+                }
             }
-        } else {
+        }
+
+        $is_status_refund = false;
+        if (!$refund_id) {
+            $refund_statuses = (array) BfwSetting::get('refunded_points_order_status', array('refunded'));
             $order_status = $order->get_status();
             $order_status_clean = ltrim($order_status, 'wc-');
 
-            if (in_array($order_status_clean, $refund_statuses, true) || in_array($order_status, $refund_statuses, true)) {
-                $current_refund_amount = $original_total;
-                $is_full_refund = true;
+            if (in_array($order_status_clean, $refund_statuses, true)
+                || in_array($order_status, $refund_statuses, true)
+                || in_array('wc-' . $order_status_clean, $refund_statuses, true)
+            ) {
+                $is_status_refund = true;
             }
         }
 
-        if ($current_refund_amount <= 0) {
+        $plan = self::refundPlan(
+            (float) $order->get_total(),
+            (float) $order->get_subtotal(),
+            $refund_amount,
+            $refund_subtotal,
+            (bool) $refund_id,
+            $is_status_refund
+        );
+
+        if ($plan['ratio'] <= 0) {
             return;
         }
 
-        $ratio = min(1, $current_refund_amount / $original_total);
-
-        // 2. Текущее состояние по заказу
-        $total_earned = (float) $order->get_meta('cashback_amount');
-        $total_spent = (float) $order->get_meta('_bfw_points_deducted');
+        $is_full_refund = $plan['is_full'];
 
         // 3. Сколько начисленного кешбэка отозвать
         $received = $order->meta_exists('cashback_receipt') ? (string) $order->get_meta('cashback_receipt') : '';
@@ -2747,7 +2957,7 @@ global $wpdb;
         if ($received === 'received' && $total_earned > 0) {
             $points_to_revoke = $is_full_refund
                 ? $total_earned
-                : self::roundPoints($total_earned * $ratio);
+                : self::roundPoints($total_earned * $plan['ratio']);
         }
 
         // 4. Сколько списанных баллов вернуть
@@ -2755,11 +2965,7 @@ global $wpdb;
         if ($total_spent > 0) {
             $points_to_return = $is_full_refund
                 ? $total_spent
-                : self::roundPoints($total_spent * $ratio);
-        }
-
-        if ($points_to_revoke <= 0 && $points_to_return <= 0) {
-            return;
+                : self::roundPoints($total_spent * $plan['ratio']);
         }
 
         $cause = __('Refund of bonus points', 'bonus-for-woo');
@@ -2817,6 +3023,26 @@ global $wpdb;
                 $order->update_meta_data('_bfw_returned_points', (float) $order->get_meta('_bfw_returned_points') + $points_to_return);
                 $order->save();
             }
+        }
+
+        /*
+         * Отзыв реферального вознаграждения по этому заказу.
+         * Ключ идемпотентности — refund_id, поэтому повторный вызов хука
+         * (а также вызов из 1С) второй раз ничего не отзовёт.
+         */
+        $referral_revoked = BfwReferral::revokeReferralForOrder(
+            $order_id,
+            $is_full_refund ? 1.0 : (float) $plan['ratio'],
+            $ref_key
+        );
+
+        if ($referral_revoked > 0) {
+            $info_email .= sprintf(
+                /* translators: %1$s: order id, %2$s: points */
+                __('Referral points for order no. %1$s have been canceled: %2$s.', 'bonus-for-woo'),
+                $order_id,
+                self::formatNumber($referral_revoked)
+            );
         }
 
         if ($info_email === '') {
@@ -3324,7 +3550,7 @@ global $wpdb;
 
         if ($points_only_in_cart) {
             // Check if user has enough points to cover the points-only products
-            $points_value = $cart_total_for_points_only * (BfwSetting::get('max-percent-bonuses', 100) / 100);
+            $points_value = $cart_total_for_points_only * (self::pointsOnlyPercent() / 100);
 
             if ($total_available_points < $points_value) {
                 wc_add_notice(

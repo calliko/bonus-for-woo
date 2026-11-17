@@ -144,6 +144,13 @@ class BfwStatistic
                 $data['spent_total_life'] = (float)($history_totals->spent ?? 0);
                 $data['prr'] = $data['issued_total_life'] > 0 ? ($data['spent_total_life'] / $data['issued_total_life']) * 100 : 0;
 
+                /*
+                 * Разбивка «потрачено» по причинам из журнала: покупки,
+                 * сгоревшие по сроку и возвращённые при возвратах.
+                 * Раньше все три попадали в одну цифру по символу '-'.
+                 */
+                $data['spent_breakdown'] = self::getSpentBreakdown($date_start, $date_end);
+
                 // Pending-баллы: сумма ожидающих начисления по всем пользователям
                 $pending_total = 0;
 
@@ -435,6 +442,72 @@ class BfwStatistic
     public static function get_stats()
     {
         return get_option(self::OPTION_KEY);
+    }
+
+
+    /**
+     * Разбивка списаний по причинам из журнала операций.
+     *
+     * «Потрачено» в отчётах исторически считалось по символу '-' в истории,
+     * поэтому сгоревшие по сроку и возвращённые при возврате баллы попадали
+     * в одну цифру с покупками. Здесь они разделены.
+     *
+     * @param string $date_start Y-m-d
+     * @param string $date_end   Y-m-d
+     *
+     * @return array{purchases: float, burned: float, refunded: float, revoked: float}
+     * @version 8.5.6
+     */
+    public static function getSpentBreakdown(string $date_start = '', string $date_end = ''): array
+    {
+        $out = array(
+            'purchases' => 0.0,
+            'burned'    => 0.0,
+            'refunded'  => 0.0,
+            'revoked'   => 0.0,
+        );
+
+        if (!class_exists('BfwLedger') || !BfwLedger::isAvailable()) {
+            return $out;
+        }
+
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'bfw_ledger';
+        $where = 'WHERE 1=1';
+        $args = array();
+
+        if ($date_start !== '' && $date_end !== '') {
+            $where .= ' AND created BETWEEN %s AND %s';
+            $args = array($date_start . ' 00:00:00', $date_end . ' 23:59:59');
+        }
+
+        $sql = "SELECT reason, SUM(delta) AS total FROM {$table} {$where} GROUP BY reason";
+        $rows = !empty($args)
+            ? $wpdb->get_results($wpdb->prepare($sql, $args))
+            : $wpdb->get_results($sql);
+
+        $map = array(
+            BfwLedger::REASON_ORDER_DEBIT        => 'purchases',
+            BfwLedger::REASON_INACTIVITY         => 'burned',
+            BfwLedger::REASON_ORDER_DEBIT_REFUND => 'refunded',
+            BfwLedger::REASON_CASHBACK_REVOKE    => 'revoked',
+        );
+
+        foreach ((array) $rows as $row) {
+            if (!isset($map[$row->reason])) {
+                continue;
+            }
+
+            $amount = abs((float) $row->total);
+            if ($amount <= 0) {
+                continue;
+            }
+
+            $out[$map[$row->reason]] += $amount;
+        }
+
+        return array_map('floatval', $out);
     }
 
     /** Очистка сохраненной стистики

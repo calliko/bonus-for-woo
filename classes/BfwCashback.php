@@ -56,8 +56,13 @@ class BfwCashback
         $coupon_deduction = 0;
         $cart_items = $woocommerce->cart->get_cart();
 
-        // Считает сумму всех примененных купонов в корзине не считая бонусных баллов
-        $filtered_discounts = self::calculate_coupons_total_except_specific();
+        /*
+         * В базе прогноза учитываем ВСЕ купонные скидки корзины, включая
+         * бонусный купон (списание баллов). Раньше бонусный купон исключался,
+         * из-за чего в корзине показывался кешбэк с полной цены, а начислялся
+         * он с фактически оплаченной суммы — цифры расходились.
+         */
+        $filtered_discounts = (float) $woocommerce->cart->get_discount_total();
 
         foreach ($cart_items as $cart_item) {
             $product_id = $cart_item['product_id'];
