@@ -276,7 +276,12 @@ class BfwReferral
         $BfwPoints = new BfwPoints();
         $points = $BfwPoints->roundPoints($points);
 
-        if ((int) $points === 0) {
+        /*
+         * Раньше здесь стояло (int) $points === 0: при дробных баллах
+         * (настройка «Не округлять десятичные дроби») начисление 0,5 балла
+         * молча отбрасывалось.
+         */
+        if ($points <= 0) {
             return;
         }
 

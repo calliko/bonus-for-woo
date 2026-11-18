@@ -6,7 +6,7 @@ Requires at least:  6.2
 Tested up to:  7.1
 WC requires at least: 6.2
 WC tested up to: 11.3.0
-Stable tag: 8.5.6
+Stable tag: 8.5.7
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -150,6 +150,10 @@ Yes, the plugin supports WooCommerce High-Performance Order Storage.
 
 
 == Changelog ==
+
+= 8.5.7 - 2026-11-18 =
+* Fixed: the «Do not round decimals in points?» setting (round_points) had no effect since 8.5.1. Unchecked = whole points (as before 8.5.1), checked = fractional points with 2 decimals. WooCommerce «Number of decimals» no longer affects points (it is the shop currency, not the bonus balance). New filters: bfw_points_decimals, bfw_percent_decimals.
+* Fixed: fractional referral points (e.g. 0.5) were silently dropped by an integer cast.
 
 = 8.5.6 - 2026-11-17 =
 * Fixed: refunding an order fully paid with points (total 0) never returned the spent points — refund share is now calculated from item subtotals for such orders.

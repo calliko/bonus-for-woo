@@ -120,7 +120,7 @@ class BfwCashback
             if (BfwSetting::get('cashback_for_first_order') && (new BfwFunctions())->get_customer_order_count($user_id) === 0) {
                 $percent = BfwSetting::get('cashback_for_first_order');
             }
-            $percentUp = ' ' . BfwPoints::formatNumber((float) $percent) . '%';
+            $percentUp = ' ' . BfwPoints::formatPercent((float) $percent) . '%';
 
             //если используются баллы, то не начисляем кешбэк
             if (BfwSetting::get('yous_balls_no_cashback') && BfwPoints::getFastPoints($user_id) > 0) {

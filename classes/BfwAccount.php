@@ -46,7 +46,7 @@ class BfwAccount
     public static function getCashback(): string
     {
         $roles = BfwRoles::getRole(get_current_user_id());
-        return BfwPoints::formatNumber((float) ($roles['percent'] ?? 0)) . '%';
+        return BfwPoints::formatPercent((float) ($roles['percent'] ?? 0)) . '%';
     }
 
 
@@ -213,8 +213,8 @@ class BfwAccount
      */
     private static function renderPercentRow(string $label, float $percent): string
     {
-        // Разряды не нужны: процент кешбэка — число до 100, дробь по настройке WC
-        $formattedPercent = BfwPoints::formatNumber($percent);
+        // Разряды не нужны: процент кешбэка — число до 100, дробь показываем всегда
+        $formattedPercent = BfwPoints::formatPercent($percent);
 
         return sprintf(
                 '<div class="bonus_computy_account bfw-account_percent">

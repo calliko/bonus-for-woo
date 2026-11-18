@@ -93,31 +93,106 @@ class BfwPoints
     /**
      * Number of decimal places for points and percent values.
      *
-     * WooCommerce «Number of decimals» (wc_get_price_decimals) is the single
-     * source of truth: with 0 the shop shows 3% and 250, with 2 — 3.5% and 250.25.
+     * Приоритет:
+     *  1. фильтр `bfw_points_decimals` — для интеграций;
+     *  2. настройка «Не округлять десятичные дроби в баллах» (`round_points`) —
+     *     дробные баллы, 2 знака, независимо от валюты магазина;
+     *  3. «Number of decimals» WooCommerce (wc_get_price_decimals).
+     *
+     * Раньше настройка round_points была объявлена в админке, но после перехода
+     * на валютные знаки её перестали читать — включённый чекбокс не давал эффекта.
+     * Теперь она снова управляет точностью баллов.
      *
      * @return int
      * @since 8.5.1
+     * @version 8.5.6
      */
     public static function decimals(): int
     {
-        if (function_exists('wc_get_price_decimals')) {
-            return max(0, min(6, (int) wc_get_price_decimals()));
-        }
+        /*
+         * Выключенная настройка «Не округлять десятичные дроби в баллах» —
+         * это округление до ЦЕЛЫХ баллов (историческое поведение плагина),
+         * а не «взять знаки из WooCommerce»: баллы не деньги, и в магазине
+         * с валютой 2 знака баллы всё равно целые.
+         */
+        $precision = BfwSetting::get('round_points') ? 2 : 0;
 
-        return 0;
+        /**
+         * Позволяет задать точность баллов напрямую (0–6 знаков).
+         *
+         * @param int $precision
+         */
+        $precision = (int) apply_filters('bfw_points_decimals', $precision);
+
+        return max(0, min(6, $precision));
     }
 
     /**
-     * Formats a points/percent value for display, following WooCommerce decimals.
+     * Число знаков для отображения ПРОЦЕНТОВ (кешбэк, статус, рефералка).
+     *
+     * Проценты не зависят от округления баллов: ставка 3,5% должна выглядеть
+     * как 3,5%, а не как 4% в магазине с целыми баллами.
+     *
+     * @return int
+     * @version 8.5.6
+     */
+    public static function percentDecimals(): int
+    {
+        $precision = 2;
+
+        /**
+         * Позволяет изменить точность отображения процентов (0–6 знаков).
+         *
+         * @param int $precision
+         */
+        $precision = (int) apply_filters('bfw_percent_decimals', $precision);
+
+        return max(0, min(6, $precision));
+    }
+
+    /**
+     * Formats a points/percent value for display.
      *
      * @param float $value
      * @return string
      * @since 8.5.1
+     * @version 8.5.6
      */
     public static function formatNumber(float $value): string
     {
-        return number_format($value, self::decimals(), wc_get_price_decimal_separator(), '');
+        return self::formatWithDecimals($value, self::decimals());
+    }
+
+    /**
+     * Форматирование процента (3 → «3», 3,5 → «3,5», 3,55 → «3,55»).
+     *
+     * @param float $value
+     * @return string
+     * @version 8.5.6
+     */
+    public static function formatPercent(float $value): string
+    {
+        return self::formatWithDecimals($value, self::percentDecimals());
+    }
+
+    /**
+     * Общее форматирование: нужная точность + без хвостовых нулей.
+     *
+     * @param float $value
+     * @param int $precision
+     * @return string
+     * @version 8.5.6
+     */
+    private static function formatWithDecimals(float $value, int $precision): string
+    {
+        $separator = function_exists('wc_get_price_decimal_separator') ? wc_get_price_decimal_separator() : '.';
+        $formatted = number_format($value, $precision, $separator, '');
+
+        if ($precision > 0 && strpos($formatted, $separator) !== false) {
+            $formatted = rtrim(rtrim($formatted, '0'), $separator);
+        }
+
+        return $formatted;
     }
 
     /**
